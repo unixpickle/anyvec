@@ -1,6 +1,8 @@
 package anyvec32
 
 import (
+	"math"
+
 	"github.com/gonum/blas"
 	"github.com/gonum/blas/blas32"
 )
@@ -41,6 +43,12 @@ func (v vector) Scale(s float32) {
 	blas32.Scal(len(v), s, v.blasVec())
 }
 
+func (v vector) AddScaler(s float32) {
+	for i := range v {
+		v[i] += s
+	}
+}
+
 func (v vector) Dot(v1 Vector) float32 {
 	return blas32.Dot(len(v), v.blasVec(), v1.(vector).blasVec())
 }
@@ -77,6 +85,12 @@ func (v vector) Gemm(transA, transB bool, m, n, k int, alpha float32, a Vector, 
 	}
 	blas32.Implementation().Sgemm(tA, tB, m, n, k, alpha, a.(vector), lda, b.(vector),
 		ldb, beta, v, ldc)
+}
+
+func (v vector) Exp() {
+	for i, x := range v {
+		v[i] = float32(math.Exp(float64(x)))
+	}
 }
 
 func (v vector) blasVec() blas32.Vector {

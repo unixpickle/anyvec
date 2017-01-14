@@ -27,6 +27,9 @@ type Vector interface {
 	// Scale scales the vector by a constant.
 	Scale(s float32)
 
+	// AddScaler adds a scaler to every component.
+	AddScaler(s float32)
+
 	// Dot computes the dot product with another vector.
 	Dot(v Vector) float32
 
@@ -53,4 +56,7 @@ type Vector interface {
 	// Row-major order is used.
 	Gemm(transA, transB bool, m, n, k int, alpha float32, a Vector, lda int, b Vector,
 		ldb int, beta float32, ldc int)
+
+	// Exp exponentiates every entry of the vector in base e.
+	Exp()
 }

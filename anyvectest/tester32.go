@@ -20,12 +20,14 @@ func (t *Tester32) TestAll(test *testing.T) {
 	test.Run("SliceConversion", t.TestSliceConversion)
 	test.Run("Copy", t.TestCopy)
 	test.Run("Scale", t.TestScale)
+	test.Run("AddScaler", t.TestAddScaler)
 	test.Run("Dot", t.TestDot)
 	test.Run("Add", t.TestAdd)
 	test.Run("Sub", t.TestSub)
 	test.Run("Mul", t.TestMul)
 	test.Run("Div", t.TestDiv)
 	test.Run("Gemm", t.TestGemm)
+	test.Run("Exp", t.TestExp)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -119,6 +121,22 @@ func (t *Tester32) TestScale(test *testing.T) {
 	}
 }
 
+// TestAddScaler tests scaler addition.
+func (t *Tester32) TestAddScaler(test *testing.T) {
+	v := t.randomVec()
+	data1 := v.Data()
+	v.AddScaler(-0.5)
+	data2 := v.Data()
+	for i, x := range data1 {
+		y := data2[i]
+		if math.Abs(float64(x-(y+0.5))) > 1e-3 || math.IsNaN(float64(x)) ||
+			math.IsNaN(float64(y)) {
+			test.Errorf("value at index %d: %v went to %v", i, x, y)
+			return
+		}
+	}
+}
+
 // TestDot tests vector dot products.
 func (t *Tester32) TestDot(test *testing.T) {
 	v1 := t.randomVec()
@@ -139,7 +157,7 @@ func (t *Tester32) TestDot(test *testing.T) {
 
 // TestAdd tests vector addition.
 func (t *Tester32) TestAdd(test *testing.T) {
-	t.testOp(test, func(x, y float32) float32 {
+	t.testBinOp(test, func(x, y float32) float32 {
 		return x + y
 	}, func(v1, v2 anyvec32.Vector) {
 		v1.Add(v2)
@@ -148,7 +166,7 @@ func (t *Tester32) TestAdd(test *testing.T) {
 
 // TestSub tests vector subtraction.
 func (t *Tester32) TestSub(test *testing.T) {
-	t.testOp(test, func(x, y float32) float32 {
+	t.testBinOp(test, func(x, y float32) float32 {
 		return x - y
 	}, func(v1, v2 anyvec32.Vector) {
 		v1.Sub(v2)
@@ -157,7 +175,7 @@ func (t *Tester32) TestSub(test *testing.T) {
 
 // TestMul tests vector multiplication.
 func (t *Tester32) TestMul(test *testing.T) {
-	t.testOp(test, func(x, y float32) float32 {
+	t.testBinOp(test, func(x, y float32) float32 {
 		return x * y
 	}, func(v1, v2 anyvec32.Vector) {
 		v1.Mul(v2)
@@ -166,7 +184,7 @@ func (t *Tester32) TestMul(test *testing.T) {
 
 // TestDiv tests vector division.
 func (t *Tester32) TestDiv(test *testing.T) {
-	t.testOp(test, func(x, y float32) float32 {
+	t.testBinOp(test, func(x, y float32) float32 {
 		return x / y
 	}, func(v1, v2 anyvec32.Vector) {
 		v1.Div(v2)
@@ -211,8 +229,17 @@ func (t *Tester32) TestGemm(test *testing.T) {
 	assertClose(test, actual, expected)
 }
 
-// testOp tests a binary operation.
-func (t *Tester32) testOp(test *testing.T, op func(x, y float32) float32,
+// TestExp test exponentiation.
+func (t *Tester32) TestExp(test *testing.T) {
+	t.testOp(test, func(x float32) float32 {
+		return float32(math.Exp(float64(x)))
+	}, func(v anyvec32.Vector) {
+		v.Exp()
+	})
+}
+
+// testBinOp tests a binary operation.
+func (t *Tester32) testBinOp(test *testing.T, op func(x, y float32) float32,
 	doer func(v1, v2 anyvec32.Vector)) {
 	v1 := t.randomVec()
 	v2 := t.randomVec()
@@ -224,6 +251,18 @@ func (t *Tester32) testOp(test *testing.T, op func(x, y float32) float32,
 	doer(v1, v2)
 	assertClose(test, v1.Data(), expected)
 	assertClose(test, v2.Data(), lastV2)
+}
+
+// testOp tests a unary operation.
+func (t *Tester32) testOp(test *testing.T, op func(x float32) float32,
+	doer func(v anyvec32.Vector)) {
+	v := t.randomVec()
+	expected := make([]float32, v.Len())
+	for i, x := range v.Data() {
+		expected[i] = op(x)
+	}
+	doer(v)
+	assertClose(test, v.Data(), expected)
 }
 
 func (t *Tester32) randomVec() anyvec32.Vector {
