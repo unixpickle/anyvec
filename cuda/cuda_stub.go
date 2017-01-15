@@ -47,6 +47,10 @@ func (h *Handle) mul(n int, a, b unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (h *Handle) div(n int, a, b unsafe.Pointer) {
+	panic("unimplemented")
+}
+
 // A buffer is an on-device memory buffer.
 type buffer struct {
 	size int

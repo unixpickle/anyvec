@@ -6,31 +6,18 @@ package cuda
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 #include "cublas_v2.h"
-#include "nvrtc.h"
 
 const cublasOperation_t noTranspose = CUBLAS_OP_N;
 const cublasOperation_t transpose = CUBLAS_OP_T;
 const cublasSideMode_t sideMode = CUBLAS_SIDE_LEFT;
-const CUresult cuSuccess = CUDA_SUCCESS;
-const nvrtcResult nvrtcSuccess = NVRTC_SUCCESS;
-const char ** nullStrPtr = NULL;
-const CUjit_option * nullJitOptions = NULL;
-const void ** nullPtrPtr = NULL;
+CUresult cuSuccess = CUDA_SUCCESS;
 
-cublasHandle_t anyvec_cuda_new_handle() {
-    cublasHandle_t handle;
-    if (cublasCreate(&handle) != CUDA_SUCCESS) {
-        return NULL;
-    }
-    return handle;
+int anyvec_cuda_is_success(cublasStatus_t s) {
+	return s == CUBLAS_STATUS_SUCCESS;
 }
 
 int anyvec_cuda_is_null(void * ptr) {
     return ptr == NULL;
-}
-
-int anyvec_cuda_is_success(cublasStatus_t s) {
-	return s == CUBLAS_STATUS_SUCCESS;
 }
 
 void * anyvec_cuda_alloc(size_t size) {
@@ -40,19 +27,12 @@ void * anyvec_cuda_alloc(size_t size) {
 	}
 	return ptr;
 }
-
-CUresult anyvec_cuda_callkernel(CUfunction f, void * p1, void * p2, size_t n) {
-	void * args[] = {&p1, &p2, &n};
-	// TODO: look into these constants.
-	return cuLaunchKernel(f, 32, 1, 1, 128, 1, 1, 0, NULL, args, NULL);
-}
 */
 import "C"
 
 import (
 	"errors"
 	"runtime"
-	"sync"
 	"unsafe"
 )
 
@@ -325,252 +305,3 @@ func (b *buffer) memcpyErr(status C.cudaError_t) error {
 	}
 	return ErrMemoryCopy
 }
-
-var mainLoop *cudaLoop
-var mainLoopLock sync.RWMutex
-
-func createMainLoop() error {
-	mainLoopLock.Lock()
-	defer mainLoopLock.Unlock()
-	if mainLoop != nil {
-		return nil
-	}
-	var err error
-	mainLoop, err = newCudaLoop()
-	return err
-}
-
-func getMainLoop() *cudaLoop {
-	mainLoopLock.RLock()
-	res := mainLoop
-	mainLoopLock.RUnlock()
-	return res
-}
-
-// A cudaLoop runs functions in a dedicated CUDA thread.
-type cudaLoop struct {
-	ch chan<- *cudaLoopMsg
-}
-
-// newCudaLoop creates a new cudaLoop and all of the
-// resources associated with it.
-func newCudaLoop() (*cudaLoop, error) {
-	ch := make(chan *cudaLoopMsg, 1)
-	res := &cudaLoop{ch: ch}
-	resChan := make(chan error, 1)
-	go func() {
-		runtime.LockOSThread()
-		defer runtime.UnlockOSThread()
-
-		s, err := newCudaState()
-		resChan <- err
-		if err != nil {
-			return
-		}
-		defer s.destroy()
-		cudaLoopMain(ch, s)
-	}()
-	if err := <-resChan; err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-// Close ends the loop and destroys its resources.
-// This should only be called once.
-func (c *cudaLoop) Close() {
-	close(c.ch)
-}
-
-// Run evaluates the function on the CUDA thread and waits
-// for the function to complete.
-func (c *cudaLoop) Run(f func()) {
-	res := make(chan struct{}, 1)
-	c.ch <- &cudaLoopMsg{
-		doneChan: res,
-		f:        f,
-	}
-	<-res
-}
-
-// RunCUBLAS is like Run, but the function is given access
-// to a cuBLAS handle.
-func (c *cudaLoop) RunCUBLAS(f func(h C.cublasHandle_t)) {
-	res := make(chan struct{}, 1)
-	c.ch <- &cudaLoopMsg{
-		doneChan: res,
-		cublasF:  f,
-	}
-	<-res
-}
-
-type cudaLoopMsg struct {
-	doneChan chan<- struct{}
-	f        func()
-	cublasF  func(h C.cublasHandle_t)
-}
-
-type cudaState struct {
-	blas C.cublasHandle_t
-	ctx  C.CUcontext
-}
-
-func newCudaState() (*cudaState, error) {
-	C.cuInit(0)
-	var dev C.CUdevice
-	if C.cuDeviceGet((*C.CUdevice)(&dev), 0) != C.cuSuccess {
-		return nil, ErrGetDevice
-	}
-	var ctx C.CUcontext
-	if C.cuCtxCreate((*C.CUcontext)(&ctx), C.uint(0), dev) != C.cuSuccess {
-		return nil, ErrMakeContext
-	}
-
-	handle := C.anyvec_cuda_new_handle()
-	if C.anyvec_cuda_is_null(unsafe.Pointer(handle)) != C.int(0) {
-		C.cuCtxDestroy(ctx)
-		return nil, ErrMakeHandle
-	}
-
-	return &cudaState{
-		blas: handle,
-		ctx:  ctx,
-	}, nil
-}
-
-func (c *cudaState) destroy() {
-	C.cublasDestroy(c.blas)
-	C.cuCtxDestroy(c.ctx)
-}
-
-func cudaLoopMain(ch <-chan *cudaLoopMsg, s *cudaState) {
-	for msg := range ch {
-		if msg.f != nil {
-			msg.f()
-		} else {
-			msg.cublasF(s.blas)
-		}
-		close(msg.doneChan)
-	}
-}
-
-type mathKernels struct {
-	module  C.CUmodule
-	kernels map[string]C.CUfunction
-	prog    C.nvrtcProgram
-}
-
-func newMathKernels() (kernels *mathKernels, err error) {
-	code := C.CString(mathKernelsCode)
-	defer C.free(unsafe.Pointer(code))
-	fileName := C.CString("prog.cu")
-	defer C.free(unsafe.Pointer(fileName))
-
-	var prog C.nvrtcProgram
-	res := C.nvrtcCreateProgram(&prog, code, fileName, 0,
-		C.nullStrPtr, C.nullStrPtr)
-	if err := nvrtcError("nvrtcCreateProgram", res); err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if kernels == nil {
-			C.nvrtcDestroyProgram(&prog)
-		}
-	}()
-
-	for _, name := range mathKernelNames {
-		cName := C.CString(name)
-		res = C.nvrtcAddNameExpression(prog, cName)
-		C.free(unsafe.Pointer(cName))
-		if err := nvrtcError("nvrtcAddNameExpression", res); err != nil {
-			return nil, err
-		}
-	}
-	res = C.nvrtcCompileProgram(prog, 0, C.nullStrPtr)
-	if err := nvrtcError("nvrtcCompileProgram", res); err != nil {
-		return nil, err
-	}
-	var ptxSize C.size_t
-	res = C.nvrtcGetPTXSize(prog, &ptxSize)
-	if err := nvrtcError("nvrtcGetPTXSize", res); err != nil {
-		return nil, err
-	}
-	ptx := C.malloc(ptxSize)
-	defer C.free(ptx)
-	res = C.nvrtcGetPTX(prog, (*C.char)(ptx))
-	if err := nvrtcError("nvrtcGetPTX", res); err != nil {
-		return nil, err
-	}
-
-	var module C.CUmodule
-	cuRes := C.cuModuleLoadDataEx(&module, ptx, 0, C.nullJitOptions, C.nullPtrPtr)
-	if cuRes != C.cuSuccess {
-		return nil, errors.New("cuModuleLoadDataEx failed")
-	}
-	defer func() {
-		if kernels == nil {
-			C.cuModuleUnload(module)
-		}
-	}()
-
-	kernelMap := map[string]C.CUfunction{}
-	for _, nameStr := range mathKernelNames {
-		var name *C.char
-		origName := C.CString(nameStr)
-		defer C.free(unsafe.Pointer(origName))
-		res = C.nvrtcGetLoweredName(prog, origName, &name)
-		if err := nvrtcError("nvrtcGetLoweredName", res); err != nil {
-			return nil, err
-		}
-		var kernel C.CUfunction
-		cuRes := C.cuModuleGetFunction(&kernel, module, name)
-		if cuRes != C.cuSuccess {
-			return nil, errors.New("cuModuleGetFunction failed")
-		}
-		kernelMap[nameStr] = kernel
-	}
-
-	return &mathKernels{
-		module:  module,
-		kernels: kernelMap,
-		prog:    prog,
-	}, nil
-}
-
-func (m *mathKernels) Destroy() {
-	C.cuModuleUnload(m.module)
-	C.nvrtcDestroyProgram(&m.prog)
-}
-
-// Div32 performs element-wise division.
-func (m *mathKernels) Div32(num, denom unsafe.Pointer, n int) error {
-	k := m.kernels["divElements"]
-	res := C.anyvec_cuda_callkernel(k, num, denom, C.size_t(n))
-	if res != C.cuSuccess {
-		return errors.New("cuLaunchKernel failed")
-	}
-	res = C.cuCtxSynchronize()
-	if res != C.cuSuccess {
-		return errors.New("cuCtxSynchronize failed")
-	}
-	return nil
-}
-
-func nvrtcError(funcName string, status C.nvrtcResult) error {
-	if status != C.nvrtcSuccess {
-		return errors.New(funcName + " failed")
-	}
-	return nil
-}
-
-var mathKernelNames = []string{"divElements"}
-
-const mathKernelsCode string = `
-__global__ void divElements(float * x, float * y, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		x[tid] /= y[tid];
-	}
-}
-`
