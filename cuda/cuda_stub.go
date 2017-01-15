@@ -54,7 +54,7 @@ type buffer struct {
 }
 
 // newBuffer allocates a buffer.
-func newBuffer(size int) (*buffer, error) {
+func newBuffer(h *Handle, size int) (*buffer, error) {
 	return nil, errors.New("unimplemented")
 }
 
