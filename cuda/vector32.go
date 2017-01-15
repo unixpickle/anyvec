@@ -19,7 +19,7 @@ func NewCreator32(h *Handle) *Creator32 {
 
 // MakeVector creates a zero'd out anyvec32.Vector.
 func (c *Creator32) MakeVector(size int) anyvec32.Vector {
-	buf, err := newBuffer(size * 4)
+	buf, err := newBuffer(c.handle, size*4)
 	if err != nil {
 		panic(err)
 	}
@@ -35,7 +35,7 @@ func (c *Creator32) MakeVector(size int) anyvec32.Vector {
 // MakeVectorData creates an anyvec32.Vector with the
 // specified contents.
 func (c *Creator32) MakeVectorData(d []float32) anyvec32.Vector {
-	buf, err := newBuffer(len(d) * 4)
+	buf, err := newBuffer(c.handle, len(d)*4)
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +72,7 @@ func (v *vector32) SetData(d []float32) {
 }
 
 func (v *vector32) Copy() anyvec32.Vector {
-	newBuff, err := newBuffer(v.buffer.size)
+	newBuff, err := newBuffer(v.handle, v.buffer.size)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func (v *vector32) Scale(s float32) {
 }
 
 func (v *vector32) AddScaler(s float32) {
-	constVec, err := newBuffer(v.buffer.size)
+	constVec, err := newBuffer(v.handle, v.buffer.size)
 	if err != nil {
 		panic(err)
 	}
