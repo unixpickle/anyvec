@@ -77,6 +77,9 @@ func (t *Tester32) TestSliceConversion(test *testing.T) {
 	}
 
 	zeroVec := t.Creator.MakeVector(129)
+	if zeroVec.Len() != 129 {
+		test.Errorf("bad length: %d", zeroVec.Len())
+	}
 	for i, x := range zeroVec.Data() {
 		if x != 0 {
 			test.Errorf("should be 0 at index %d but got: %f", i, x)

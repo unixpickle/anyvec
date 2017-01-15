@@ -19,7 +19,7 @@ func NewCreator32(h *Handle) *Creator32 {
 
 // MakeVector creates a zero'd out anyvec32.Vector.
 func (c *Creator32) MakeVector(size int) anyvec32.Vector {
-	buf, err := newBuffer(size)
+	buf, err := newBuffer(size * 4)
 	if err != nil {
 		panic(err)
 	}
