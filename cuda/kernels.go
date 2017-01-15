@@ -131,6 +131,21 @@ func (m *mathKernels) Exp32(vec unsafe.Pointer, n int) error {
 	return m.call1("expElements", vec, n)
 }
 
+// Tanh32 performs element-wise hyperbolic tangent.
+func (m *mathKernels) Tanh32(vec unsafe.Pointer, n int) error {
+	return m.call1("tanhElements", vec, n)
+}
+
+// Sin32 performs element-wise sine.
+func (m *mathKernels) Sin32(vec unsafe.Pointer, n int) error {
+	return m.call1("sinElements", vec, n)
+}
+
+// ClipPos32 performs element-wise max(0, x).
+func (m *mathKernels) ClipPos32(vec unsafe.Pointer, n int) error {
+	return m.call1("clipPositive", vec, n)
+}
+
 func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
 	k := m.kernels[name]
 	res := C.anyvec_cuda_call1(k, v, C.size_t(n))
@@ -164,7 +179,8 @@ func nvrtcError(funcName string, status C.nvrtcResult) error {
 	return nil
 }
 
-var mathKernelNames = []string{"divElements", "expElements"}
+var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
+	"sinElements", "clipPositive"}
 
 const mathKernelsCode string = `
 __global__ void divElements(float * x, float * y, size_t n) {
@@ -178,6 +194,27 @@ __global__ void expElements(float * x, size_t n) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = expf(x[tid]);
+	}
+}
+
+__global__ void tanhElements(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		x[tid] = tanhf(x[tid]);
+	}
+}
+
+__global__ void sinElements(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		x[tid] = sinf(x[tid]);
+	}
+}
+
+__global__ void clipPositive(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		x[tid] = fmaxf(0, x[tid]);
 	}
 }
 `

@@ -17,6 +17,13 @@ type Tester32 struct {
 
 // TestAll runs every test.
 func (t *Tester32) TestAll(test *testing.T) {
+	t.TestRequired(test)
+	t.TestExtras(test)
+}
+
+// TestRequired runs tests for all of the required Vector
+// interface methods.
+func (t *Tester32) TestRequired(test *testing.T) {
 	test.Run("SliceConversion", t.TestSliceConversion)
 	test.Run("Copy", t.TestCopy)
 	test.Run("Scale", t.TestScale)
@@ -27,7 +34,15 @@ func (t *Tester32) TestAll(test *testing.T) {
 	test.Run("Mul", t.TestMul)
 	test.Run("Div", t.TestDiv)
 	test.Run("Gemm", t.TestGemm)
+}
+
+// TestExtras runs tests for all of the possible extra
+// methods the Vector may implement.
+func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("Exp", t.TestExp)
+	test.Run("Sin", t.TestSin)
+	test.Run("Tanh", t.TestTanh)
+	test.Run("ClipPos", t.TestClipPos)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -236,9 +251,28 @@ func (t *Tester32) TestGemm(test *testing.T) {
 func (t *Tester32) TestExp(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Exp(float64(x)))
-	}, func(v anyvec32.Vector) {
-		v.Exp()
-	})
+	}, anyvec32.Exp)
+}
+
+// TestSin test sine.
+func (t *Tester32) TestSin(test *testing.T) {
+	t.testOp(test, func(x float32) float32 {
+		return float32(math.Sin(float64(x)))
+	}, anyvec32.Sin)
+}
+
+// TestTanh test tanh.
+func (t *Tester32) TestTanh(test *testing.T) {
+	t.testOp(test, func(x float32) float32 {
+		return float32(math.Tanh(float64(x)))
+	}, anyvec32.Tanh)
+}
+
+// TestClipPos test positive clipping.
+func (t *Tester32) TestClipPos(test *testing.T) {
+	t.testOp(test, func(x float32) float32 {
+		return float32(math.Max(0, float64(x)))
+	}, anyvec32.ClipPos)
 }
 
 // testBinOp tests a binary operation.

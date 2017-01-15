@@ -132,6 +132,18 @@ func (v *vector32) Exp() {
 	v.handle.exp(v.Len(), v.buffer.ptr)
 }
 
+func (v *vector32) Tanh() {
+	v.handle.tanh(v.Len(), v.buffer.ptr)
+}
+
+func (v *vector32) Sin() {
+	v.handle.sin(v.Len(), v.buffer.ptr)
+}
+
+func (v *vector32) ClipPos() {
+	v.handle.clipPos(v.Len(), v.buffer.ptr)
+}
+
 func (v *vector32) assertMatch(v1 anyvec32.Vector) {
 	if v.Len() != v1.Len() {
 		panic("sizes do no match")

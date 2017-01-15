@@ -118,24 +118,36 @@ func (h *Handle) mul(n int, a, b unsafe.Pointer) {
 }
 
 func (h *Handle) div(n int, a, b unsafe.Pointer) {
-	h.runWithKernels(func() {
-		err := h.kernels.Div32(a, b, n)
-		if err != nil {
-			panic(err)
-		}
+	h.runWithKernels(func() error {
+		return h.kernels.Div32(a, b, n)
 	})
 }
 
 func (h *Handle) exp(n int, a unsafe.Pointer) {
-	h.runWithKernels(func() {
-		err := h.kernels.Exp32(a, n)
-		if err != nil {
-			panic(err)
-		}
+	h.runWithKernels(func() error {
+		return h.kernels.Exp32(a, n)
 	})
 }
 
-func (h *Handle) runWithKernels(f func()) {
+func (h *Handle) tanh(n int, a unsafe.Pointer) {
+	h.runWithKernels(func() error {
+		return h.kernels.Tanh32(a, n)
+	})
+}
+
+func (h *Handle) sin(n int, a unsafe.Pointer) {
+	h.runWithKernels(func() error {
+		return h.kernels.Sin32(a, n)
+	})
+}
+
+func (h *Handle) clipPos(n int, a unsafe.Pointer) {
+	h.runWithKernels(func() error {
+		return h.kernels.ClipPos32(a, n)
+	})
+}
+
+func (h *Handle) runWithKernels(f func() error) {
 	h.loop.Run(func() {
 		var err error
 		if h.kernels == nil {
@@ -144,7 +156,10 @@ func (h *Handle) runWithKernels(f func()) {
 				panic(err)
 			}
 		}
-		f()
+		err = f()
+		if err != nil {
+			panic(err)
+		}
 	})
 }
 

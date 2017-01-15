@@ -56,7 +56,4 @@ type Vector interface {
 	// Row-major order is used.
 	Gemm(transA, transB bool, m, n, k int, alpha float32, a Vector, lda int, b Vector,
 		ldb int, beta float32, ldc int)
-
-	// Exp exponentiates every entry of the vector in base e.
-	Exp()
 }

@@ -124,8 +124,42 @@ func BenchmarkExp(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// Prevent numbers from exploding or changing too much.
-		v.Exp()
+		anyvec32.Exp(v)
 		v.Scale(-1)
+	}
+}
+
+func BenchmarkTanh(b *testing.B) {
+	h, err := NewHandle()
+	if err != nil {
+		b.Fatal(err)
+	}
+	c := NewCreator32(h)
+	vec := make([]float32, 1024)
+	for i := range vec {
+		vec[i] = float32(rand.NormFloat64())
+	}
+	v := c.MakeVectorData(vec)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		anyvec32.Tanh(v)
+	}
+}
+
+func BenchmarkClipPos(b *testing.B) {
+	h, err := NewHandle()
+	if err != nil {
+		b.Fatal(err)
+	}
+	c := NewCreator32(h)
+	vec := make([]float32, 1024)
+	for i := range vec {
+		vec[i] = float32(rand.NormFloat64())
+	}
+	v := c.MakeVectorData(vec)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		anyvec32.ClipPos(v)
 	}
 }
 
