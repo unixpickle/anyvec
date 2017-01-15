@@ -78,6 +78,11 @@ func newBuffer(h *Handle, size int) (*buffer, error) {
 	return nil, errors.New("unimplemented")
 }
 
+// newBufferConcat concatenates buffers.
+func newBufferConcat(h *Handle, bufs []*buffer) (*buffer, error) {
+	return nil, errors.New("unimplemented")
+}
+
 // Len returns the buffer's length in bytes.
 func (b *buffer) Len() int {
 	panic("unimplemented")
