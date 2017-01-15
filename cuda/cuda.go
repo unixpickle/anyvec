@@ -9,6 +9,7 @@ package cuda
 
 const cublasOperation_t noTranspose = CUBLAS_OP_N;
 const cublasOperation_t transpose = CUBLAS_OP_T;
+const cublasSideMode_t sideMode = CUBLAS_SIDE_LEFT;
 
 cublasHandle_t anyvec_cuda_new_handle() {
     cublasHandle_t handle;
@@ -101,6 +102,11 @@ func (h *Handle) sgemm(transA, transB bool, m, n, k int, alpha float32, a unsafe
 		(*C.float)(&alphaC), (*C.float)(b), C.int(ldb),
 		(*C.float)(a), C.int(lda), (*C.float)(&betaC),
 		(*C.float)(c), C.int(ldc)))
+}
+
+func (h *Handle) mul(n int, a, b unsafe.Pointer) {
+	h.panicOnErr(C.cublasSdgmm(h.handlePtr, C.sideMode, C.int(n), 1,
+		(*C.float)(a), C.int(n), (*C.float)(b), 1, (*C.float)(a), C.int(n)))
 }
 
 func (h *Handle) panicOnErr(s C.cublasStatus_t) {

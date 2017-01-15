@@ -117,13 +117,7 @@ func (v *vector32) Sub(v1 anyvec32.Vector) {
 
 func (v *vector32) Mul(v1 anyvec32.Vector) {
 	v.assertMatch(v1)
-	// TODO: use cublasSdgmm for this.
-	d1 := v.Data()
-	d2 := v1.Data()
-	for i, x := range d2 {
-		d1[i] *= x
-	}
-	v.SetData(d1)
+	v.handle.mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 }
 
 func (v *vector32) Div(v1 anyvec32.Vector) {
