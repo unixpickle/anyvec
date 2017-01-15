@@ -2,7 +2,7 @@
 
 **anyvec** lets you use any implementation of vector arithmetic that you want. You might use it for GPU acceleration, distributed matrix multiplication, or any number of things that nobody's thought of yet.
 
-# Usage
+# Installation
 
 Download the code as follows:
 
@@ -10,7 +10,40 @@ Download the code as follows:
 $ go get -u -tags nocuda github.com/unixpickle/anyvec/...
 ```
 
-See [gocublas](https://github.com/unixpickle/gocublas#usage) for details on using the CUDA sub-package.
+To use the CUDA package, you have to tell the compiler about your CUDA installation. On OS X, this might look like:
+
+```
+$ export CUDA_PATH="/Developer/NVIDIA/CUDA-8.0"
+$ export DYLD_LIBRARY_PATH="$CUDA_PATH/lib":$DYLD_LIBRARY_PATH
+$ export CPATH="$CUDA_PATH/include/"
+$ export CGO_LDFLAGS="/usr/local/cuda/lib/libcuda.dylib $CUDA_PATH/lib/libcudart.dylib $CUDA_PATH/lib/libcublas.dylib $CUDA_PATH/lib/libnvrtc.dylib"
+```
+
+On Linux, the environment setup might be more like this:
+
+```
+$ export CUDA_PATH=/usr/local/cuda
+$ export CPATH="$CUDA_PATH/include/"
+$ export CGO_LDFLAGS="$CUDA_PATH/lib64/libcublas.so $CUDA_PATH/lib64/libcudart.so $CUDA_PATH/lib64/stubs/libcuda.so /usr/local/cuda/lib64/libnvrtc.so"
+$ export LD_LIBRARY_PATH=$CUDA_PATH/lib64/
+```
+
+Once you have this setup, you can enable the CUDA library in `anyvec32` as follows:
+
+```go
+import (
+	"github.com/unixpickle/anyvec/anyvec32"
+	"github.com/unixpickle/anyvec/cuda"
+)
+
+func main() {
+	handle, err := cuda.NewHandle()
+	if err != nil {
+		panic(err)
+	}
+	anyvec32.Use(cuda.NewCreator32(handle))
+}
+```
 
 # Why not BLAS?
 
