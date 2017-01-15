@@ -48,6 +48,10 @@ func (v vector) Copy() Vector {
 	return append(vector{}, v...)
 }
 
+func (v vector) Slice(start, end int) Vector {
+	return append(vector{}, v[start:end]...)
+}
+
 func (v vector) Scale(s float32) {
 	blas32.Scal(len(v), s, v.blasVec())
 }

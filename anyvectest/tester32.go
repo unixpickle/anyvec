@@ -26,6 +26,7 @@ func (t *Tester32) TestAll(test *testing.T) {
 func (t *Tester32) TestRequired(test *testing.T) {
 	test.Run("SliceConversion", t.TestSliceConversion)
 	test.Run("Copy", t.TestCopy)
+	test.Run("Slice", t.TestSlice)
 	test.Run("Concat", t.TestConcat)
 	test.Run("Scale", t.TestScale)
 	test.Run("AddScaler", t.TestAddScaler)
@@ -122,6 +123,27 @@ func (t *Tester32) TestCopy(test *testing.T) {
 	if math.Abs(float64(vec1.Data()[37]-(vec2.Data()[37]+2))) > 1e-3 {
 		test.Error("values inconsistent after Copy()+SetData()")
 	}
+}
+
+// TestSlice tests vector slicing.
+func (t *Tester32) TestSlice(test *testing.T) {
+	origVec := make([]float32, 513)
+	for i := range origVec {
+		origVec[i] = float32(rand.NormFloat64())
+	}
+
+	vec1 := t.Creator.MakeVectorData(origVec)
+	vec2 := vec1.Slice(5, 20)
+
+	actual := vec2.Data()
+	expected := origVec[5:20]
+
+	assertClose(test, actual, expected)
+
+	origVec[7] -= 10
+	vec1.SetData(origVec)
+
+	assertClose(test, vec2.Data(), actual)
 }
 
 // TestConcat tests vector concatenation.

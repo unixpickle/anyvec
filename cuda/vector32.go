@@ -1,6 +1,11 @@
 package cuda
 
-import "github.com/unixpickle/anyvec/anyvec32"
+import (
+	"runtime"
+	"unsafe"
+
+	"github.com/unixpickle/anyvec/anyvec32"
+)
 
 // A Creator32 implements anyvec32.Creator.
 type Creator32 struct {
@@ -94,6 +99,31 @@ func (v *vector32) Copy() anyvec32.Vector {
 	return &vector32{
 		handle: v.handle,
 		buffer: newBuff,
+	}
+}
+
+func (v *vector32) Slice(start, end int) anyvec32.Vector {
+	if start < 0 || end < 0 {
+		panic("indices must be non-negative")
+	}
+	if end < start {
+		panic("invalid range: end < start")
+	}
+	if end > v.Len() {
+		panic("end out of bounds")
+	}
+	buf, err := newBuffer(v.handle, (end-start)*4)
+	if err != nil {
+		panic(err)
+	}
+	buf.Set(&buffer{
+		size: (end - start) * 4,
+		ptr:  unsafe.Pointer(uintptr(v.buffer.ptr) + uintptr(4*start)),
+	})
+	runtime.KeepAlive(v.buffer)
+	return &vector32{
+		handle: v.handle,
+		buffer: buf,
 	}
 }
 

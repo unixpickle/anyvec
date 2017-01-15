@@ -24,6 +24,18 @@ type Vector interface {
 	// Copy creates a copy of the vector.
 	Copy() Vector
 
+	// Slice creates a copy of a subset of the vector.
+	//
+	// The start argument specifies the first element.
+	// The end argument specifies the element after the last
+	// element, so that (end-start) is the length of the
+	// resulting vector.
+	// The indices must be within the bounds of the vector.
+	//
+	// The result should contain its own copy of the data,
+	// unlike how slices work in Go.
+	Slice(start, end int) Vector
+
 	// Scale scales the vector by a constant.
 	Scale(s float32)
 
