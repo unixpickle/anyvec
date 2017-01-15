@@ -220,15 +220,20 @@ func newBufferConcat(h *Handle, bufs []*buffer) (*buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	var idx uintptr
-	for _, x := range bufs {
-		dest := unsafe.Pointer(uintptr(buf.ptr) + idx)
-		idx += uintptr(x.size)
-		err := buf.memcpyErr(C.cudaMemcpy(dest, x.ptr, C.size_t(x.size),
-			C.cudaMemcpyDeviceToDevice))
-		if err != nil {
-			return nil, err
+	h.loop.Run(func() {
+		var idx uintptr
+		for _, x := range bufs {
+			dest := unsafe.Pointer(uintptr(buf.ptr) + idx)
+			idx += uintptr(x.size)
+			err = buf.memcpyErr(C.cudaMemcpy(dest, x.ptr, C.size_t(x.size),
+				C.cudaMemcpyDeviceToDevice))
+			if err != nil {
+				return
+			}
 		}
+	})
+	if err != nil {
+		return nil, err
 	}
 	return buf, nil
 }
