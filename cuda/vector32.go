@@ -122,13 +122,7 @@ func (v *vector32) Mul(v1 anyvec32.Vector) {
 
 func (v *vector32) Div(v1 anyvec32.Vector) {
 	v.assertMatch(v1)
-	// TODO: use custom kernel for this.
-	d1 := v.Data()
-	d2 := v1.Data()
-	for i, x := range d2 {
-		d1[i] /= x
-	}
-	v.SetData(d1)
+	v.handle.div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 }
 
 func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha float32, a anyvec32.Vector, lda int,
