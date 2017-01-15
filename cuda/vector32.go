@@ -1,10 +1,6 @@
 package cuda
 
-import (
-	"math"
-
-	"github.com/unixpickle/anyvec/anyvec32"
-)
+import "github.com/unixpickle/anyvec/anyvec32"
 
 // A Creator32 implements anyvec32.Creator.
 type Creator32 struct {
@@ -133,12 +129,7 @@ func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha float32, a anyve
 }
 
 func (v *vector32) Exp() {
-	// TODO: use custom kernel for this.
-	d := v.Data()
-	for i, x := range d {
-		d[i] = float32(math.Exp(float64(x)))
-	}
-	v.SetData(d)
+	v.handle.exp(v.Len(), v.buffer.ptr)
 }
 
 func (v *vector32) assertMatch(v1 anyvec32.Vector) {

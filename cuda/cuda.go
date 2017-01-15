@@ -118,6 +118,24 @@ func (h *Handle) mul(n int, a, b unsafe.Pointer) {
 }
 
 func (h *Handle) div(n int, a, b unsafe.Pointer) {
+	h.runWithKernels(func() {
+		err := h.kernels.Div32(a, b, n)
+		if err != nil {
+			panic(err)
+		}
+	})
+}
+
+func (h *Handle) exp(n int, a unsafe.Pointer) {
+	h.runWithKernels(func() {
+		err := h.kernels.Exp32(a, n)
+		if err != nil {
+			panic(err)
+		}
+	})
+}
+
+func (h *Handle) runWithKernels(f func()) {
 	h.loop.Run(func() {
 		var err error
 		if h.kernels == nil {
@@ -126,10 +144,7 @@ func (h *Handle) div(n int, a, b unsafe.Pointer) {
 				panic(err)
 			}
 		}
-		err = h.kernels.Div32(a, b, n)
-		if err != nil {
-			panic(err)
-		}
+		f()
 	})
 }
 

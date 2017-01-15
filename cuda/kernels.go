@@ -13,8 +13,14 @@ const char ** nullStrPtr = NULL;
 const CUjit_option * nullJitOptions = NULL;
 const void ** nullPtrPtr = NULL;
 
-CUresult anyvec_cuda_callkernel(CUfunction f, void * p1, void * p2, size_t n) {
+CUresult anyvec_cuda_call2(CUfunction f, void * p1, void * p2, size_t n) {
 	void * args[] = {&p1, &p2, &n};
+	// TODO: look into these constants.
+	return cuLaunchKernel(f, 32, 1, 1, 128, 1, 1, 0, NULL, args, NULL);
+}
+
+CUresult anyvec_cuda_call1(CUfunction f, void * p1, size_t n) {
+	void * args[] = {&p1, &n};
 	// TODO: look into these constants.
 	return cuLaunchKernel(f, 32, 1, 1, 128, 1, 1, 0, NULL, args, NULL);
 }
@@ -117,8 +123,30 @@ func (m *mathKernels) Destroy() {
 
 // Div32 performs element-wise division.
 func (m *mathKernels) Div32(num, denom unsafe.Pointer, n int) error {
-	k := m.kernels["divElements"]
-	res := C.anyvec_cuda_callkernel(k, num, denom, C.size_t(n))
+	return m.call2("divElements", num, denom, n)
+}
+
+// Exp32 performs element-wise exponentiation.
+func (m *mathKernels) Exp32(vec unsafe.Pointer, n int) error {
+	return m.call1("expElements", vec, n)
+}
+
+func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
+	k := m.kernels[name]
+	res := C.anyvec_cuda_call1(k, v, C.size_t(n))
+	if res != C.cuSuccess {
+		return errors.New("cuLaunchKernel failed")
+	}
+	res = C.cuCtxSynchronize()
+	if res != C.cuSuccess {
+		return errors.New("cuCtxSynchronize failed")
+	}
+	return nil
+}
+
+func (m *mathKernels) call2(name string, v1, v2 unsafe.Pointer, n int) error {
+	k := m.kernels[name]
+	res := C.anyvec_cuda_call2(k, v1, v2, C.size_t(n))
 	if res != C.cuSuccess {
 		return errors.New("cuLaunchKernel failed")
 	}
@@ -136,13 +164,20 @@ func nvrtcError(funcName string, status C.nvrtcResult) error {
 	return nil
 }
 
-var mathKernelNames = []string{"divElements"}
+var mathKernelNames = []string{"divElements", "expElements"}
 
 const mathKernelsCode string = `
 __global__ void divElements(float * x, float * y, size_t n) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] /= y[tid];
+	}
+}
+
+__global__ void expElements(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		x[tid] = expf(x[tid]);
 	}
 }
 `
