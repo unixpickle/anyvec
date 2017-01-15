@@ -21,6 +21,15 @@ func (d DefaultCreator) MakeVectorData(data []float32) Vector {
 	return append(vector{}, data...)
 }
 
+// Concat concatenates vectors.
+func (d DefaultCreator) Concat(vs ...Vector) Vector {
+	var res vector
+	for _, v := range vs {
+		res = append(res, v.(vector)...)
+	}
+	return res
+}
+
 type vector []float32
 
 func (v vector) Len() int {

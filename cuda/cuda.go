@@ -210,6 +210,29 @@ func newBuffer(h *Handle, size int) (*buffer, error) {
 	return res, nil
 }
 
+// newBufferConcat concatenates buffers.
+func newBufferConcat(h *Handle, bufs []*buffer) (*buffer, error) {
+	var size int
+	for _, x := range bufs {
+		size += x.size
+	}
+	buf, err := newBuffer(h, size)
+	if err != nil {
+		return nil, err
+	}
+	var idx uintptr
+	for _, x := range bufs {
+		dest := unsafe.Pointer(uintptr(buf.ptr) + idx)
+		idx += uintptr(x.size)
+		err := buf.memcpyErr(C.cudaMemcpy(dest, x.ptr, C.size_t(x.size),
+			C.cudaMemcpyDeviceToDevice))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buf, nil
+}
+
 // Len returns the buffer's length in bytes.
 func (b *buffer) Len() int {
 	return b.size

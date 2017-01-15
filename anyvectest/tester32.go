@@ -26,6 +26,7 @@ func (t *Tester32) TestAll(test *testing.T) {
 func (t *Tester32) TestRequired(test *testing.T) {
 	test.Run("SliceConversion", t.TestSliceConversion)
 	test.Run("Copy", t.TestCopy)
+	test.Run("Concat", t.TestConcat)
 	test.Run("Scale", t.TestScale)
 	test.Run("AddScaler", t.TestAddScaler)
 	test.Run("Dot", t.TestDot)
@@ -121,6 +122,38 @@ func (t *Tester32) TestCopy(test *testing.T) {
 	if math.Abs(float64(vec1.Data()[37]-(vec2.Data()[37]+2))) > 1e-3 {
 		test.Error("values inconsistent after Copy()+SetData()")
 	}
+}
+
+// TestConcat tests vector concatenation.
+func (t *Tester32) TestConcat(test *testing.T) {
+	data1 := make([]float32, 513)
+	for i := range data1 {
+		data1[i] = float32(rand.NormFloat64())
+	}
+	data2 := make([]float32, 13)
+	for i := range data2 {
+		data2[i] = float32(rand.NormFloat64())
+	}
+	data3 := make([]float32, 54)
+	for i := range data2 {
+		data2[i] = float32(rand.NormFloat64())
+	}
+
+	vec1 := t.Creator.MakeVectorData(data1)
+	vec2 := t.Creator.MakeVectorData(data2)
+	vec3 := t.Creator.MakeVectorData(data3)
+
+	actual := t.Creator.Concat(vec1, vec2, vec3)
+	expected := append(append(append([]float32{}, data1...), data2...), data3...)
+
+	assertClose(test, actual.Data(), expected)
+	old := actual.Data()
+	for i, x := range data1 {
+		data1[i] = x - 1
+	}
+	assertClose(test, old, actual.Data())
+	vec1.SetData(data1)
+	assertClose(test, old, actual.Data())
 }
 
 // TestScale tests vector scaling.
@@ -315,6 +348,10 @@ func (t *Tester32) randomVecLen(l int) anyvec32.Vector {
 }
 
 func assertClose(t *testing.T, actual, expected []float32) {
+	if len(actual) != len(expected) {
+		t.Errorf("length mismatch")
+		return
+	}
 	for i, x := range expected {
 		y := actual[i]
 		if math.Abs(float64(x-y)) > 1e-3 {

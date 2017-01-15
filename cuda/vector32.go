@@ -44,6 +44,22 @@ func (c *Creator32) MakeVectorData(d []float32) anyvec32.Vector {
 	}
 }
 
+// Concat concatenates vectors.
+func (c *Creator32) Concat(v ...anyvec32.Vector) anyvec32.Vector {
+	bufs := make([]*buffer, len(v))
+	for i, x := range v {
+		bufs[i] = x.(*vector32).buffer
+	}
+	buf, err := newBufferConcat(c.handle, bufs)
+	if err != nil {
+		panic(err)
+	}
+	return &vector32{
+		handle: c.handle,
+		buffer: buf,
+	}
+}
+
 type vector32 struct {
 	handle *Handle
 	buffer *buffer
