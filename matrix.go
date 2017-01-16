@@ -1,4 +1,4 @@
-package anyvec32
+package anyvec
 
 // Matrix is a helper for performing matrix operations.
 type Matrix struct {
@@ -10,7 +10,7 @@ type Matrix struct {
 // Product sets m = alpha*a*b + beta*m.
 // If transA is set, then a is transposed.
 // If transB is set, then b is transposed.
-func (m *Matrix) Product(transA, transB bool, alpha float32, a, b *Matrix, beta float32) {
+func (m *Matrix) Product(transA, transB bool, alpha Numeric, a, b *Matrix, beta Numeric) {
 	x, n, k := a.Rows, m.Cols, a.Cols
 	if transA {
 		x, k = k, x

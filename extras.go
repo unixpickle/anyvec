@@ -1,6 +1,9 @@
-package anyvec32
+package anyvec
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 // A Tanher can compute its own hyperbolic tangent.
 type Tanher interface {
@@ -10,7 +13,8 @@ type Tanher interface {
 // Tanh computes the in-place hyperbolic tangent of the
 // vector.
 // If the vector does not implement Tanher, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 func Tanh(v Vector) {
 	if t, ok := v.(Tanher); ok {
 		t.Tanh()
@@ -72,8 +76,17 @@ func Exp(v Vector) {
 
 func applyUnitary(v Vector, f func(float64) float64) {
 	data := v.Data()
-	for i, x := range data {
-		data[i] = float32(f(float64(x)))
+	switch data := data.(type) {
+	case []float32:
+		for i, x := range data {
+			data[i] = float32(f(float64(x)))
+		}
+	case []float64:
+		for i, x := range data {
+			data[i] = f(x)
+		}
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", data))
 	}
 	v.SetData(data)
 }

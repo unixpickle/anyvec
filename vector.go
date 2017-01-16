@@ -1,7 +1,14 @@
-package anyvec32
+package anyvec
 
-// A Vector is the main primitive for manipulating 32-bit
-// floating-point values.
+// A Numeric is some numerical type, such as a float32 or
+// a float64.
+type Numeric interface{}
+
+// A NumericList is a slice of numerical values, such as a
+// []float32 or a []float64.
+type NumericList interface{}
+
+// A Vector is the main primitive for storing values.
 //
 // Vectors are only thread-safe for reading.
 // Any time a vector is being modified, it should not be
@@ -10,16 +17,16 @@ package anyvec32
 // A Vector can only be used with other Vector instances
 // created by the same Creator.
 type Vector interface {
-	// Len returns the size of the vector.
+	// Len returns the number of vector components.
 	Len() int
 
 	// Data returns a copy of the vector's contents.
-	Data() []float32
+	Data() NumericList
 
 	// SetData copies the values from v into the receiver.
 	//
 	// It must be the case that len(v) <= receiver.Len().
-	SetData(v []float32)
+	SetData(v NumericList)
 
 	// Copy creates a copy of the vector.
 	Copy() Vector
@@ -37,13 +44,13 @@ type Vector interface {
 	Slice(start, end int) Vector
 
 	// Scale scales the vector by a constant.
-	Scale(s float32)
+	Scale(s Numeric)
 
 	// AddScaler adds a scaler to every component.
-	AddScaler(s float32)
+	AddScaler(s Numeric)
 
 	// Dot computes the dot product with another vector.
-	Dot(v Vector) float32
+	Dot(v Vector) Numeric
 
 	// Add adds another vector to this vector.
 	Add(v Vector)
@@ -66,6 +73,6 @@ type Vector interface {
 	// the output matrix c is the receiver.
 	//
 	// Row-major order is used.
-	Gemm(transA, transB bool, m, n, k int, alpha float32, a Vector, lda int, b Vector,
-		ldb int, beta float32, ldc int)
+	Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int, b Vector,
+		ldb int, beta Numeric, ldc int)
 }

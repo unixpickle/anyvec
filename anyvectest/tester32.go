@@ -7,12 +7,13 @@ import (
 
 	"github.com/gonum/blas"
 	"github.com/gonum/blas/blas32"
-	"github.com/unixpickle/anyvec/anyvec32"
+	"github.com/unixpickle/anyvec"
 )
 
-// Tester32 tests an anyvec32.Creator.
+// Tester32 tests an anyvec.Creator which uses float32
+// numerics.
 type Tester32 struct {
-	Creator anyvec32.Creator
+	Creator anyvec.Creator
 }
 
 // TestAll runs every test.
@@ -58,16 +59,16 @@ func (t *Tester32) TestSliceConversion(test *testing.T) {
 	if inVec.Len() != len(origVec) {
 		test.Errorf("bad length: %d (expected %d)", inVec.Len(), len(origVec))
 	}
-	if len(inVec.Data()) != len(origVec) {
+	if len(inVec.Data().([]float32)) != len(origVec) {
 		test.Errorf("bad len(Data()): %d (expected %d)", inVec.Len(), len(origVec))
 	}
 	origVec[0]++
-	outData := inVec.Data()
+	outData := inVec.Data().([]float32)
 	outData[0]--
 	if math.Abs(float64(origVec[0]-(outData[0]+2))) > 1e-3 {
 		test.Error("invalid value after assignment")
 	}
-	if math.Abs(float64(origVec[0]-(inVec.Data()[0]+1))) > 1e-3 {
+	if math.Abs(float64(origVec[0]-(inVec.Data().([]float32)[0]+1))) > 1e-3 {
 		test.Error("invalid value after assignment")
 	}
 
@@ -76,18 +77,18 @@ func (t *Tester32) TestSliceConversion(test *testing.T) {
 	if inVec.Len() != len(origVec) {
 		test.Errorf("bad length: %d (expected %d)", inVec.Len(), len(origVec))
 	}
-	if len(inVec.Data()) != len(origVec) {
+	if len(inVec.Data().([]float32)) != len(origVec) {
 		test.Errorf("bad len(Data()): %d (expected %d)", inVec.Len(), len(origVec))
 	}
 
 	if math.Abs(float64(origVec[0]-(outData[0]+2))) > 1e-3 {
 		test.Error("invalid value after assignment")
 	}
-	if math.Abs(float64(inVec.Data()[0]-(outData[0]+2))) > 1e-3 {
+	if math.Abs(float64(inVec.Data().([]float32)[0]-(outData[0]+2))) > 1e-3 {
 		test.Error("invalid value after assignment")
 	}
 	for i := 1; i < len(origVec); i++ {
-		if math.Abs(float64(origVec[i]-inVec.Data()[i])) > 1e-3 {
+		if math.Abs(float64(origVec[i]-inVec.Data().([]float32)[i])) > 1e-3 {
 			test.Errorf("bad value at index %d", i)
 			break
 		}
@@ -97,7 +98,7 @@ func (t *Tester32) TestSliceConversion(test *testing.T) {
 	if zeroVec.Len() != 129 {
 		test.Errorf("bad length: %d", zeroVec.Len())
 	}
-	for i, x := range zeroVec.Data() {
+	for i, x := range zeroVec.Data().([]float32) {
 		if x != 0 {
 			test.Errorf("should be 0 at index %d but got: %f", i, x)
 			break
@@ -120,7 +121,7 @@ func (t *Tester32) TestCopy(test *testing.T) {
 	origVec[37] -= 2
 	vec2.SetData(origVec)
 
-	if math.Abs(float64(vec1.Data()[37]-(vec2.Data()[37]+2))) > 1e-3 {
+	if math.Abs(float64(vec1.Data().([]float32)[37]-(vec2.Data().([]float32)[37]+2))) > 1e-3 {
 		test.Error("values inconsistent after Copy()+SetData()")
 	}
 }
@@ -135,7 +136,7 @@ func (t *Tester32) TestSlice(test *testing.T) {
 	vec1 := t.Creator.MakeVectorData(origVec)
 	vec2 := vec1.Slice(5, 20)
 
-	actual := vec2.Data()
+	actual := vec2.Data().([]float32)
 	expected := origVec[5:20]
 
 	assertClose(test, actual, expected)
@@ -143,7 +144,7 @@ func (t *Tester32) TestSlice(test *testing.T) {
 	origVec[7] -= 10
 	vec1.SetData(origVec)
 
-	assertClose(test, vec2.Data(), actual)
+	assertClose(test, vec2.Data().([]float32), actual)
 }
 
 // TestConcat tests vector concatenation.
@@ -168,22 +169,22 @@ func (t *Tester32) TestConcat(test *testing.T) {
 	actual := t.Creator.Concat(vec1, vec2, vec3)
 	expected := append(append(append([]float32{}, data1...), data2...), data3...)
 
-	assertClose(test, actual.Data(), expected)
-	old := actual.Data()
+	assertClose(test, actual.Data().([]float32), expected)
+	old := actual.Data().([]float32)
 	for i, x := range data1 {
 		data1[i] = x - 1
 	}
-	assertClose(test, old, actual.Data())
+	assertClose(test, old, actual.Data().([]float32))
 	vec1.SetData(data1)
-	assertClose(test, old, actual.Data())
+	assertClose(test, old, actual.Data().([]float32))
 }
 
 // TestScale tests vector scaling.
 func (t *Tester32) TestScale(test *testing.T) {
 	v := t.randomVec()
-	data1 := v.Data()
-	v.Scale(-0.5)
-	data2 := v.Data()
+	data1 := v.Data().([]float32)
+	v.Scale(float32(-0.5))
+	data2 := v.Data().([]float32)
 	for i, x := range data1 {
 		y := data2[i]
 		if math.Abs(float64(x+2*y)) > 1e-3 || math.IsNaN(float64(x)) ||
@@ -197,9 +198,9 @@ func (t *Tester32) TestScale(test *testing.T) {
 // TestAddScaler tests scaler addition.
 func (t *Tester32) TestAddScaler(test *testing.T) {
 	v := t.randomVec()
-	data1 := v.Data()
-	v.AddScaler(-0.5)
-	data2 := v.Data()
+	data1 := v.Data().([]float32)
+	v.AddScaler(float32(-0.5))
+	data2 := v.Data().([]float32)
 	for i, x := range data1 {
 		y := data2[i]
 		if math.Abs(float64(x-(y+0.5))) > 1e-3 || math.IsNaN(float64(x)) ||
@@ -215,11 +216,11 @@ func (t *Tester32) TestDot(test *testing.T) {
 	v1 := t.randomVec()
 	v2 := t.randomVec()
 	var expected float32
-	for i, x := range v1.Data() {
-		expected += x * v2.Data()[i]
+	for i, x := range v1.Data().([]float32) {
+		expected += x * v2.Data().([]float32)[i]
 	}
-	actual1 := v1.Dot(v2)
-	actual2 := v2.Dot(v1)
+	actual1 := v1.Dot(v2).(float32)
+	actual2 := v2.Dot(v1).(float32)
 	if math.Abs(float64(actual1-expected)) > 1e-3 {
 		test.Errorf("expected %v but got %v", expected, actual1)
 	}
@@ -232,7 +233,7 @@ func (t *Tester32) TestDot(test *testing.T) {
 func (t *Tester32) TestAdd(test *testing.T) {
 	t.testBinOp(test, func(x, y float32) float32 {
 		return x + y
-	}, func(v1, v2 anyvec32.Vector) {
+	}, func(v1, v2 anyvec.Vector) {
 		v1.Add(v2)
 	})
 }
@@ -241,7 +242,7 @@ func (t *Tester32) TestAdd(test *testing.T) {
 func (t *Tester32) TestSub(test *testing.T) {
 	t.testBinOp(test, func(x, y float32) float32 {
 		return x - y
-	}, func(v1, v2 anyvec32.Vector) {
+	}, func(v1, v2 anyvec.Vector) {
 		v1.Sub(v2)
 	})
 }
@@ -250,7 +251,7 @@ func (t *Tester32) TestSub(test *testing.T) {
 func (t *Tester32) TestMul(test *testing.T) {
 	t.testBinOp(test, func(x, y float32) float32 {
 		return x * y
-	}, func(v1, v2 anyvec32.Vector) {
+	}, func(v1, v2 anyvec.Vector) {
 		v1.Mul(v2)
 	})
 }
@@ -259,7 +260,7 @@ func (t *Tester32) TestMul(test *testing.T) {
 func (t *Tester32) TestDiv(test *testing.T) {
 	t.testBinOp(test, func(x, y float32) float32 {
 		return x / y
-	}, func(v1, v2 anyvec32.Vector) {
+	}, func(v1, v2 anyvec.Vector) {
 		v1.Div(v2)
 	})
 }
@@ -268,35 +269,35 @@ func (t *Tester32) TestDiv(test *testing.T) {
 func (t *Tester32) TestGemm(test *testing.T) {
 	// TODO: fancier test for unusual strides.
 
-	mat1 := &anyvec32.Matrix{
+	mat1 := &anyvec.Matrix{
 		Data: t.randomVecLen(30 * 17),
 		Rows: 30,
 		Cols: 17,
 	}
-	mat2 := &anyvec32.Matrix{
+	mat2 := &anyvec.Matrix{
 		Data: t.randomVecLen(30 * 5),
 		Rows: 5,
 		Cols: 30,
 	}
-	mat3 := &anyvec32.Matrix{
+	mat3 := &anyvec.Matrix{
 		Data: t.randomVecLen(30 * 5),
 		Rows: 30,
 		Cols: 5,
 	}
 
 	var bmats [3]blas32.General
-	for i, x := range []*anyvec32.Matrix{mat1, mat2, mat3} {
+	for i, x := range []*anyvec.Matrix{mat1, mat2, mat3} {
 		bmats[i] = blas32.General{
-			Data:   x.Data.Data(),
+			Data:   x.Data.Data().([]float32),
 			Rows:   x.Rows,
 			Cols:   x.Cols,
 			Stride: x.Cols,
 		}
 	}
 	blas32.Gemm(blas.NoTrans, blas.Trans, 2.5, bmats[0], bmats[1], -0.7, bmats[2])
-	mat3.Product(false, true, 2.5, mat1, mat2, -0.7)
+	mat3.Product(false, true, float32(2.5), mat1, mat2, float32(-0.7))
 
-	actual := mat3.Data.Data()
+	actual := mat3.Data.Data().([]float32)
 	expected := bmats[2].Data
 
 	assertClose(test, actual, expected)
@@ -306,62 +307,62 @@ func (t *Tester32) TestGemm(test *testing.T) {
 func (t *Tester32) TestExp(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Exp(float64(x)))
-	}, anyvec32.Exp)
+	}, anyvec.Exp)
 }
 
 // TestSin test sine.
 func (t *Tester32) TestSin(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Sin(float64(x)))
-	}, anyvec32.Sin)
+	}, anyvec.Sin)
 }
 
 // TestTanh test tanh.
 func (t *Tester32) TestTanh(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Tanh(float64(x)))
-	}, anyvec32.Tanh)
+	}, anyvec.Tanh)
 }
 
 // TestClipPos test positive clipping.
 func (t *Tester32) TestClipPos(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Max(0, float64(x)))
-	}, anyvec32.ClipPos)
+	}, anyvec.ClipPos)
 }
 
 // testBinOp tests a binary operation.
 func (t *Tester32) testBinOp(test *testing.T, op func(x, y float32) float32,
-	doer func(v1, v2 anyvec32.Vector)) {
+	doer func(v1, v2 anyvec.Vector)) {
 	v1 := t.randomVec()
 	v2 := t.randomVec()
-	expected := v1.Data()
-	for i, x := range v2.Data() {
+	expected := v1.Data().([]float32)
+	for i, x := range v2.Data().([]float32) {
 		expected[i] = op(expected[i], x)
 	}
-	lastV2 := v2.Data()
+	lastV2 := v2.Data().([]float32)
 	doer(v1, v2)
-	assertClose(test, v1.Data(), expected)
-	assertClose(test, v2.Data(), lastV2)
+	assertClose(test, v1.Data().([]float32), expected)
+	assertClose(test, v2.Data().([]float32), lastV2)
 }
 
 // testOp tests a unary operation.
 func (t *Tester32) testOp(test *testing.T, op func(x float32) float32,
-	doer func(v anyvec32.Vector)) {
+	doer func(v anyvec.Vector)) {
 	v := t.randomVec()
 	expected := make([]float32, v.Len())
-	for i, x := range v.Data() {
+	for i, x := range v.Data().([]float32) {
 		expected[i] = op(x)
 	}
 	doer(v)
-	assertClose(test, v.Data(), expected)
+	assertClose(test, v.Data().([]float32), expected)
 }
 
-func (t *Tester32) randomVec() anyvec32.Vector {
+func (t *Tester32) randomVec() anyvec.Vector {
 	return t.randomVecLen(513)
 }
 
-func (t *Tester32) randomVecLen(l int) anyvec32.Vector {
+func (t *Tester32) randomVecLen(l int) anyvec.Vector {
 	origVec := make([]float32, l)
 	for i := range origVec {
 		origVec[i] = float32(rand.NormFloat64())

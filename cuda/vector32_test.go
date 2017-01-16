@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/unixpickle/anyvec/anyvec32"
+	"github.com/unixpickle/anyvec"
 	"github.com/unixpickle/anyvec/anyvectest"
 )
 
@@ -25,24 +25,24 @@ func BenchmarkGemmOneVec(b *testing.B) {
 		b.Fatal(err)
 	}
 	c := NewCreator32(h)
-	mat := &anyvec32.Matrix{
+	mat := &anyvec.Matrix{
 		Data: randomVector(c, 300*300),
 		Rows: 300,
 		Cols: 300,
 	}
-	vec := &anyvec32.Matrix{
+	vec := &anyvec.Matrix{
 		Data: randomVector(c, 300),
 		Rows: 300,
 		Cols: 1,
 	}
-	prod := &anyvec32.Matrix{
+	prod := &anyvec.Matrix{
 		Data: c.MakeVector(300),
 		Rows: 300,
 		Cols: 1,
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		prod.Product(false, false, 1, mat, vec, 0)
+		prod.Product(false, false, float32(1), mat, vec, float32(0))
 	}
 }
 
@@ -52,24 +52,24 @@ func BenchmarkGemmMat(b *testing.B) {
 		b.Fatal(err)
 	}
 	c := NewCreator32(h)
-	mat1 := &anyvec32.Matrix{
+	mat1 := &anyvec.Matrix{
 		Data: randomVector(c, 300*300),
 		Rows: 300,
 		Cols: 300,
 	}
-	mat2 := &anyvec32.Matrix{
+	mat2 := &anyvec.Matrix{
 		Data: randomVector(c, 300*300),
 		Rows: 300,
 		Cols: 300,
 	}
-	prod := &anyvec32.Matrix{
+	prod := &anyvec.Matrix{
 		Data: c.MakeVector(300 * 300),
 		Rows: 300,
 		Cols: 300,
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		prod.Product(false, false, 1, mat1, mat2, 0)
+		prod.Product(false, false, float32(1), mat1, mat2, float32(0))
 	}
 }
 
@@ -124,8 +124,8 @@ func BenchmarkExp(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// Prevent numbers from exploding or changing too much.
-		anyvec32.Exp(v)
-		v.Scale(-1)
+		anyvec.Exp(v)
+		v.Scale(float32(-1))
 	}
 }
 
@@ -142,7 +142,7 @@ func BenchmarkTanh(b *testing.B) {
 	v := c.MakeVectorData(vec)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		anyvec32.Tanh(v)
+		anyvec.Tanh(v)
 	}
 }
 
@@ -159,11 +159,11 @@ func BenchmarkClipPos(b *testing.B) {
 	v := c.MakeVectorData(vec)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		anyvec32.ClipPos(v)
+		anyvec.ClipPos(v)
 	}
 }
 
-func randomVector(c anyvec32.Creator, size int) anyvec32.Vector {
+func randomVector(c anyvec.Creator, size int) anyvec.Vector {
 	d := make([]float32, size)
 	for i := range d {
 		d[i] = float32(rand.NormFloat64())
