@@ -125,6 +125,102 @@ func Max(v Vector) Numeric {
 	}
 }
 
+// A LogSoftmaxer computes the logarithm of the softmax of
+// its components.
+// Softmaxing is done in chunks, meaning that every
+// chunkSize components are treated as their own vector
+// and softmaxed in place.
+// If the chunkSize is 0, then the entire vector is
+// softmaxed as a single unit.
+// The chunkSize should divide the vector evenly, unless
+// it is zero.
+type LogSoftmaxer interface {
+	LogSoftmax(chunkSize int)
+}
+
+// LogSoftmax computes the logarithm of the softmax in
+// place.
+// If the vector does not implement LogSoftmaxer, a
+// default implementation is used.
+func LogSoftmax(v Vector, chunkSize int) {
+	if l, ok := v.(LogSoftmaxer); ok {
+		l.LogSoftmax(chunkSize)
+	} else {
+		data := v.Data()
+		switch data := data.(type) {
+		case []float32:
+			applyLogSoftmax32(data, chunkSize)
+		case []float64:
+			applyLogSoftmax64(data, chunkSize)
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
+		v.SetData(data)
+	}
+}
+
+func applyLogSoftmax32(data []float32, chunkSize int) {
+	if len(data) == 0 {
+		return
+	} else if chunkSize == 0 {
+		chunkSize = len(data)
+	} else if len(data)%chunkSize != 0 {
+		panic("chunkSize must divide vector length")
+	}
+
+	for i := 0; i < len(data); i += chunkSize {
+		vec := data[i : i+chunkSize]
+
+		max := float32(math.Inf(-1))
+		for _, x := range vec {
+			if x > max {
+				max = x
+			}
+		}
+
+		var expSum float64
+		for _, x := range vec {
+			expSum += math.Exp(float64(x - max))
+		}
+		sumLog := float32(math.Log(expSum)) + max
+
+		for i, x := range vec {
+			vec[i] = float32(x) - sumLog
+		}
+	}
+}
+
+func applyLogSoftmax64(data []float64, chunkSize int) {
+	if len(data) == 0 {
+		return
+	} else if chunkSize == 0 {
+		chunkSize = len(data)
+	} else if len(data)%chunkSize != 0 {
+		panic("chunkSize must divide vector length")
+	}
+
+	for i := 0; i < len(data); i += chunkSize {
+		vec := data[i : i+chunkSize]
+
+		max := math.Inf(-1)
+		for _, x := range vec {
+			if x > max {
+				max = x
+			}
+		}
+
+		var expSum float64
+		for _, x := range vec {
+			expSum += math.Exp(x - max)
+		}
+		sumLog := math.Log(expSum) + max
+
+		for i, x := range vec {
+			vec[i] = x - sumLog
+		}
+	}
+}
+
 func applyUnitary(v Vector, f func(float64) float64) {
 	data := v.Data()
 	switch data := data.(type) {

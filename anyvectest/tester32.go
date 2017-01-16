@@ -48,6 +48,7 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("ClipPos", t.TestClipPos)
 	test.Run("Max", t.TestMax)
 	test.Run("Sum", t.TestSum)
+	test.Run("LogSoftmax", t.TestLogSoftmax)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -355,6 +356,27 @@ func (t *Tester32) TestMax(test *testing.T) {
 		}
 		return max
 	}, anyvec.Max)
+}
+
+// TestLogSoftmax tests log-domain softmaxing.
+func (t *Tester32) TestLogSoftmax(test *testing.T) {
+	inData := []float32{0.735181, 0.638349, 0.672189, 0.025860, 0.492178,
+		0.175069, 0.487960, 0.598212}
+	expected := []float32{-1.84798499753082, -1.94481718265820, -1.91097680228496,
+		-2.55730580715485, -2.09098781021549, -2.40809688666664, -2.09520595321559,
+		-1.98495420701728}
+	v := t.Creator.MakeVectorData(inData)
+	anyvec.LogSoftmax(v, 0)
+	assertClose(test, v.Data().([]float32), expected)
+
+	expected = []float32{-1.20556282283073, -1.30239482283073, -1.26855482283073,
+		-1.91488382283073, -1.34440459198132, -1.66151359198132, -1.34862259198132,
+		-1.23837059198132}
+	v = t.Creator.MakeVectorData(inData)
+	anyvec.LogSoftmax(v, 4)
+	assertClose(test, v.Data().([]float32), expected)
+
+	// TODO: test with negative inputs here.
 }
 
 // testBinOp tests a binary operation.
