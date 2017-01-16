@@ -32,6 +32,7 @@ type Vector interface {
 	SetData(v NumericList)
 
 	// Set copies the contents of v into the receiver.
+	// The receiver must not be equal to v.
 	Set(v Vector)
 
 	// Copy creates a copy of the vector.
@@ -59,17 +60,21 @@ type Vector interface {
 	Dot(v Vector) Numeric
 
 	// Add adds another vector to this vector.
+	// The receiver must not be equal to v.
 	Add(v Vector)
 
 	// Sub subtracts a vector from this vector.
+	// The receiver must not be equal to v.
 	Sub(v Vector)
 
 	// Mul multiplies the components of the vector by the
 	// components of v and stores the result in the receiver.
+	// The receiver must not be equal to v.
 	Mul(v Vector)
 
 	// Div divides the components of the vector by the
 	// components of v and stores the result in the receiver.
+	// The receiver must not be equal to v.
 	Div(v Vector)
 
 	// Gemm performs a matrix multiplication and stores the
@@ -79,6 +84,8 @@ type Vector interface {
 	// the output matrix c is the receiver.
 	//
 	// Row-major order is used.
+	//
+	// The receiver must not be equal to a or b.
 	Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int, b Vector,
 		ldb int, beta Numeric, ldc int)
 }

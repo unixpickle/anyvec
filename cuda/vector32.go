@@ -109,6 +109,9 @@ func (v *vector32) SetData(d anyvec.NumericList) {
 }
 
 func (v *vector32) Set(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	v.buffer.Set(v1.(*vector32).buffer)
 }
 
@@ -176,6 +179,9 @@ func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
 }
 
 func (v *vector32) Add(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	v.assertMatch(v1)
 	v.creator.handle.saxpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
@@ -183,6 +189,9 @@ func (v *vector32) Add(v1 anyvec.Vector) {
 }
 
 func (v *vector32) Sub(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	v.assertMatch(v1)
 	v.creator.handle.saxpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
@@ -190,6 +199,9 @@ func (v *vector32) Sub(v1 anyvec.Vector) {
 }
 
 func (v *vector32) Mul(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	v.assertMatch(v1)
 	v.creator.handle.mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
@@ -197,6 +209,9 @@ func (v *vector32) Mul(v1 anyvec.Vector) {
 }
 
 func (v *vector32) Div(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	v.assertMatch(v1)
 	v.creator.handle.div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
@@ -205,6 +220,9 @@ func (v *vector32) Div(v1 anyvec.Vector) {
 
 func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a anyvec.Vector,
 	lda int, b anyvec.Vector, ldb int, beta anyvec.Numeric, ldc int) {
+	if v == a || v == b {
+		panic("output matrix cannot be an input")
+	}
 	aBuf := a.(*vector32).buffer
 	bBuf := b.(*vector32).buffer
 	validateGemm(transA, transB, m, n, k, a.Len(), lda, b.Len(), ldb, v.Len(), ldc)
@@ -242,6 +260,9 @@ func (v *vector32) Sum() anyvec.Numeric {
 }
 
 func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	if v.Len()%v1.Len() != 0 {
 		panic("number of scalers must divide vector size")
 	}

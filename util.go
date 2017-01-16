@@ -39,6 +39,7 @@ type ChunkScaler interface {
 // If the vector does not implement ChunkScaler, a default
 // implementation is used which supports float32 and
 // float64 values.
+// v and scalers must not be equal.
 func ScaleChunks(v, scalers Vector) {
 	if c, ok := v.(ChunkScaler); ok {
 		c.ScaleChunks(scalers)
