@@ -376,7 +376,11 @@ func (t *Tester32) TestLogSoftmax(test *testing.T) {
 	anyvec.LogSoftmax(v, 4)
 	assertClose(test, v.Data().([]float32), expected)
 
-	// TODO: test with negative inputs here.
+	inData = []float32{0.86568, -0.61489, 0.59658, -0.18710, -1.46797, -0.73938}
+	expected = []float32{-0.97016, -2.45073, -1.23925, -2.02294, -3.30380, -2.57522}
+	v = t.Creator.MakeVectorData(inData)
+	anyvec.LogSoftmax(v, 6)
+	assertClose(test, v.Data().([]float32), expected)
 }
 
 // testBinOp tests a binary operation.
