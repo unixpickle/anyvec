@@ -145,6 +145,7 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 
 func (v *vector32) Scale(s anyvec.Numeric) {
 	v.handle.sscal(v.Len(), s.(float32), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) AddScaler(s anyvec.Numeric) {
@@ -160,50 +161,70 @@ func (v *vector32) AddScaler(s anyvec.Numeric) {
 
 func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
 	v.assertMatch(v1)
-	return v.handle.sdot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	res := v.handle.sdot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1)
+	return res
 }
 
 func (v *vector32) Add(v1 anyvec.Vector) {
 	v.assertMatch(v1)
 	v.handle.saxpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Sub(v1 anyvec.Vector) {
 	v.assertMatch(v1)
 	v.handle.saxpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Mul(v1 anyvec.Vector) {
 	v.assertMatch(v1)
 	v.handle.mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Div(v1 anyvec.Vector) {
 	v.assertMatch(v1)
 	v.handle.div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a anyvec.Vector,
 	lda int, b anyvec.Vector, ldb int, beta anyvec.Numeric, ldc int) {
+	aBuf := a.(*vector32).buffer
+	bBuf := b.(*vector32).buffer
 	validateGemm(transA, transB, m, n, k, a.Len(), lda, b.Len(), ldb, v.Len(), ldc)
-	v.handle.sgemm(transA, transB, m, n, k, alpha.(float32), a.(*vector32).buffer.ptr,
-		lda, b.(*vector32).buffer.ptr, ldb, beta.(float32), v.buffer.ptr, ldc)
+	v.handle.sgemm(transA, transB, m, n, k, alpha.(float32), aBuf.ptr,
+		lda, bBuf.ptr, ldb, beta.(float32), v.buffer.ptr, ldc)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(aBuf)
+	runtime.KeepAlive(bBuf)
 }
 
 func (v *vector32) Exp() {
 	v.handle.exp(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Tanh() {
 	v.handle.tanh(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Sin() {
 	v.handle.sin(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) ClipPos() {
 	v.handle.clipPos(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) assertMatch(v1 anyvec.Vector) {
