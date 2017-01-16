@@ -1,6 +1,8 @@
 package anyvec
 
 // A Creator creates Vectors and Numerics.
+// Creators should be comparable using the == operation,
+// meaning that they should typically be pointers.
 type Creator interface {
 	// MakeNumeric creates a Numeric from a 64-bit floating
 	// point constant.

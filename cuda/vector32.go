@@ -43,8 +43,8 @@ func (c *Creator32) MakeVector(size int) anyvec.Vector {
 		panic(err)
 	}
 	return &vector32{
-		handle: c.handle,
-		buffer: buf,
+		creator: c,
+		buffer:  buf,
 	}
 }
 
@@ -60,8 +60,8 @@ func (c *Creator32) MakeVectorData(dObj anyvec.NumericList) anyvec.Vector {
 		panic(err)
 	}
 	return &vector32{
-		handle: c.handle,
-		buffer: buf,
+		creator: c,
+		buffer:  buf,
 	}
 }
 
@@ -76,14 +76,18 @@ func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
 		panic(err)
 	}
 	return &vector32{
-		handle: c.handle,
-		buffer: buf,
+		creator: c,
+		buffer:  buf,
 	}
 }
 
 type vector32 struct {
-	handle *Handle
-	buffer *buffer
+	creator *Creator32
+	buffer  *buffer
+}
+
+func (v *vector32) Creator() anyvec.Creator {
+	return v.creator
 }
 
 func (v *vector32) Len() int {
@@ -105,7 +109,7 @@ func (v *vector32) SetData(d anyvec.NumericList) {
 }
 
 func (v *vector32) Copy() anyvec.Vector {
-	newBuff, err := newBuffer(v.handle, v.buffer.size)
+	newBuff, err := newBuffer(v.creator.handle, v.buffer.size)
 	if err != nil {
 		panic(err)
 	}
@@ -113,8 +117,8 @@ func (v *vector32) Copy() anyvec.Vector {
 		panic(err)
 	}
 	return &vector32{
-		handle: v.handle,
-		buffer: newBuff,
+		creator: v.creator,
+		buffer:  newBuff,
 	}
 }
 
@@ -128,7 +132,7 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 	if end > v.Len() {
 		panic("end out of bounds")
 	}
-	buf, err := newBuffer(v.handle, (end-start)*4)
+	buf, err := newBuffer(v.creator.handle, (end-start)*4)
 	if err != nil {
 		panic(err)
 	}
@@ -138,30 +142,30 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 	})
 	runtime.KeepAlive(v.buffer)
 	return &vector32{
-		handle: v.handle,
-		buffer: buf,
+		creator: v.creator,
+		buffer:  buf,
 	}
 }
 
 func (v *vector32) Scale(s anyvec.Numeric) {
-	v.handle.sscal(v.Len(), s.(float32), v.buffer.ptr)
+	v.creator.handle.sscal(v.Len(), s.(float32), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) AddScaler(s anyvec.Numeric) {
-	constVec, err := newBuffer(v.handle, v.buffer.size)
+	constVec, err := newBuffer(v.creator.handle, v.buffer.size)
 	if err != nil {
 		panic(err)
 	}
 	if err := constVec.SetRepeated32(s.(float32)); err != nil {
 		panic(err)
 	}
-	v.Add(&vector32{handle: v.handle, buffer: constVec})
+	v.Add(&vector32{creator: v.creator, buffer: constVec})
 }
 
 func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
 	v.assertMatch(v1)
-	res := v.handle.sdot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	res := v.creator.handle.sdot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 	return res
@@ -169,28 +173,28 @@ func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
 
 func (v *vector32) Add(v1 anyvec.Vector) {
 	v.assertMatch(v1)
-	v.handle.saxpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
+	v.creator.handle.saxpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Sub(v1 anyvec.Vector) {
 	v.assertMatch(v1)
-	v.handle.saxpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
+	v.creator.handle.saxpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Mul(v1 anyvec.Vector) {
 	v.assertMatch(v1)
-	v.handle.mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	v.creator.handle.mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
 
 func (v *vector32) Div(v1 anyvec.Vector) {
 	v.assertMatch(v1)
-	v.handle.div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	v.creator.handle.div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
@@ -200,7 +204,7 @@ func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, 
 	aBuf := a.(*vector32).buffer
 	bBuf := b.(*vector32).buffer
 	validateGemm(transA, transB, m, n, k, a.Len(), lda, b.Len(), ldb, v.Len(), ldc)
-	v.handle.sgemm(transA, transB, m, n, k, alpha.(float32), aBuf.ptr,
+	v.creator.handle.sgemm(transA, transB, m, n, k, alpha.(float32), aBuf.ptr,
 		lda, bBuf.ptr, ldb, beta.(float32), v.buffer.ptr, ldc)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(aBuf)
@@ -208,27 +212,27 @@ func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, 
 }
 
 func (v *vector32) Exp() {
-	v.handle.exp(v.Len(), v.buffer.ptr)
+	v.creator.handle.exp(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Tanh() {
-	v.handle.tanh(v.Len(), v.buffer.ptr)
+	v.creator.handle.tanh(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Sin() {
-	v.handle.sin(v.Len(), v.buffer.ptr)
+	v.creator.handle.sin(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) ClipPos() {
-	v.handle.clipPos(v.Len(), v.buffer.ptr)
+	v.creator.handle.clipPos(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Sum() anyvec.Numeric {
-	res := v.handle.sum(v.Len(), v.buffer.ptr)
+	res := v.creator.handle.sum(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	return res
 }

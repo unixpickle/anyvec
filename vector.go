@@ -17,6 +17,9 @@ type NumericList interface{}
 // A Vector can only be used with other Vector instances
 // created by the same Creator.
 type Vector interface {
+	// Creator returns the creator of the vector.
+	Creator() Creator
+
 	// Len returns the number of vector components.
 	Len() int
 

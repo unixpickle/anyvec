@@ -45,6 +45,10 @@ func (d DefaultCreator) Concat(vs ...anyvec.Vector) anyvec.Vector {
 
 type vector []float32
 
+func (v vector) Creator() anyvec.Creator {
+	return DefaultCreator{}
+}
+
 func (v vector) Len() int {
 	return len(v)
 }
