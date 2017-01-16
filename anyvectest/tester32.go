@@ -49,6 +49,7 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("Max", t.TestMax)
 	test.Run("Sum", t.TestSum)
 	test.Run("LogSoftmax", t.TestLogSoftmax)
+	test.Run("ScaleChunks", t.TestScaleChunks)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -380,6 +381,18 @@ func (t *Tester32) TestLogSoftmax(test *testing.T) {
 	expected = []float32{-0.97016, -2.45073, -1.23925, -2.02294, -3.30380, -2.57522}
 	v = t.Creator.MakeVectorData(inData)
 	anyvec.LogSoftmax(v, 6)
+	assertClose(test, v.Data().([]float32), expected)
+}
+
+// TestScaleChunks tests chunk scaling.
+func (t *Tester32) TestScaleChunks(test *testing.T) {
+	data := []float32{-0.66886, -2.12313, -0.49031, -1.00323, -0.82617, 1.16384, -1.84009,
+		-0.24389, 0.25384, -0.78570}
+	scales := []float32{-0.25492, -0.50632}
+	expected := []float32{0.17051, 0.54123, 0.12499, 0.25574, 0.21061, -0.58927, 0.93167,
+		0.12349, -0.12852, 0.39781}
+	v := t.Creator.MakeVectorData(data)
+	anyvec.ScaleChunks(v, t.Creator.MakeVectorData(scales))
 	assertClose(test, v.Data().([]float32), expected)
 }
 

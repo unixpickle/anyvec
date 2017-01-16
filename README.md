@@ -54,4 +54,7 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 # TODO
 
  * On-GPU implementation of Max()
+ * Kernelized AddScaler()
  * Kernelized Sum()
+ * Kernelized LogSoftmax()
+ * Repeat() extra

@@ -31,7 +31,8 @@ type Siner interface {
 // Sin computes the in-place sin of the vector.
 // The arguments to sin are in radians.
 // If the vector does not implement Siner, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 func Sin(v Vector) {
 	if s, ok := v.(Siner); ok {
 		s.Sin()
@@ -47,7 +48,8 @@ type PosClipper interface {
 
 // ClipPos clips the vector entries to positive values.
 // If the vector does not implement PosClipper, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 func ClipPos(v Vector) {
 	if p, ok := v.(PosClipper); ok {
 		p.ClipPos()
@@ -65,7 +67,8 @@ type Exper interface {
 
 // Exp exponentiates the vector entries in base e.
 // If the vector does not implement Exper, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 func Exp(v Vector) {
 	if e, ok := v.(Exper); ok {
 		e.Exp()
@@ -81,7 +84,8 @@ type Summer interface {
 
 // Sum sums the vector entries.
 // If the vector does not implement Summer, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 func Sum(v Vector) Numeric {
 	if s, ok := v.(Summer); ok {
 		return s.Sum()
@@ -104,7 +108,8 @@ type Maxer interface {
 
 // Max computes the maximum vector entry.
 // If the vector does not implement Maxer, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 // The return value is unspecified if the vector is empty.
 func Max(v Vector) Numeric {
 	if m, ok := v.(Maxer); ok {
@@ -141,11 +146,19 @@ type LogSoftmaxer interface {
 // LogSoftmax computes the logarithm of the softmax in
 // place.
 // If the vector does not implement LogSoftmaxer, a
-// default implementation is used.
+// default implementation is used which supports float32
+// and float64 values.
 func LogSoftmax(v Vector, chunkSize int) {
 	if l, ok := v.(LogSoftmaxer); ok {
 		l.LogSoftmax(chunkSize)
 	} else {
+		if v.Len() == 0 {
+			return
+		} else if chunkSize == 0 {
+			chunkSize = v.Len()
+		} else if v.Len()%chunkSize != 0 {
+			panic("chunkSize must divide vector length")
+		}
 		data := v.Data()
 		switch data := data.(type) {
 		case []float32:
@@ -160,14 +173,6 @@ func LogSoftmax(v Vector, chunkSize int) {
 }
 
 func applyLogSoftmax32(data []float32, chunkSize int) {
-	if len(data) == 0 {
-		return
-	} else if chunkSize == 0 {
-		chunkSize = len(data)
-	} else if len(data)%chunkSize != 0 {
-		panic("chunkSize must divide vector length")
-	}
-
 	for i := 0; i < len(data); i += chunkSize {
 		vec := data[i : i+chunkSize]
 
@@ -191,14 +196,6 @@ func applyLogSoftmax32(data []float32, chunkSize int) {
 }
 
 func applyLogSoftmax64(data []float64, chunkSize int) {
-	if len(data) == 0 {
-		return
-	} else if chunkSize == 0 {
-		chunkSize = len(data)
-	} else if len(data)%chunkSize != 0 {
-		panic("chunkSize must divide vector length")
-	}
-
 	for i := 0; i < len(data); i += chunkSize {
 		vec := data[i : i+chunkSize]
 
@@ -218,6 +215,55 @@ func applyLogSoftmax64(data []float64, chunkSize int) {
 		for i, x := range vec {
 			vec[i] = x - sumLog
 		}
+	}
+}
+
+// A ChunkScaler can scale contiguous chunks of itself,
+// each by differenent scalers.
+// The length of the receiver must be divisible by the
+// length of the scaler vector, since the chunk size is
+// determined by dividing the receiver's length by the
+// number of scalers.
+// Each scaled chunk is the same length.
+type ChunkScaler interface {
+	ScaleChunks(scalers Vector)
+}
+
+// ScaleChunks scales contigous chunks of a vector.
+// If the vector does not implement ChunkScaler, a default
+// implementation is used which supports float32 and
+// float64 values.
+func ScaleChunks(v, scalers Vector) {
+	if c, ok := v.(ChunkScaler); ok {
+		c.ScaleChunks(scalers)
+	} else {
+		if v.Len()%scalers.Len() != 0 {
+			panic("scaler count must divide vector length")
+		}
+		data := v.Data()
+		switch data := data.(type) {
+		case []float32:
+			applyScaleChunks32(data, scalers.Data().([]float32))
+		case []float64:
+			applyScaleChunks64(data, scalers.Data().([]float64))
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
+		v.SetData(data)
+	}
+}
+
+func applyScaleChunks32(data, scalers []float32) {
+	chunkSize := len(data) / len(scalers)
+	for i := range data {
+		data[i] *= scalers[i/chunkSize]
+	}
+}
+
+func applyScaleChunks64(data, scalers []float64) {
+	chunkSize := len(data) / len(scalers)
+	for i := range data {
+		data[i] *= scalers[i/chunkSize]
 	}
 }
 
