@@ -8,6 +8,7 @@ import (
 	"github.com/gonum/blas"
 	"github.com/gonum/blas/blas32"
 	"github.com/unixpickle/anyvec"
+	"github.com/unixpickle/approb"
 )
 
 // Tester32 tests an anyvec.Creator which uses float32
@@ -50,6 +51,7 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("Sum", t.TestSum)
 	test.Run("LogSoftmax", t.TestLogSoftmax)
 	test.Run("ScaleChunks", t.TestScaleChunks)
+	test.Run("Rand", t.TestRand)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -394,6 +396,35 @@ func (t *Tester32) TestScaleChunks(test *testing.T) {
 	v := t.Creator.MakeVectorData(data)
 	anyvec.ScaleChunks(v, t.Creator.MakeVectorData(scales))
 	assertClose(test, v.Data().([]float32), expected)
+}
+
+// TestRand tests random sampling.
+func (t *Tester32) TestRand(test *testing.T) {
+	const numSamples = 20000
+	const vecSize = 15
+	r := rand.New(rand.NewSource(1337))
+
+	vec := t.Creator.MakeVector(vecSize)
+
+	names := []string{"Uniform", "Bernoulli", "Normal"}
+	dists := []anyvec.ProbDist{anyvec.Uniform, anyvec.Bernoulli, anyvec.Normal}
+	samplers := []func() float64{rand.Float64, func() float64 {
+		return float64(rand.Intn(2))
+	}, rand.NormFloat64}
+	for i, name := range names {
+		actualSampler := func() float64 {
+			if rand.Intn(2) == 0 {
+				anyvec.Rand(vec, dists[i], r)
+			} else {
+				anyvec.Rand(vec, dists[i], nil)
+			}
+			return float64(vec.Data().([]float32)[rand.Intn(vecSize)])
+		}
+		corr := approb.Correlation(numSamples, 0.1, actualSampler, samplers[i])
+		if corr < 0.95 {
+			test.Errorf("distribution %s had correlation %f", name, corr)
+		}
+	}
 }
 
 // testBinOp tests a binary operation.
