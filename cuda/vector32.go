@@ -241,6 +241,18 @@ func (v *vector32) Sum() anyvec.Numeric {
 	return res
 }
 
+func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
+	if v.Len()%v1.Len() != 0 {
+		panic("number of scalers must divide vector size")
+	}
+	chunkSize := v.Len() / v1.Len()
+	numChunks := v1.Len()
+	v1Buf := v1.(*vector32).buffer
+	v.creator.handle.mulChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1Buf)
+}
+
 func (v *vector32) assertMatch(v1 anyvec.Vector) {
 	if v.Len() != v1.Len() {
 		panic("sizes do no match")

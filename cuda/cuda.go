@@ -9,7 +9,7 @@ package cuda
 
 const cublasOperation_t noTranspose = CUBLAS_OP_N;
 const cublasOperation_t transpose = CUBLAS_OP_T;
-const cublasSideMode_t sideMode = CUBLAS_SIDE_LEFT;
+const cublasSideMode_t sideMode = CUBLAS_SIDE_RIGHT;
 CUresult cuSuccess = CUDA_SUCCESS;
 
 int anyvec_cuda_is_success(cublasStatus_t s) {
@@ -118,8 +118,16 @@ func (h *Handle) sgemm(transA, transB bool, m, n, k int, alpha float32, a unsafe
 
 func (h *Handle) mul(n int, a, b unsafe.Pointer) {
 	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		h.panicOnErr(C.cublasSdgmm(blas, C.sideMode, C.int(n), 1,
-			(*C.float)(a), C.int(n), (*C.float)(b), 1, (*C.float)(a), C.int(n)))
+		h.panicOnErr(C.cublasSdgmm(blas, C.sideMode, 1, C.int(n),
+			(*C.float)(a), 1, (*C.float)(b), 1, (*C.float)(a), 1))
+	})
+}
+
+func (h *Handle) mulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
+	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
+		h.panicOnErr(C.cublasSdgmm(blas, C.sideMode, C.int(chunkSize), C.int(chunkCount),
+			(*C.float)(vec), C.int(chunkSize), (*C.float)(scales), 1, (*C.float)(vec),
+			C.int(chunkSize)))
 	})
 }
 

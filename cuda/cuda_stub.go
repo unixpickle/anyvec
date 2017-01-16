@@ -47,6 +47,10 @@ func (h *Handle) mul(n int, a, b unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (h *Handle) mulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
+	panic("unimplemented")
+}
+
 func (h *Handle) div(n int, a, b unsafe.Pointer) {
 	panic("unimplemented")
 }
