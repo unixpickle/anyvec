@@ -28,6 +28,7 @@ func (t *Tester32) TestAll(test *testing.T) {
 func (t *Tester32) TestRequired(test *testing.T) {
 	test.Run("SliceConversion", t.TestSliceConversion)
 	test.Run("Copy", t.TestCopy)
+	test.Run("Set", t.TestSet)
 	test.Run("Slice", t.TestSlice)
 	test.Run("Concat", t.TestConcat)
 	test.Run("Scale", t.TestScale)
@@ -129,6 +130,36 @@ func (t *Tester32) TestCopy(test *testing.T) {
 
 	if math.Abs(float64(vec1.Data().([]float32)[37]-(vec2.Data().([]float32)[37]+2))) > 1e-3 {
 		test.Error("values inconsistent after Copy()+SetData()")
+	}
+}
+
+// TestSet tests vector assignment.
+func (t *Tester32) TestSet(test *testing.T) {
+	origVec := make([]float32, 513)
+	for i := range origVec {
+		origVec[i] = float32(rand.NormFloat64())
+	}
+
+	origVec[0] = 1.5
+
+	vec1 := t.Creator.MakeVectorData(origVec)
+	vec2 := t.Creator.MakeVector(len(origVec))
+	old := vec2.Data().([]float32)
+	vec2.Set(vec1)
+	if old[0] != 0 {
+		test.Errorf("expected 0 but got %f", old[0])
+	}
+
+	assertClose(test, vec1.Data().([]float32), origVec)
+	assertClose(test, vec1.Data().([]float32), vec2.Data().([]float32))
+
+	origVec[37]++
+	vec1.SetData(origVec)
+	origVec[37] -= 2
+	vec2.SetData(origVec)
+
+	if math.Abs(float64(vec1.Data().([]float32)[37]-(vec2.Data().([]float32)[37]+2))) > 1e-3 {
+		test.Error("values inconsistent after Set()+SetData()")
 	}
 }
 

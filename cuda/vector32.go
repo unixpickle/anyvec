@@ -108,6 +108,10 @@ func (v *vector32) SetData(d anyvec.NumericList) {
 	}
 }
 
+func (v *vector32) Set(v1 anyvec.Vector) {
+	v.buffer.Set(v1.(*vector32).buffer)
+}
+
 func (v *vector32) Copy() anyvec.Vector {
 	newBuff, err := newBuffer(v.creator.handle, v.buffer.size)
 	if err != nil {

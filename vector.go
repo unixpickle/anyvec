@@ -31,6 +31,9 @@ type Vector interface {
 	// It must be the case that len(v) <= receiver.Len().
 	SetData(v NumericList)
 
+	// Set copies the contents of v into the receiver.
+	Set(v Vector)
+
 	// Copy creates a copy of the vector.
 	Copy() Vector
 

@@ -61,6 +61,10 @@ func (v vector) SetData(v1 anyvec.NumericList) {
 	copy(v, v1.([]float32))
 }
 
+func (v vector) Set(v1 anyvec.Vector) {
+	copy(v, v1.(vector))
+}
+
 func (v vector) Copy() anyvec.Vector {
 	return append(vector{}, v...)
 }
