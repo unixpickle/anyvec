@@ -66,6 +66,7 @@ func newMathKernels() (kernels *mathKernels, err error) {
 		}
 	}
 	res = C.nvrtcCompileProgram(prog, 0, C.nullStrPtr)
+	fixSignals()
 	if err := nvrtcError("nvrtcCompileProgram", res); err != nil {
 		return nil, err
 	}
