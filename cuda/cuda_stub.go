@@ -51,6 +51,10 @@ func (h *Handle) div(n int, a, b unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (h *Handle) sum(n int, a unsafe.Pointer) float32 {
+	panic("unimplemented")
+}
+
 func (h *Handle) exp(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }

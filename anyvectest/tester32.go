@@ -46,6 +46,8 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("Sin", t.TestSin)
 	test.Run("Tanh", t.TestTanh)
 	test.Run("ClipPos", t.TestClipPos)
+	test.Run("Max", t.TestMax)
+	test.Run("Sum", t.TestSum)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -303,32 +305,56 @@ func (t *Tester32) TestGemm(test *testing.T) {
 	assertClose(test, actual, expected)
 }
 
-// TestExp test exponentiation.
+// TestExp tests exponentiation.
 func (t *Tester32) TestExp(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Exp(float64(x)))
 	}, anyvec.Exp)
 }
 
-// TestSin test sine.
+// TestSin tests sine.
 func (t *Tester32) TestSin(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Sin(float64(x)))
 	}, anyvec.Sin)
 }
 
-// TestTanh test tanh.
+// TestTanh tests tanh.
 func (t *Tester32) TestTanh(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Tanh(float64(x)))
 	}, anyvec.Tanh)
 }
 
-// TestClipPos test positive clipping.
+// TestClipPos tests positive clipping.
 func (t *Tester32) TestClipPos(test *testing.T) {
 	t.testOp(test, func(x float32) float32 {
 		return float32(math.Max(0, float64(x)))
 	}, anyvec.ClipPos)
+}
+
+// TestSum test summation.
+func (t *Tester32) TestSum(test *testing.T) {
+	t.testAgg(test, func(x []float32) float32 {
+		var sum float32
+		for _, k := range x {
+			sum += k
+		}
+		return sum
+	}, anyvec.Sum)
+}
+
+// TestMax tests max computation.
+func (t *Tester32) TestMax(test *testing.T) {
+	t.testAgg(test, func(x []float32) float32 {
+		max := float32(math.Inf(-1))
+		for _, k := range x {
+			if k > max {
+				max = k
+			}
+		}
+		return max
+	}, anyvec.Max)
 }
 
 // testBinOp tests a binary operation.
@@ -356,6 +382,17 @@ func (t *Tester32) testOp(test *testing.T, op func(x float32) float32,
 	}
 	doer(v)
 	assertClose(test, v.Data().([]float32), expected)
+}
+
+// testAgg tests an aggregate operation.
+func (t *Tester32) testAgg(test *testing.T, op func(x []float32) float32,
+	doer func(v anyvec.Vector) anyvec.Numeric) {
+	v := t.randomVec()
+	expected := op(v.Data().([]float32))
+	actual := doer(v).(float32)
+	if math.Abs(float64(actual-expected)) > 1e-3 {
+		test.Errorf("expected %v but got %v", expected, actual)
+	}
 }
 
 func (t *Tester32) randomVec() anyvec.Vector {

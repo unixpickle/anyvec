@@ -20,6 +20,12 @@ int anyvec_cuda_is_null(void * ptr) {
     return ptr == NULL;
 }
 
+CUresult anyvec_cuda_set1(size_t n, void * vec) {
+	float datum = 1;
+	unsigned int datumRaw = *((unsigned int *)&datum);
+	return cuMemsetD32((CUdeviceptr)vec, datumRaw, n);
+}
+
 void * anyvec_cuda_alloc(size_t size) {
 	void * ptr;
 	if (cudaMalloc(&ptr, size) != cudaSuccess) {
@@ -115,6 +121,28 @@ func (h *Handle) mul(n int, a, b unsafe.Pointer) {
 		h.panicOnErr(C.cublasSdgmm(blas, C.sideMode, C.int(n), 1,
 			(*C.float)(a), C.int(n), (*C.float)(b), 1, (*C.float)(a), C.int(n)))
 	})
+}
+
+func (h *Handle) sum(n int, a unsafe.Pointer) float32 {
+	if n == 0 {
+		return 0
+	}
+	var res float32
+	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
+		tempBuf := C.anyvec_cuda_alloc(C.size_t(n * 4))
+		if C.anyvec_cuda_is_null(tempBuf) != C.int(0) {
+			panic(ErrMemoryAlloc)
+		}
+		defer C.cudaFree(tempBuf)
+		if C.anyvec_cuda_set1(C.size_t(n), tempBuf) != C.cuSuccess {
+			panic(ErrMemorySet)
+		}
+		var tempRes C.float
+		h.panicOnErr(C.cublasSdot(blas, C.int(n), (*C.float)(a), 1, (*C.float)(tempBuf),
+			1, &tempRes))
+		res = float32(tempRes)
+	})
+	return res
 }
 
 func (h *Handle) div(n int, a, b unsafe.Pointer) {

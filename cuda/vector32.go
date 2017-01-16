@@ -227,6 +227,12 @@ func (v *vector32) ClipPos() {
 	runtime.KeepAlive(v.buffer)
 }
 
+func (v *vector32) Sum() anyvec.Numeric {
+	res := v.handle.sum(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	return res
+}
+
 func (v *vector32) assertMatch(v1 anyvec.Vector) {
 	if v.Len() != v1.Len() {
 		panic("sizes do no match")
