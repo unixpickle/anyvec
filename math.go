@@ -114,6 +114,9 @@ func AddRepeated(v, v1 Vector) {
 	if r, ok := v.(RepeatAdder); ok {
 		r.AddRepeated(v1)
 	} else {
+		if v1.Len() == 0 {
+			panic("repeated vector cannot be empty")
+		}
 		var joinMe []Vector
 		var joinLen int
 		for joinLen < v.Len() {

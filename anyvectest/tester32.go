@@ -472,6 +472,12 @@ func (t *Tester32) TestAddRepeated(test *testing.T) {
 	anyvec.AddRepeated(v1, v)
 	expected = []float32{-3 + 1 - 3, -4 + 2 - 4, -5 + 3 - 5}
 	assertClose(test, v1.Data().([]float32), expected)
+
+	v1 = t.Creator.MakeVectorData([]float32{-1, -2})
+	v = t.Creator.MakeVectorData([]float32{1, 2, 3, 4, 5, 6, 7, 8})
+	anyvec.AddRepeated(v, v1)
+	expected = []float32{0, 0, 3 - 1, 4 - 2, 5 - 1, 6 - 2, 7 - 1, 8 - 2}
+	assertClose(test, v.Data().([]float32), expected)
 }
 
 // testBinOp tests a binary operation.

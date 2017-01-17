@@ -51,6 +51,7 @@ import "C"
 
 import (
 	"errors"
+	"math"
 	"unsafe"
 )
 
@@ -183,7 +184,12 @@ func (m *mathKernels) UniformToBernoulli32(vec unsafe.Pointer, n int) error {
 
 // AddRepeated32 adds a repeated vector to a target.
 func (m *mathKernels) AddRepeated32(target, source unsafe.Pointer, targLen, srcLen int) error {
-	return m.call2Asym("addRepeated", target, source, targLen, srcLen)
+	log2 := uint(math.Log2(float64(srcLen)))
+	if (1 << log2) == srcLen {
+		return m.call2Asym("addRepeatedPow2", target, source, targLen, srcLen-1)
+	} else {
+		return m.call2Asym("addRepeated", target, source, targLen, srcLen)
+	}
 }
 
 func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
@@ -234,7 +240,7 @@ func nvrtcError(funcName string, status C.nvrtcResult) error {
 
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
-	"addRepeated"}
+	"addRepeated", "addRepeatedPow2"}
 
 const mathKernelsCode string = `
 __global__ void divElements(float * x, float * y, size_t n) {
@@ -296,6 +302,13 @@ __global__ void addRepeated(float * dest, float * source, size_t destLen, size_t
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += source[tid % sourceLen];
+	}
+}
+
+__global__ void addRepeatedPow2(float * dest, float * source, size_t destLen, size_t srcMask) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] += source[tid & srcMask];
 	}
 }
 `

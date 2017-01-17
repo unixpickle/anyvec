@@ -281,6 +281,9 @@ func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
 }
 
 func (v *vector32) AddRepeated(v1 anyvec.Vector) {
+	if v1.Len() == 0 {
+		panic("repeated vector cannot be empty")
+	}
 	v1Buf := v1.(*vector32).buffer
 	v.creator.handle.addRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
 	runtime.KeepAlive(v.buffer)
