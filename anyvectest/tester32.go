@@ -53,6 +53,7 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("LogSoftmax", t.TestLogSoftmax)
 	test.Run("ScaleChunks", t.TestScaleChunks)
 	test.Run("Rand", t.TestRand)
+	test.Run("AddRepeated", t.TestAddRepeated)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -456,6 +457,21 @@ func (t *Tester32) TestRand(test *testing.T) {
 			test.Errorf("distribution %s had correlation %f", name, corr)
 		}
 	}
+}
+
+// TestAddRepeated tests adding a repeated vector.
+func (t *Tester32) TestAddRepeated(test *testing.T) {
+	v := t.Creator.MakeVectorData([]float32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+	v1 := t.Creator.MakeVectorData([]float32{-3, -4, -5})
+
+	anyvec.AddRepeated(v, v1)
+	expected := []float32{1 - 3, 2 - 4, 3 - 5, 4 - 3, 5 - 4, 6 - 5, 7 - 3,
+		8 - 4, 9 - 5, 10 - 3}
+	assertClose(test, v.Data().([]float32), expected)
+
+	anyvec.AddRepeated(v1, v)
+	expected = []float32{-3 + 1 - 3, -4 + 2 - 4, -5 + 3 - 5}
+	assertClose(test, v1.Data().([]float32), expected)
 }
 
 // testBinOp tests a binary operation.
