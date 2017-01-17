@@ -1,6 +1,7 @@
 package cuda
 
 import (
+	"math/rand"
 	"runtime"
 	"unsafe"
 
@@ -272,6 +273,11 @@ func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
 	v.creator.handle.mulChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1Buf)
+}
+
+func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
+	v.creator.handle.genRand(v.Len(), v.buffer.ptr, p)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) assertMatch(v1 anyvec.Vector) {

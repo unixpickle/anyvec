@@ -162,6 +162,18 @@ func (m *mathKernels) ClipPos32(vec unsafe.Pointer, n int) error {
 	return m.call1("clipPositive", vec, n)
 }
 
+// ShiftRandUniform32 sets all 1.0f values to 0.0f in
+// order to match Go's rand package.
+func (m *mathKernels) ShiftRandUniform32(vec unsafe.Pointer, n int) error {
+	return m.call1("shiftRandUniform", vec, n)
+}
+
+// UniformToBernoulli32 creates bernoulli random variables
+// from uniform random variables.
+func (m *mathKernels) UniformToBernoulli32(vec unsafe.Pointer, n int) error {
+	return m.call1("uniformToBernoulli", vec, n)
+}
+
 func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
 	k := m.kernels[name]
 	res := C.anyvec_cuda_call1(k, v, C.size_t(n))
@@ -196,7 +208,7 @@ func nvrtcError(funcName string, status C.nvrtcResult) error {
 }
 
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
-	"sinElements", "clipPositive"}
+	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli"}
 
 const mathKernelsCode string = `
 __global__ void divElements(float * x, float * y, size_t n) {
@@ -231,6 +243,26 @@ __global__ void clipPositive(float * x, size_t n) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = fmaxf(0, x[tid]);
+	}
+}
+
+__global__ void shiftRandUniform(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		if (x[tid] == 1.0f) {
+			x[tid] = 0;
+		}
+	}
+}
+
+__global__ void uniformToBernoulli(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		if (x[tid] > 0.5) {
+			x[tid] = 1;
+		} else {
+			x[tid] = 0;
+		}
 	}
 }
 `

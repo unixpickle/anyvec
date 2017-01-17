@@ -5,6 +5,8 @@ package cuda
 import (
 	"errors"
 	"unsafe"
+
+	"github.com/unixpickle/anyvec"
 )
 
 // These errors indicate various CUDA-related failures.
@@ -72,6 +74,10 @@ func (h *Handle) sin(n int, a unsafe.Pointer) {
 }
 
 func (h *Handle) clipPos(n int, a unsafe.Pointer) {
+	panic("unimplemented")
+}
+
+func (h *Handle) genRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 	panic("unimplemented")
 }
 

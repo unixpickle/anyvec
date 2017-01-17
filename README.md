@@ -16,7 +16,7 @@ To use the CUDA package, you have to tell the compiler about your CUDA installat
 $ export CUDA_PATH="/Developer/NVIDIA/CUDA-8.0"
 $ export DYLD_LIBRARY_PATH="$CUDA_PATH/lib":$DYLD_LIBRARY_PATH
 $ export CPATH="$CUDA_PATH/include/"
-$ export CGO_LDFLAGS="/usr/local/cuda/lib/libcuda.dylib $CUDA_PATH/lib/libcudart.dylib $CUDA_PATH/lib/libcublas.dylib $CUDA_PATH/lib/libnvrtc.dylib"
+$ export CGO_LDFLAGS="/usr/local/cuda/lib/libcuda.dylib $CUDA_PATH/lib/libcudart.dylib $CUDA_PATH/lib/libcublas.dylib $CUDA_PATH/lib/libnvrtc.dylib $CUDA_PATH/lib/libcurand.dylib"
 ```
 
 On Linux, the environment setup might be more like this:
@@ -24,7 +24,7 @@ On Linux, the environment setup might be more like this:
 ```
 $ export CUDA_PATH=/usr/local/cuda
 $ export CPATH="$CUDA_PATH/include/"
-$ export CGO_LDFLAGS="$CUDA_PATH/lib64/libcublas.so $CUDA_PATH/lib64/libcudart.so $CUDA_PATH/lib64/stubs/libcuda.so /usr/local/cuda/lib64/libnvrtc.so"
+$ export CGO_LDFLAGS="$CUDA_PATH/lib64/libcublas.so $CUDA_PATH/lib64/libcudart.so $CUDA_PATH/lib64/stubs/libcuda.so $CUDA_PATH/lib64/libnvrtc.so $CUDA_PATH/lib64/libcurand.so"
 $ export LD_LIBRARY_PATH=$CUDA_PATH/lib64/
 ```
 

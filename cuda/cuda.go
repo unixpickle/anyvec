@@ -38,8 +38,11 @@ import "C"
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
 	"unsafe"
+
+	"github.com/unixpickle/anyvec"
 )
 
 // These errors indicate various CUDA-related failures.
@@ -58,6 +61,7 @@ var (
 type Handle struct {
 	loop    *cudaLoop
 	kernels *mathKernels
+	rand    *randomizer
 }
 
 // NewHandle attempts to get a new Handle.
@@ -71,6 +75,9 @@ func NewHandle() (*Handle, error) {
 		obj.loop.Run(func() {
 			if obj.kernels != nil {
 				obj.kernels.Destroy()
+			}
+			if obj.rand != nil {
+				obj.rand.Destroy()
 			}
 		})
 	})
@@ -183,11 +190,48 @@ func (h *Handle) clipPos(n int, a unsafe.Pointer) {
 	})
 }
 
+func (h *Handle) genRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
+	h.runWithRand(func() error {
+		switch dist {
+		case anyvec.Bernoulli:
+			return h.rand.Bernoulli32(h.kernels, a, n)
+		case anyvec.Uniform:
+			return h.rand.Uniform32(h.kernels, a, n)
+		case anyvec.Normal:
+			return h.rand.Norm32(a, n)
+		default:
+			panic(fmt.Sprintf("unsupported distribution: %v", dist))
+		}
+	})
+}
+
 func (h *Handle) runWithKernels(f func() error) {
 	h.loop.Run(func() {
 		var err error
 		if h.kernels == nil {
 			h.kernels, err = newMathKernels()
+			if err != nil {
+				panic(err)
+			}
+		}
+		err = f()
+		if err != nil {
+			panic(err)
+		}
+	})
+}
+
+func (h *Handle) runWithRand(f func() error) {
+	h.loop.Run(func() {
+		var err error
+		if h.kernels == nil {
+			h.kernels, err = newMathKernels()
+			if err != nil {
+				panic(err)
+			}
+		}
+		if h.rand == nil {
+			h.rand, err = newRandomizer()
 			if err != nil {
 				panic(err)
 			}
