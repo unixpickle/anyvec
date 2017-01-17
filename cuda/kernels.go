@@ -39,6 +39,13 @@ CUresult anyvec_cuda_call1(CUfunction f, void * p1, size_t n) {
 	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
+
+CUresult anyvec_cuda_call2_asym(CUfunction f, void * p1, void * p2, size_t n1, size_t n2) {
+	void * args[] = {&p1, &p2, &n1, &n2};
+	unsigned int blockSize, gridSize;
+	kernel_sizes((unsigned int)n1, &blockSize, &gridSize);
+	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
+}
 */
 import "C"
 
@@ -174,6 +181,11 @@ func (m *mathKernels) UniformToBernoulli32(vec unsafe.Pointer, n int) error {
 	return m.call1("uniformToBernoulli", vec, n)
 }
 
+// AddRepeated32 adds a repeated vector to a target.
+func (m *mathKernels) AddRepeated32(target, source unsafe.Pointer, targLen, srcLen int) error {
+	return m.call2Asym("addRepeated", target, source, targLen, srcLen)
+}
+
 func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
 	k := m.kernels[name]
 	res := C.anyvec_cuda_call1(k, v, C.size_t(n))
@@ -200,6 +212,19 @@ func (m *mathKernels) call2(name string, v1, v2 unsafe.Pointer, n int) error {
 	return nil
 }
 
+func (m *mathKernels) call2Asym(name string, v1, v2 unsafe.Pointer, n1, n2 int) error {
+	k := m.kernels[name]
+	res := C.anyvec_cuda_call2_asym(k, v1, v2, C.size_t(n1), C.size_t(n2))
+	if res != C.cuSuccess {
+		return errors.New("cuLaunchKernel failed")
+	}
+	res = C.cuCtxSynchronize()
+	if res != C.cuSuccess {
+		return errors.New("cuCtxSynchronize failed")
+	}
+	return nil
+}
+
 func nvrtcError(funcName string, status C.nvrtcResult) error {
 	if status != C.nvrtcSuccess {
 		return errors.New(funcName + " failed")
@@ -208,7 +233,8 @@ func nvrtcError(funcName string, status C.nvrtcResult) error {
 }
 
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
-	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli"}
+	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
+	"addRepeated"}
 
 const mathKernelsCode string = `
 __global__ void divElements(float * x, float * y, size_t n) {
@@ -263,6 +289,13 @@ __global__ void uniformToBernoulli(float * x, size_t n) {
 		} else {
 			x[tid] = 0;
 		}
+	}
+}
+
+__global__ void addRepeated(float * dest, float * source, size_t destLen, size_t sourceLen) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] += source[tid % sourceLen];
 	}
 }
 `

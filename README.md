@@ -57,4 +57,4 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
  * Kernelized AddScaler()
  * Kernelized Sum()
  * Kernelized LogSoftmax()
- * Repeat() extra
+ * Don't use modulus in CUDA AddRepeated().

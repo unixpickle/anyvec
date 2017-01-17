@@ -113,6 +113,24 @@ func BenchmarkDiv(b *testing.B) {
 	}
 }
 
+func BenchmarkAddRepeated(b *testing.B) {
+	h, err := NewHandle()
+	if err != nil {
+		b.Fatal(err)
+	}
+	c := NewCreator32(h)
+	v := randomVector(c, 256*128)
+	v1 := randomVector(c, 256)
+
+	// Initialize kernels.
+	anyvec.AddRepeated(v, v1)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		anyvec.AddRepeated(v, v1)
+	}
+}
+
 func BenchmarkExp(b *testing.B) {
 	h, err := NewHandle()
 	if err != nil {

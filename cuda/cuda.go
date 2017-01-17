@@ -205,6 +205,12 @@ func (h *Handle) genRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 	})
 }
 
+func (h *Handle) addRepeated(mainLen, repLen int, dest, source unsafe.Pointer) {
+	h.runWithKernels(func() error {
+		return h.kernels.AddRepeated32(dest, source, mainLen, repLen)
+	})
+}
+
 func (h *Handle) runWithKernels(f func() error) {
 	h.loop.Run(func() {
 		var err error

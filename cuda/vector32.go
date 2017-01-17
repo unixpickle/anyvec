@@ -280,6 +280,13 @@ func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
 	runtime.KeepAlive(v.buffer)
 }
 
+func (v *vector32) AddRepeated(v1 anyvec.Vector) {
+	v1Buf := v1.(*vector32).buffer
+	v.creator.handle.addRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1Buf)
+}
+
 func (v *vector32) assertMatch(v1 anyvec.Vector) {
 	if v.Len() != v1.Len() {
 		panic("sizes do no match")
