@@ -13,16 +13,31 @@ const char ** nullStrPtr = NULL;
 const CUjit_option * nullJitOptions = NULL;
 const void ** nullPtrPtr = NULL;
 
+void kernel_sizes(unsigned int n, unsigned int * block, unsigned int * grid) {
+	*block = 128;
+	if (n < *block) {
+		*block = n;
+		*grid = 1;
+	} else {
+		*grid = n / (*block);
+		if (n%(*block) != 0) {
+			(*grid)++;
+		}
+	}
+}
+
 CUresult anyvec_cuda_call2(CUfunction f, void * p1, void * p2, size_t n) {
 	void * args[] = {&p1, &p2, &n};
-	// TODO: look into these constants.
-	return cuLaunchKernel(f, 32, 1, 1, 128, 1, 1, 0, NULL, args, NULL);
+	unsigned int blockSize, gridSize;
+	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
+	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
 CUresult anyvec_cuda_call1(CUfunction f, void * p1, size_t n) {
 	void * args[] = {&p1, &n};
-	// TODO: look into these constants.
-	return cuLaunchKernel(f, 32, 1, 1, 128, 1, 1, 0, NULL, args, NULL);
+	unsigned int blockSize, gridSize;
+	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
+	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 */
 import "C"

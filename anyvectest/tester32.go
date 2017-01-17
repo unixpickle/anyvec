@@ -497,7 +497,7 @@ func (t *Tester32) testAgg(test *testing.T, op func(x []float32) float32,
 }
 
 func (t *Tester32) randomVec() anyvec.Vector {
-	return t.randomVecLen(513)
+	return t.randomVecLen(8192)
 }
 
 func (t *Tester32) randomVecLen(l int) anyvec.Vector {
