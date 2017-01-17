@@ -139,27 +139,20 @@ func BenchmarkExp(b *testing.B) {
 }
 
 func BenchmarkTanh(b *testing.B) {
-	h, err := NewHandle()
-	if err != nil {
-		b.Fatal(err)
-	}
-	c := NewCreator32(h)
-	vec := make([]float32, 1024)
-	for i := range vec {
-		vec[i] = float32(rand.NormFloat64())
-	}
-	v := c.MakeVectorData(vec)
-
-	// Initialize kernels.
-	anyvec.Tanh(v)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		anyvec.Tanh(v)
-	}
+	benchmarkIter(b, anyvec.Tanh)
 }
 
 func BenchmarkClipPos(b *testing.B) {
+	benchmarkIter(b, anyvec.ClipPos)
+}
+
+func BenchmarkNormDist(b *testing.B) {
+	benchmarkIter(b, func(v anyvec.Vector) {
+		anyvec.Rand(v, anyvec.Normal, nil)
+	})
+}
+
+func benchmarkIter(b *testing.B, f func(anyvec.Vector)) {
 	h, err := NewHandle()
 	if err != nil {
 		b.Fatal(err)
@@ -172,11 +165,11 @@ func BenchmarkClipPos(b *testing.B) {
 	v := c.MakeVectorData(vec)
 
 	// Initialize kernels.
-	anyvec.ClipPos(v)
+	f(v)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		anyvec.ClipPos(v)
+		f(v)
 	}
 }
 
