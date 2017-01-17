@@ -139,20 +139,26 @@ func BenchmarkExp(b *testing.B) {
 }
 
 func BenchmarkTanh(b *testing.B) {
-	benchmarkIter(b, anyvec.Tanh)
+	benchmarkIter(1024, b, anyvec.Tanh)
 }
 
 func BenchmarkClipPos(b *testing.B) {
-	benchmarkIter(b, anyvec.ClipPos)
+	benchmarkIter(1024, b, anyvec.ClipPos)
 }
 
 func BenchmarkNormDist(b *testing.B) {
-	benchmarkIter(b, func(v anyvec.Vector) {
+	benchmarkIter(1024, b, func(v anyvec.Vector) {
 		anyvec.Rand(v, anyvec.Normal, nil)
 	})
 }
 
-func benchmarkIter(b *testing.B, f func(anyvec.Vector)) {
+func BenchmarkLogSoftmax(b *testing.B) {
+	benchmarkIter(256*64, b, func(v anyvec.Vector) {
+		anyvec.LogSoftmax(v, 256)
+	})
+}
+
+func benchmarkIter(size int, b *testing.B, f func(anyvec.Vector)) {
 	h, err := NewHandle()
 	if err != nil {
 		b.Fatal(err)
