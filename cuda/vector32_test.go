@@ -103,6 +103,10 @@ func BenchmarkDiv(b *testing.B) {
 		scale[i] = rand.Float32()*0.005 + 0.9975
 	}
 	v2 := c.MakeVectorData(scale)
+
+	// Initialize kernels.
+	v1.Div(v2)
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		v1.Div(v2)
@@ -121,6 +125,11 @@ func BenchmarkExp(b *testing.B) {
 		vec[i] = -0.56714329041
 	}
 	v := c.MakeVectorData(vec)
+
+	// Initialize kernels.
+	anyvec.Exp(v)
+	v.Scale(float32(-1))
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// Prevent numbers from exploding or changing too much.
@@ -140,6 +149,10 @@ func BenchmarkTanh(b *testing.B) {
 		vec[i] = float32(rand.NormFloat64())
 	}
 	v := c.MakeVectorData(vec)
+
+	// Initialize kernels.
+	anyvec.Tanh(v)
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		anyvec.Tanh(v)
@@ -157,6 +170,10 @@ func BenchmarkClipPos(b *testing.B) {
 		vec[i] = float32(rand.NormFloat64())
 	}
 	v := c.MakeVectorData(vec)
+
+	// Initialize kernels.
+	anyvec.ClipPos(v)
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		anyvec.ClipPos(v)
