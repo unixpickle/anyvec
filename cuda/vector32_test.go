@@ -194,7 +194,7 @@ func benchmarkIter(size int, b *testing.B, f func(anyvec.Vector)) {
 		b.Fatal(err)
 	}
 	c := NewCreator32(h)
-	vec := make([]float32, 1024)
+	vec := make([]float32, size)
 	for i := range vec {
 		vec[i] = float32(rand.NormFloat64())
 	}
