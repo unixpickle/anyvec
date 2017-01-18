@@ -1,22 +1,32 @@
 # anyvec
 
-**anyvec** lets you use any implementation of vector arithmetic that you want. You might use it for GPU acceleration, distributed matrix multiplication, or any number of things that nobody's thought of yet.
+**anyvec** lets you use any implementation of vector arithmetic that you want. You might use it for GPU acceleration, distributed matrix multiplication, or precision-agnostic arithmetic.
 
-# Installation
+**anyvec** should help you do the following:
 
-Download the code as follows:
+ * Benefit from GPU hardware acceleration
+ * Write code once that works with any floating-point precision
+ * Perform common linear algebra routines
+
+# Downloading
+
+First, you must have [Go](https://golang.org/doc/install) installed and configured. Once you do, you can download **anyvec** and its dependencies as follows:
 
 ```
 $ go get -u -tags nocuda github.com/unixpickle/anyvec/...
 ```
 
-To use the CUDA package, you have to tell the compiler about your CUDA installation. On OS X, this might look like:
+Note the `-tags nocuda` arguments. This does not mean that you will not be able to use CUDA. However, it prevents `go get` from attempting to compile CUDA-dependent code.
+
+# Using CUDA
+
+If you plan on using the CUDA package, you have to tell the compiler about your CUDA installation. You can do this by setting the appropriate environment variables. On OS X, this might look like:
 
 ```
 $ export CUDA_PATH="/Developer/NVIDIA/CUDA-8.0"
 $ export DYLD_LIBRARY_PATH="$CUDA_PATH/lib":$DYLD_LIBRARY_PATH
 $ export CPATH="$CUDA_PATH/include/"
-$ export CGO_LDFLAGS="/usr/local/cuda/lib/libcuda.dylib $CUDA_PATH/lib/libcudart.dylib $CUDA_PATH/lib/libcublas.dylib $CUDA_PATH/lib/libnvrtc.dylib $CUDA_PATH/lib/libcurand.dylib"
+$ export CGO_LDFLAGS="/usr/local/cuda/lib/libcuda.dylib $CUDA_PATH/lib/libcudart.dylib $CUDA_PATH/lib/libcublas.dylib $CUDA_PATH/lib/libcurand.dylib"
 ```
 
 On Linux, the environment setup might be more like this:
@@ -24,7 +34,7 @@ On Linux, the environment setup might be more like this:
 ```
 $ export CUDA_PATH=/usr/local/cuda
 $ export CPATH="$CUDA_PATH/include/"
-$ export CGO_LDFLAGS="$CUDA_PATH/lib64/libcublas.so $CUDA_PATH/lib64/libcudart.so $CUDA_PATH/lib64/stubs/libcuda.so $CUDA_PATH/lib64/libnvrtc.so $CUDA_PATH/lib64/libcurand.so"
+$ export CGO_LDFLAGS="$CUDA_PATH/lib64/libcublas.so $CUDA_PATH/lib64/libcudart.so $CUDA_PATH/lib64/stubs/libcuda.so $CUDA_PATH/lib64/libcurand.so"
 $ export LD_LIBRARY_PATH=$CUDA_PATH/lib64/
 ```
 
@@ -36,7 +46,7 @@ import (
 	"github.com/unixpickle/anyvec/cuda"
 )
 
-func main() {
+func init() {
 	handle, err := cuda.NewHandle()
 	if err != nil {
 		panic(err)

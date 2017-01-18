@@ -5,7 +5,6 @@ package cuda
 /*
 #include "cuda.h"
 #include "cuda_runtime_api.h"
-#include "nvrtc.h"
 
 const char ** nullStrPtr = NULL;
 const CUjit_option * nullJitOptions = NULL;
