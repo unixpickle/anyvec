@@ -127,16 +127,16 @@ func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 // stores the result in a.
 // The vectors both contain n elements.
 func (o ops32) Div(n int, a, b unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.Div32(a, b, n)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.Div32(a, b, n))
 	})
 }
 
 // Exp exponentiates the vector components.
 // The vector contains n elements.
 func (o ops32) Exp(n int, a unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.Exp32(a, n)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.Exp32(a, n))
 	})
 }
 
@@ -144,38 +144,38 @@ func (o ops32) Exp(n int, a unsafe.Pointer) {
 // components.
 // The vector contains n elements.
 func (o ops32) Tanh(n int, a unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.Tanh32(a, n)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.Tanh32(a, n))
 	})
 }
 
 // Sin computes the sine of the vector components.
 // The vector contains n elements.
 func (o ops32) Sin(n int, a unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.Sin32(a, n)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.Sin32(a, n))
 	})
 }
 
 // ClipPos takes MAX(0, x) for every component x.
 // The vector contains n elements.
 func (o ops32) ClipPos(n int, a unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.ClipPos32(a, n)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.ClipPos32(a, n))
 	})
 }
 
 // GenRand randomizes the contents of a vector.
 // The vector contains n elements.
 func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
-	o.h.runWithRand(func() error {
+	o.h.runWithRand(func() {
 		switch dist {
 		case anyvec.Bernoulli:
-			return o.h.rand.Bernoulli32(o.h.kernels, a, n)
+			must(o.h.rand.Bernoulli32(o.h.kernels, a, n))
 		case anyvec.Uniform:
-			return o.h.rand.Uniform32(o.h.kernels, a, n)
+			must(o.h.rand.Uniform32(o.h.kernels, a, n))
 		case anyvec.Normal:
-			return o.h.rand.Norm32(a, n)
+			must(o.h.rand.Norm32(a, n))
 		default:
 			panic(fmt.Sprintf("unsupported distribution: %v", dist))
 		}
@@ -188,15 +188,15 @@ func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 // The dst vector contains dstLen components.
 // The src vector contains srcLen components.
 func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.AddRepeated32(dst, src, dstLen, srcLen)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.AddRepeated32(dst, src, dstLen, srcLen))
 	})
 }
 
 // AddScaler adds a scaler s to the components of x.
 // The vector contains n elements.
 func (o ops32) AddScaler(n int, s float32, x unsafe.Pointer) {
-	o.h.runWithKernels(func() error {
-		return o.h.kernels.AddScaler32(s, x, n)
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.AddScaler32(s, x, n))
 	})
 }

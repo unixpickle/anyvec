@@ -47,7 +47,7 @@ func NewHandle() (*Handle, error) {
 	return res, nil
 }
 
-func (h *Handle) runWithKernels(f func() error) {
+func (h *Handle) runWithKernels(f func()) {
 	h.loop.Run(func() {
 		var err error
 		if h.kernels == nil {
@@ -56,14 +56,11 @@ func (h *Handle) runWithKernels(f func() error) {
 				panic(err)
 			}
 		}
-		err = f()
-		if err != nil {
-			panic(err)
-		}
+		f()
 	})
 }
 
-func (h *Handle) runWithRand(f func() error) {
+func (h *Handle) runWithRand(f func()) {
 	h.loop.Run(func() {
 		var err error
 		if h.kernels == nil {
@@ -78,10 +75,7 @@ func (h *Handle) runWithRand(f func() error) {
 				panic(err)
 			}
 		}
-		err = f()
-		if err != nil {
-			panic(err)
-		}
+		f()
 	})
 }
 
