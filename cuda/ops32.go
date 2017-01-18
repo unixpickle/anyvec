@@ -22,6 +22,7 @@ import "C"
 
 import (
 	"fmt"
+	"math"
 	"unsafe"
 
 	"github.com/unixpickle/anyvec"
@@ -78,6 +79,38 @@ func (o ops32) Gemm(transA, transB bool, m, n, k int, alpha float32, a unsafe.Po
 			(*C.float)(a), C.int(lda), (*C.float)(&betaC),
 			(*C.float)(c), C.int(ldc)))
 	})
+}
+
+// Asum computes the 1-norm of the vector.
+// The vector contains n elements.
+func (o ops32) Asum(n int, v unsafe.Pointer) float32 {
+	var res float32
+	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
+		var tempRes C.float
+		mustBLAS("Sasum", C.cublasSasum(blas, C.int(n), (*C.float)(v), 1, &tempRes))
+		res = float32(tempRes)
+	})
+	return res
+}
+
+// Amax computes the absolute value of the element with
+// the largest absolute value in the vector.
+// The vector contains n elements.
+func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
+	var res float32
+	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
+		var resIdx C.int
+		mustBLAS("Isamax", C.cublasIsamax(blas, C.int(n), (*C.float)(v), 1, &resIdx))
+		var tempRes C.float
+
+		// Isamax uses 1-based indexing for Fortran compatibility.
+		offPtr := unsafe.Pointer(uintptr(v) + 4*uintptr(resIdx-1))
+
+		must(cudaError("cudaMemcpy", C.cudaMemcpy(unsafe.Pointer(&tempRes), offPtr,
+			4, C.cudaMemcpyDeviceToHost)))
+		res = float32(math.Abs(float64(tempRes)))
+	})
+	return res
 }
 
 // Mul performs component-wise multiplication and stores

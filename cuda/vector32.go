@@ -284,6 +284,24 @@ func (v *vector32) AddRepeated(v1 anyvec.Vector) {
 	runtime.KeepAlive(v1Buf)
 }
 
+func (v *vector32) AbsSum() anyvec.Numeric {
+	if v.Len() == 0 {
+		return float32(0)
+	}
+	res := v.ops().Asum(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	return res
+}
+
+func (v *vector32) AbsMax() anyvec.Numeric {
+	if v.Len() == 0 {
+		return float32(0)
+	}
+	res := v.ops().Amax(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+	return res
+}
+
 func (v *vector32) assertMatch(v1 anyvec.Vector) {
 	if v.Len() != v1.Len() {
 		panic("sizes do no match")
