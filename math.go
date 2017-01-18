@@ -58,6 +58,25 @@ func Exp(v Vector) {
 	}
 }
 
+// A PosClipper can clip its values using max(0, x).
+type PosClipper interface {
+	ClipPos()
+}
+
+// ClipPos clips the vector entries to positive values.
+// If the vector does not implement PosClipper, a default
+// implementation is used which supports float32 and
+// float64 values.
+func ClipPos(v Vector) {
+	if p, ok := v.(PosClipper); ok {
+		p.ClipPos()
+	} else {
+		applyUnitary(v, func(arg float64) float64 {
+			return math.Max(0, arg)
+		})
+	}
+}
+
 // A LogSoftmaxer computes the logarithm of the softmax of
 // its components.
 // Softmaxing is done in chunks, meaning that every
@@ -97,33 +116,6 @@ func LogSoftmax(v Vector, chunkSize int) {
 			panic(fmt.Sprintf("unsupported type: %T", data))
 		}
 		v.SetData(data)
-	}
-}
-
-// A RepeatAdder can add the repeated form of a vector to
-// itself.
-type RepeatAdder interface {
-	AddRepeated(v Vector)
-}
-
-// AddRepeated adds the repeated form of v1 to v.
-// It is equivalent to v[i] += v1[i%v1.Len()].
-// If the vector does not implement RepeatAdder, a default
-// implementation is used.
-func AddRepeated(v, v1 Vector) {
-	if r, ok := v.(RepeatAdder); ok {
-		r.AddRepeated(v1)
-	} else {
-		if v1.Len() == 0 {
-			panic("repeated vector cannot be empty")
-		}
-		var joinMe []Vector
-		var joinLen int
-		for joinLen < v.Len() {
-			joinLen += v1.Len()
-			joinMe = append(joinMe, v1)
-		}
-		v.Add(v.Creator().Concat(joinMe...).Slice(0, v.Len()))
 	}
 }
 
