@@ -182,6 +182,12 @@ func BenchmarkLogSoftmax(b *testing.B) {
 	})
 }
 
+func BenchmarkAddLogs(b *testing.B) {
+	benchmarkIter(256*64, b, func(v anyvec.Vector) {
+		anyvec.AddLogs(v, 256)
+	})
+}
+
 func benchmarkIter(size int, b *testing.B, f func(anyvec.Vector)) {
 	h, err := NewHandle()
 	if err != nil {

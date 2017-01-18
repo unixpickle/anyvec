@@ -6,7 +6,6 @@ package cuda
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 
-const char ** nullStrPtr = NULL;
 const CUjit_option * nullJitOptions = NULL;
 const void ** nullPtrPtr = NULL;
 
@@ -49,6 +48,15 @@ CUresult anyvec_cuda_call1_scaler(CUfunction f, size_t n, float scaler, void * p
 	unsigned int blockSize, gridSize;
 	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
+}
+
+CUresult anyvec_cuda_call_addlogs(CUfunction f, size_t rows, size_t cols, void * dst,
+	void * src, int threadCount) {
+	void * args[] = {&dst, &src, &cols};
+	unsigned int gridX = (unsigned int)((cols + threadCount - 1) / threadCount);
+	unsigned int sharedSize = 4 * threadCount;
+	return cuLaunchKernel(f, gridX, (unsigned int)rows, 1, threadCount, 1, 1,
+		sharedSize, NULL, args, NULL);
 }
 */
 import "C"
@@ -180,6 +188,47 @@ func (m *mathKernels) Compare32(n int, alpha float32, v unsafe.Pointer, c compar
 	panic("unknown compare type")
 }
 
+// AddLogs32 performs addition in the log domain.
+func (m *mathKernels) AddLogs32(rows, cols int, dst, src unsafe.Pointer) error {
+	threads := 256
+
+	for threads/2 >= cols && threads > 32 {
+		threads /= 2
+	}
+
+	k := m.kernels["addLogs"]
+
+	freeSrc := false
+	for cols > threads {
+		destCols := (cols + threads - 1) / threads
+		destSize := destCols * rows * 4
+		var tempDest unsafe.Pointer
+		err := cudaError("cudaMalloc", C.cudaMalloc(&tempDest, C.size_t(destSize)))
+		if err != nil {
+			return err
+		}
+		res := C.anyvec_cuda_call_addlogs(k, C.size_t(rows), C.size_t(cols),
+			tempDest, src, C.int(threads))
+		if freeSrc {
+			C.cudaFree(src)
+		}
+		if err := cuError("cuLaunchKernel", res); err != nil {
+			C.cudaFree(tempDest)
+			return err
+		}
+		src = tempDest
+		cols = destCols
+		freeSrc = true
+	}
+
+	res := C.anyvec_cuda_call_addlogs(k, C.size_t(rows), C.size_t(cols),
+		dst, src, C.int(threads))
+	if freeSrc {
+		C.cudaFree(src)
+	}
+	return m.doneKernel(res)
+}
+
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
 	return m.doneKernel(C.anyvec_cuda_call1(k, C.size_t(n), v))
@@ -214,4 +263,5 @@ func (m *mathKernels) sync() error {
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
-	"addScaler", "addChunks", "lessThan", "greaterThan", "equalTo"}
+	"addScaler", "addChunks", "lessThan", "greaterThan", "equalTo",
+	"addLogs"}

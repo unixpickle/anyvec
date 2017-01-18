@@ -143,3 +143,32 @@ void equalTo(float s, float * v, size_t n) {
     }
 	}
 }
+
+extern "C" __device__
+float addLogPair(float x, float y) {
+  float m = max(x, y);
+  return logf(expf(x-m) + expf(y-m)) + m;
+}
+
+extern "C" __global__
+void addLogs(float * dst, float * src, size_t rowSize) {
+  extern __shared__ float chunk[];
+
+  size_t rowIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (rowIdx < rowSize) {
+    chunk[threadIdx.x] = src[rowIdx+rowSize*blockIdx.y];
+  }
+  __syncthreads();
+
+  for (size_t stride = (blockDim.x>>1); stride >= 1; stride >>= 1) {
+    if (threadIdx.x < stride && rowIdx+stride < rowSize) {
+      chunk[threadIdx.x] = addLogPair(chunk[threadIdx.x],
+        chunk[threadIdx.x+stride]);
+    }
+    __syncthreads();
+  }
+
+  if (threadIdx.x == 0) {
+    dst[blockIdx.x + blockIdx.y*gridDim.x] = chunk[0];
+  }
+}

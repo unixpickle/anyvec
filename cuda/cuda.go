@@ -94,27 +94,34 @@ type buffer struct {
 	ptr    unsafe.Pointer
 }
 
-// newBuffer allocates a buffer.
-func newBuffer(h *Handle, size int) (res *buffer, err error) {
-	h.loop.Run(func() {
-		var buf unsafe.Pointer
-		err = cudaError("cudaMalloc", C.cudaMalloc(&buf, C.size_t(size)))
-		if err == nil {
-			res = &buffer{
-				handle: h,
-				size:   size,
-				ptr:    buf,
-			}
-		}
-	})
-	if err != nil {
-		return nil, err
+// newBufferPtr creates a buffer around an existing piece
+// of device memory.
+func newBufferPtr(h *Handle, size int, buf unsafe.Pointer) *buffer {
+	res := &buffer{
+		handle: h,
+		size:   size,
+		ptr:    buf,
 	}
 	runtime.SetFinalizer(res, func(b *buffer) {
 		b.handle.loop.Run(func() {
 			C.cudaFree(b.ptr)
 		})
 	})
+	return res
+}
+
+// newBuffer allocates a buffer.
+func newBuffer(h *Handle, size int) (res *buffer, err error) {
+	h.loop.Run(func() {
+		var buf unsafe.Pointer
+		err = cudaError("cudaMalloc", C.cudaMalloc(&buf, C.size_t(size)))
+		if err == nil {
+			res = newBufferPtr(h, size, buf)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 

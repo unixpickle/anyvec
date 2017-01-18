@@ -115,9 +115,17 @@ func (o ops32) Compare(n int, alpha float32, v unsafe.Pointer, c compareType) {
 	panic("unimplemented")
 }
 
+func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
+	panic("unimplemented")
+}
+
 type buffer struct {
 	size int
 	ptr  unsafe.Pointer
+}
+
+func newBufferPtr(h *Handle, size int, buf unsafe.Pointer) *buffer {
+	panic("unimplemented")
 }
 
 func newBuffer(h *Handle, size int) (*buffer, error) {

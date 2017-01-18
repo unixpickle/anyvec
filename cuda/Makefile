@@ -1,6 +1,6 @@
 .PHONY: clean
 
-kernel_code.go:
+kernel_code.go: kernels.cu
 	nvcc --ptx kernels.cu
 	echo '//+build !nocuda' >kernel_code.go
 	echo '' >>kernel_code.go

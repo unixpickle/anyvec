@@ -272,3 +272,16 @@ func (o ops32) Compare(n int, alpha float32, v unsafe.Pointer, c compareType) {
 		must(o.h.kernels.Compare32(n, alpha, v, c))
 	})
 }
+
+// AddLogs performs addition in the log domain.
+func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
+	var res unsafe.Pointer
+	o.h.runWithKernels(func() {
+		must(cudaError("cudaMalloc", C.cudaMalloc(&res, C.size_t(4*rows))))
+		if err := o.h.kernels.AddLogs32(rows, cols, res, src); err != nil {
+			C.cudaFree(res)
+			panic(err)
+		}
+	})
+	return res
+}
