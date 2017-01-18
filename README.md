@@ -53,6 +53,7 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 
 # TODO
 
+ * Precompile kernels to avoid NVRTC
  * Investigate Ctrl+C crash on OS X
   * When I Ctrl+C the running tests, I get a SIGSEGV.
  * CUDA: asum and amax
