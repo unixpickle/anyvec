@@ -37,16 +37,16 @@ func newRandomizer() (*randomizer, error) {
 }
 
 // Uniform32 creates uniform random values.
-func (r *randomizer) Uniform32(k *mathKernels, dest unsafe.Pointer, n int) error {
+func (r *randomizer) Uniform32(k *mathKernels, n int, dest unsafe.Pointer) error {
 	res := C.curandGenerateUniform(r.gen, (*C.float)(dest), C.size_t(n))
 	if err := curandError("curandGenerateUniform", res); err != nil {
 		return err
 	}
-	return k.ShiftRandUniform32(dest, n)
+	return k.ShiftRandUniform32(n, dest)
 }
 
 // Norm32 creates normally distributed random values.
-func (r *randomizer) Norm32(dest unsafe.Pointer, n int) error {
+func (r *randomizer) Norm32(n int, dest unsafe.Pointer) error {
 	// cuRAND requires the size to be a multiple of 2.
 	if n%2 == 0 {
 		res := C.curandGenerateNormal(r.gen, (*C.float)(dest), C.size_t(n), 0, 1)
@@ -70,12 +70,12 @@ func (r *randomizer) Norm32(dest unsafe.Pointer, n int) error {
 }
 
 // Bernoulli32 generates bernoulli random variables.
-func (r *randomizer) Bernoulli32(k *mathKernels, dest unsafe.Pointer, n int) error {
+func (r *randomizer) Bernoulli32(k *mathKernels, n int, dest unsafe.Pointer) error {
 	res := C.curandGenerateUniform(r.gen, (*C.float)(dest), C.size_t(n))
 	if err := curandError("curandGenerateUniform", res); err != nil {
 		return err
 	}
-	return k.UniformToBernoulli32(dest, n)
+	return k.UniformToBernoulli32(n, dest)
 }
 
 // Destroy releases the randomizer's resources.

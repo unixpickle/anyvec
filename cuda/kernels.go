@@ -11,44 +11,44 @@ const char ** nullStrPtr = NULL;
 const CUjit_option * nullJitOptions = NULL;
 const void ** nullPtrPtr = NULL;
 
-void kernel_sizes(unsigned int n, unsigned int * block, unsigned int * grid) {
+void kernel_sizes(size_t n, unsigned int * block, unsigned int * grid) {
 	*block = 128;
 	if (n < *block) {
-		*block = n;
+		*block = (unsigned int)n;
 		*grid = 1;
 	} else {
-		*grid = n / (*block);
+		*grid = (unsigned int)(n / (size_t)(*block));
 		if (n%(*block) != 0) {
 			(*grid)++;
 		}
 	}
 }
 
-CUresult anyvec_cuda_call2(CUfunction f, void * p1, void * p2, size_t n) {
+CUresult anyvec_cuda_call2(CUfunction f, size_t n, void * p1, void * p2) {
 	void * args[] = {&p1, &p2, &n};
 	unsigned int blockSize, gridSize;
-	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
+	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call1(CUfunction f, void * p1, size_t n) {
+CUresult anyvec_cuda_call1(CUfunction f, size_t n, void * p1) {
 	void * args[] = {&p1, &n};
 	unsigned int blockSize, gridSize;
-	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
+	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call2_asym(CUfunction f, void * p1, void * p2, size_t n1, size_t n2) {
+CUresult anyvec_cuda_call2_asym(CUfunction f, size_t n1, size_t n2, void * p1, void * p2) {
 	void * args[] = {&p1, &p2, &n1, &n2};
 	unsigned int blockSize, gridSize;
-	kernel_sizes((unsigned int)n1, &blockSize, &gridSize);
+	kernel_sizes(n1, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call1_scaler(CUfunction f, float scaler, void * p1, size_t n) {
+CUresult anyvec_cuda_call1_scaler(CUfunction f, size_t n, float scaler, void * p1) {
 	void * args[] = {&scaler, &p1, &n};
 	unsigned int blockSize, gridSize;
-	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
+	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 */
@@ -150,75 +150,75 @@ func (m *mathKernels) Destroy() {
 }
 
 // Div32 performs element-wise division.
-func (m *mathKernels) Div32(num, denom unsafe.Pointer, n int) error {
-	return m.call2("divElements", num, denom, n)
+func (m *mathKernels) Div32(n int, num, denom unsafe.Pointer) error {
+	return m.call2("divElements", n, num, denom)
 }
 
 // Exp32 performs element-wise exponentiation.
-func (m *mathKernels) Exp32(vec unsafe.Pointer, n int) error {
-	return m.call1("expElements", vec, n)
+func (m *mathKernels) Exp32(n int, v unsafe.Pointer) error {
+	return m.call1("expElements", n, v)
 }
 
 // Tanh32 performs element-wise hyperbolic tangent.
-func (m *mathKernels) Tanh32(vec unsafe.Pointer, n int) error {
-	return m.call1("tanhElements", vec, n)
+func (m *mathKernels) Tanh32(n int, v unsafe.Pointer) error {
+	return m.call1("tanhElements", n, v)
 }
 
 // Sin32 performs element-wise sine.
-func (m *mathKernels) Sin32(vec unsafe.Pointer, n int) error {
-	return m.call1("sinElements", vec, n)
+func (m *mathKernels) Sin32(n int, v unsafe.Pointer) error {
+	return m.call1("sinElements", n, v)
 }
 
 // ClipPos32 performs element-wise max(0, x).
-func (m *mathKernels) ClipPos32(vec unsafe.Pointer, n int) error {
-	return m.call1("clipPositive", vec, n)
+func (m *mathKernels) ClipPos32(n int, v unsafe.Pointer) error {
+	return m.call1("clipPositive", n, v)
 }
 
 // ShiftRandUniform32 sets all 1.0f values to 0.0f in
 // order to match Go's rand package.
-func (m *mathKernels) ShiftRandUniform32(vec unsafe.Pointer, n int) error {
-	return m.call1("shiftRandUniform", vec, n)
+func (m *mathKernels) ShiftRandUniform32(n int, v unsafe.Pointer) error {
+	return m.call1("shiftRandUniform", n, v)
 }
 
 // UniformToBernoulli32 creates bernoulli random variables
 // from uniform random variables.
-func (m *mathKernels) UniformToBernoulli32(vec unsafe.Pointer, n int) error {
-	return m.call1("uniformToBernoulli", vec, n)
+func (m *mathKernels) UniformToBernoulli32(n int, v unsafe.Pointer) error {
+	return m.call1("uniformToBernoulli", n, v)
 }
 
 // AddRepeated32 adds a repeated vector to a target.
-func (m *mathKernels) AddRepeated32(target, source unsafe.Pointer, targLen, srcLen int) error {
+func (m *mathKernels) AddRepeated32(dstLen, srcLen int, dst, src unsafe.Pointer) error {
 	log2 := uint(math.Log2(float64(srcLen)))
 	if (1 << log2) == srcLen {
-		return m.call2Asym("addRepeatedPow2", target, source, targLen, srcLen-1)
+		return m.call2Asym("addRepeatedPow2", dstLen, srcLen-1, dst, src)
 	} else {
-		return m.call2Asym("addRepeated", target, source, targLen, srcLen)
+		return m.call2Asym("addRepeated", dstLen, srcLen, dst, src)
 	}
 }
 
 // AddScaler32 adds a scaler to a target.
-func (m *mathKernels) AddScaler32(scaler float32, v unsafe.Pointer, size int) error {
-	return m.call1Scaler("addScaler", scaler, v, size)
+func (m *mathKernels) AddScaler32(n int, alpha float32, v unsafe.Pointer) error {
+	return m.call1Scaler("addScaler", n, alpha, v)
 }
 
-func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
+func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call1(k, v, C.size_t(n)))
+	return m.doneKernel(C.anyvec_cuda_call1(k, C.size_t(n), v))
 }
 
-func (m *mathKernels) call1Scaler(name string, s float32, v unsafe.Pointer, n int) error {
+func (m *mathKernels) call1Scaler(name string, n int, s float32, v unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call1_scaler(k, C.float(s), v, C.size_t(n)))
+	return m.doneKernel(C.anyvec_cuda_call1_scaler(k, C.size_t(n), C.float(s), v))
 }
 
-func (m *mathKernels) call2(name string, v1, v2 unsafe.Pointer, n int) error {
+func (m *mathKernels) call2(name string, n int, v1, v2 unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call2(k, v1, v2, C.size_t(n)))
+	return m.doneKernel(C.anyvec_cuda_call2(k, C.size_t(n), v1, v2))
 }
 
-func (m *mathKernels) call2Asym(name string, v1, v2 unsafe.Pointer, n1, n2 int) error {
+func (m *mathKernels) call2Asym(name string, n1, n2 int, v1, v2 unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call2_asym(k, v1, v2, C.size_t(n1), C.size_t(n2)))
+	return m.doneKernel(C.anyvec_cuda_call2_asym(k, C.size_t(n1), C.size_t(n2), v1, v2))
 }
 
 func (m *mathKernels) doneKernel(res C.CUresult) error {

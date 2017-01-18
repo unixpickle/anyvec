@@ -128,7 +128,7 @@ func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 // The vectors both contain n elements.
 func (o ops32) Div(n int, a, b unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.Div32(a, b, n))
+		must(o.h.kernels.Div32(n, a, b))
 	})
 }
 
@@ -136,7 +136,7 @@ func (o ops32) Div(n int, a, b unsafe.Pointer) {
 // The vector contains n elements.
 func (o ops32) Exp(n int, a unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.Exp32(a, n))
+		must(o.h.kernels.Exp32(n, a))
 	})
 }
 
@@ -145,7 +145,7 @@ func (o ops32) Exp(n int, a unsafe.Pointer) {
 // The vector contains n elements.
 func (o ops32) Tanh(n int, a unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.Tanh32(a, n))
+		must(o.h.kernels.Tanh32(n, a))
 	})
 }
 
@@ -153,7 +153,7 @@ func (o ops32) Tanh(n int, a unsafe.Pointer) {
 // The vector contains n elements.
 func (o ops32) Sin(n int, a unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.Sin32(a, n))
+		must(o.h.kernels.Sin32(n, a))
 	})
 }
 
@@ -161,7 +161,7 @@ func (o ops32) Sin(n int, a unsafe.Pointer) {
 // The vector contains n elements.
 func (o ops32) ClipPos(n int, a unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.ClipPos32(a, n))
+		must(o.h.kernels.ClipPos32(n, a))
 	})
 }
 
@@ -171,11 +171,11 @@ func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 	o.h.runWithRand(func() {
 		switch dist {
 		case anyvec.Bernoulli:
-			must(o.h.rand.Bernoulli32(o.h.kernels, a, n))
+			must(o.h.rand.Bernoulli32(o.h.kernels, n, a))
 		case anyvec.Uniform:
-			must(o.h.rand.Uniform32(o.h.kernels, a, n))
+			must(o.h.rand.Uniform32(o.h.kernels, n, a))
 		case anyvec.Normal:
-			must(o.h.rand.Norm32(a, n))
+			must(o.h.rand.Norm32(n, a))
 		default:
 			panic(fmt.Sprintf("unsupported distribution: %v", dist))
 		}
@@ -189,14 +189,14 @@ func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 // The src vector contains srcLen components.
 func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.AddRepeated32(dst, src, dstLen, srcLen))
+		must(o.h.kernels.AddRepeated32(dstLen, srcLen, dst, src))
 	})
 }
 
 // AddScaler adds a scaler s to the components of x.
 // The vector contains n elements.
-func (o ops32) AddScaler(n int, s float32, x unsafe.Pointer) {
+func (o ops32) AddScaler(n int, alpha float32, v unsafe.Pointer) {
 	o.h.runWithKernels(func() {
-		must(o.h.kernels.AddScaler32(s, x, n))
+		must(o.h.kernels.AddScaler32(n, alpha, v))
 	})
 }
