@@ -288,6 +288,9 @@ func (t *Tester) TestAddLogs(test *testing.T) {
 	sum := anyvec.AddLogs(v, 4)
 	expected := []float64{2.47132687702842, 1.40132369536570}
 	t.assertClose(test, sum.Data(), expected)
+	sum = anyvec.AddLogs(v, 0)
+	expected = []float64{2.766238324}
+	t.assertClose(test, sum.Data(), expected)
 
 	if !testing.Short() {
 		data = make([]float64, 300*3)

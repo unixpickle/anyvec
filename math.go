@@ -104,7 +104,7 @@ func AddLogs(v Vector, chunkSize int) Vector {
 		return l.AddLogs(chunkSize)
 	} else {
 		if chunkSize == 0 {
-			panic("chunk size cannot be zero")
+			chunkSize = v.Len()
 		} else if v.Len()%chunkSize != 0 {
 			panic("chunk size must divide vector size")
 		}
