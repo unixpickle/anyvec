@@ -7,6 +7,6 @@ import (
 )
 
 func TestDefault32(t *testing.T) {
-	tester := Tester32{Creator: anyvec32.DefaultCreator{}}
+	tester := Tester{Creator: anyvec32.DefaultCreator{}}
 	tester.TestAll(t)
 }

@@ -58,4 +58,3 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
  * Kernelized Max()
  * Kernelized Sum()
  * Kernelized LogSoftmax()
- * Tests that are 32-bit and 64-bit agnostic

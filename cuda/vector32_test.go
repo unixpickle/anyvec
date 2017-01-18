@@ -13,7 +13,7 @@ func TestVector32(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tester := anyvectest.Tester32{
+	tester := anyvectest.Tester{
 		Creator: NewCreator32(h),
 	}
 	tester.TestAll(t)
