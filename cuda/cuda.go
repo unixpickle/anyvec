@@ -7,42 +7,19 @@ package cuda
 #include "cuda_runtime_api.h"
 #include "cublas_v2.h"
 
-const cublasOperation_t noTranspose = CUBLAS_OP_N;
-const cublasOperation_t transpose = CUBLAS_OP_T;
-const cublasSideMode_t sideMode = CUBLAS_SIDE_RIGHT;
+cublasOperation_t noTranspose = CUBLAS_OP_N;
+cublasOperation_t transpose = CUBLAS_OP_T;
+cublasSideMode_t sideModeRight = CUBLAS_SIDE_RIGHT;
+cublasSideMode_t sideModeLeft = CUBLAS_SIDE_LEFT;
 CUresult cuSuccess = CUDA_SUCCESS;
-
-int anyvec_cuda_is_success(cublasStatus_t s) {
-	return s == CUBLAS_STATUS_SUCCESS;
-}
-
-int anyvec_cuda_is_null(void * ptr) {
-    return ptr == NULL;
-}
-
-CUresult anyvec_cuda_set1(size_t n, void * vec) {
-	float datum = 1;
-	unsigned int datumRaw = *((unsigned int *)&datum);
-	return cuMemsetD32((CUdeviceptr)vec, datumRaw, n);
-}
-
-void * anyvec_cuda_alloc(size_t size) {
-	void * ptr;
-	if (cudaMalloc(&ptr, size) != cudaSuccess) {
-		return NULL;
-	}
-	return ptr;
-}
+cublasStatus_t cublasSuccess = CUBLAS_STATUS_SUCCESS;
 */
 import "C"
 
 import (
 	"errors"
-	"fmt"
 	"runtime"
 	"unsafe"
-
-	"github.com/unixpickle/anyvec"
 )
 
 // These errors indicate various CUDA-related failures.
@@ -84,133 +61,6 @@ func NewHandle() (*Handle, error) {
 	return res, nil
 }
 
-func (h *Handle) sscal(n int, s float32, x unsafe.Pointer) {
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		h.panicOnErr(C.cublasSscal(blas, C.int(n), (*C.float)(&s), (*C.float)(x), 1))
-	})
-}
-
-func (h *Handle) sdot(n int, x, y unsafe.Pointer) float32 {
-	var res float32
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		var tempRes C.float
-		h.panicOnErr(C.cublasSdot(blas, C.int(n), (*C.float)(x), 1, (*C.float)(y),
-			1, &tempRes))
-		res = float32(tempRes)
-	})
-	return res
-}
-
-func (h *Handle) saxpy(n int, alpha float32, x, y unsafe.Pointer) {
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		a := C.float(alpha)
-		h.panicOnErr(C.cublasSaxpy(blas, C.int(n), (*C.float)(&a), (*C.float)(x),
-			1, (*C.float)(y), 1))
-	})
-}
-
-func (h *Handle) sgemm(transA, transB bool, m, n, k int, alpha float32, a unsafe.Pointer,
-	lda int, b unsafe.Pointer, ldb int, beta float32, c unsafe.Pointer, ldc int) {
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		alphaC := C.float(alpha)
-		betaC := C.float(beta)
-		// Stuff is ordered to emulate column-major storage.
-		h.panicOnErr(C.cublasSgemm(blas, h.transposeOp(transB),
-			h.transposeOp(transA), C.int(n), C.int(m), C.int(k),
-			(*C.float)(&alphaC), (*C.float)(b), C.int(ldb),
-			(*C.float)(a), C.int(lda), (*C.float)(&betaC),
-			(*C.float)(c), C.int(ldc)))
-	})
-}
-
-func (h *Handle) mul(n int, a, b unsafe.Pointer) {
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		h.panicOnErr(C.cublasSdgmm(blas, C.sideMode, 1, C.int(n),
-			(*C.float)(a), 1, (*C.float)(b), 1, (*C.float)(a), 1))
-	})
-}
-
-func (h *Handle) mulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		h.panicOnErr(C.cublasSdgmm(blas, C.sideMode, C.int(chunkSize), C.int(chunkCount),
-			(*C.float)(vec), C.int(chunkSize), (*C.float)(scales), 1, (*C.float)(vec),
-			C.int(chunkSize)))
-	})
-}
-
-func (h *Handle) sum(n int, a unsafe.Pointer) float32 {
-	if n == 0 {
-		return 0
-	}
-	var res float32
-	h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		tempBuf := C.anyvec_cuda_alloc(C.size_t(n * 4))
-		if C.anyvec_cuda_is_null(tempBuf) != C.int(0) {
-			panic(ErrMemoryAlloc)
-		}
-		defer C.cudaFree(tempBuf)
-		if C.anyvec_cuda_set1(C.size_t(n), tempBuf) != C.cuSuccess {
-			panic(ErrMemorySet)
-		}
-		var tempRes C.float
-		h.panicOnErr(C.cublasSdot(blas, C.int(n), (*C.float)(a), 1, (*C.float)(tempBuf),
-			1, &tempRes))
-		res = float32(tempRes)
-	})
-	return res
-}
-
-func (h *Handle) div(n int, a, b unsafe.Pointer) {
-	h.runWithKernels(func() error {
-		return h.kernels.Div32(a, b, n)
-	})
-}
-
-func (h *Handle) exp(n int, a unsafe.Pointer) {
-	h.runWithKernels(func() error {
-		return h.kernels.Exp32(a, n)
-	})
-}
-
-func (h *Handle) tanh(n int, a unsafe.Pointer) {
-	h.runWithKernels(func() error {
-		return h.kernels.Tanh32(a, n)
-	})
-}
-
-func (h *Handle) sin(n int, a unsafe.Pointer) {
-	h.runWithKernels(func() error {
-		return h.kernels.Sin32(a, n)
-	})
-}
-
-func (h *Handle) clipPos(n int, a unsafe.Pointer) {
-	h.runWithKernels(func() error {
-		return h.kernels.ClipPos32(a, n)
-	})
-}
-
-func (h *Handle) genRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
-	h.runWithRand(func() error {
-		switch dist {
-		case anyvec.Bernoulli:
-			return h.rand.Bernoulli32(h.kernels, a, n)
-		case anyvec.Uniform:
-			return h.rand.Uniform32(h.kernels, a, n)
-		case anyvec.Normal:
-			return h.rand.Norm32(a, n)
-		default:
-			panic(fmt.Sprintf("unsupported distribution: %v", dist))
-		}
-	})
-}
-
-func (h *Handle) addRepeated(mainLen, repLen int, dest, source unsafe.Pointer) {
-	h.runWithKernels(func() error {
-		return h.kernels.AddRepeated32(dest, source, mainLen, repLen)
-	})
-}
-
 func (h *Handle) runWithKernels(f func() error) {
 	h.loop.Run(func() {
 		var err error
@@ -249,19 +99,6 @@ func (h *Handle) runWithRand(f func() error) {
 	})
 }
 
-func (h *Handle) panicOnErr(s C.cublasStatus_t) {
-	if C.anyvec_cuda_is_success(s) == C.int(0) {
-		panic("cuBLAS operation failed")
-	}
-}
-
-func (h *Handle) transposeOp(trans bool) C.cublasOperation_t {
-	if trans {
-		return C.transpose
-	}
-	return C.noTranspose
-}
-
 // A buffer is an on-device memory buffer.
 type buffer struct {
 	handle *Handle
@@ -274,15 +111,15 @@ func newBuffer(h *Handle, size int) (*buffer, error) {
 	var res *buffer
 	var err error
 	h.loop.Run(func() {
-		buff := C.anyvec_cuda_alloc(C.size_t(size))
-		if C.anyvec_cuda_is_null(buff) != C.int(0) {
+		var buf unsafe.Pointer
+		if C.cudaMalloc(&buf, C.size_t(size)) != C.cudaSuccess {
 			err = ErrMemoryAlloc
 			return
 		}
 		res = &buffer{
 			handle: h,
 			size:   size,
-			ptr:    buff,
+			ptr:    buf,
 		}
 	})
 	if err != nil {
@@ -448,4 +285,17 @@ func (b *buffer) memcpyErr(status C.cudaError_t) error {
 		return nil
 	}
 	return ErrMemoryCopy
+}
+
+func blasTransposeOp(trans bool) C.cublasOperation_t {
+	if trans {
+		return C.transpose
+	}
+	return C.noTranspose
+}
+
+func panicOnBLASError(s C.cublasStatus_t) {
+	if s != C.cublasSuccess {
+		panic("cuBLAS operation failed")
+	}
 }

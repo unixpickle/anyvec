@@ -8,22 +8,13 @@ package cuda
 #include "cublas_v2.h"
 
 extern CUresult cuSuccess;
+extern cublasStatus_t cublasSuccess;
 
-extern int anyvec_cuda_is_null(void * ptr);
-
-cublasHandle_t anyvec_cuda_new_handle() {
-    cublasHandle_t handle;
-    if (cublasCreate(&handle) != CUDA_SUCCESS) {
-        return NULL;
-    }
-    return handle;
-}
 */
 import "C"
 import (
 	"runtime"
 	"sync"
-	"unsafe"
 )
 
 var mainLoop *cudaLoop
@@ -126,8 +117,8 @@ func newCudaState() (*cudaState, error) {
 		return nil, ErrMakeContext
 	}
 
-	handle := C.anyvec_cuda_new_handle()
-	if C.anyvec_cuda_is_null(unsafe.Pointer(handle)) != C.int(0) {
+	var handle C.cublasHandle_t
+	if C.cublasCreate(&handle) != C.cublasSuccess {
 		C.cuCtxDestroy(ctx)
 		return nil, ErrMakeHandle
 	}

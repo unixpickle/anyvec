@@ -28,122 +28,112 @@ func NewHandle() (*Handle, error) {
 	return nil, errors.New("unimplemented")
 }
 
-func (h *Handle) sscal(n int, s float32, x unsafe.Pointer) {
+type ops32 struct {
+	h *Handle
+}
+
+func (o ops32) Scal(n int, s float32, x unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) sdot(n int, x, y unsafe.Pointer) float32 {
+func (o ops32) Dot(n int, x, y unsafe.Pointer) float32 {
 	panic("unimplemented")
 }
 
-func (h *Handle) saxpy(n int, alpha float32, x, y unsafe.Pointer) {
+func (o ops32) Axpy(n int, alpha float32, x, y unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) sgemm(transA, transB bool, m, n, k int, alpha float32, a unsafe.Pointer,
+func (o ops32) Gemm(transA, transB bool, m, n, k int, alpha float32, a unsafe.Pointer,
 	lda int, b unsafe.Pointer, ldb int, beta float32, c unsafe.Pointer, ldc int) {
 	panic("unimplemented")
 }
 
-func (h *Handle) mul(n int, a, b unsafe.Pointer) {
+func (o ops32) Mul(n int, a, b unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) mulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
+func (o ops32) MulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) div(n int, a, b unsafe.Pointer) {
+func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 	panic("unimplemented")
 }
 
-func (h *Handle) sum(n int, a unsafe.Pointer) float32 {
+func (o ops32) Div(n int, a, b unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) exp(n int, a unsafe.Pointer) {
+func (o ops32) Exp(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) tanh(n int, a unsafe.Pointer) {
+func (o ops32) Tanh(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) sin(n int, a unsafe.Pointer) {
+func (o ops32) Sin(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) clipPos(n int, a unsafe.Pointer) {
+func (o ops32) ClipPos(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-func (h *Handle) genRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
+func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 	panic("unimplemented")
 }
 
-func (h *Handle) addRepeated(mainLen, repLen int, dest, source unsafe.Pointer) {
+func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
 	panic("unimplemented")
 }
 
-// A buffer is an on-device memory buffer.
 type buffer struct {
 	size int
 	ptr  unsafe.Pointer
 }
 
-// newBuffer allocates a buffer.
 func newBuffer(h *Handle, size int) (*buffer, error) {
 	return nil, errors.New("unimplemented")
 }
 
-// newBufferConcat concatenates buffers.
 func newBufferConcat(h *Handle, bufs []*buffer) (*buffer, error) {
 	return nil, errors.New("unimplemented")
 }
 
-// Len returns the buffer's length in bytes.
 func (b *buffer) Len() int {
 	panic("unimplemented")
 }
 
-// Clear zeroes the buffer.
 func (b *buffer) Clear() error {
 	panic("unimplemented")
 }
 
-// Set copies the contents of a buffer into b.
 func (b *buffer) Set(b1 *buffer) error {
 	panic("unimplemented")
 }
 
-// Set32 copies 32-bit floats into the buffer.
 func (b *buffer) Set32(source []float32) error {
 	panic("unimplemented")
 }
 
-// SetRepeated32 copies the same 32-bits again and again
-// to fill the buffer.
 func (b *buffer) SetRepeated32(v float32) error {
 	panic("unimplemented")
 }
 
-// Set64 copies 64-bit floats into the buffer.
 func (b *buffer) Set64(source []float64) error {
 	panic("unimplemented")
 }
 
-// SetRepeated64 copies the same 64-bits again and again
-// to fill the buffer.
 func (b *buffer) SetRepeated64(v float64) error {
 	panic("unimplemented")
 }
 
-// Get32 copies 32-bit floats out of the buffer.
 func (b *buffer) Get32(source []float32) error {
 	panic("unimplemented")
 }
 
-// Get64 copies 64-bit floats out of the buffer.
 func (b *buffer) Get64(source []float64) error {
 	panic("unimplemented")
 }

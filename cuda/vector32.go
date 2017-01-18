@@ -156,7 +156,7 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 }
 
 func (v *vector32) Scale(s anyvec.Numeric) {
-	v.creator.handle.sscal(v.Len(), s.(float32), v.buffer.ptr)
+	v.ops().Scal(v.Len(), s.(float32), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
@@ -173,7 +173,7 @@ func (v *vector32) AddScaler(s anyvec.Numeric) {
 
 func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
 	v.assertMatch(v1)
-	res := v.creator.handle.sdot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	res := v.ops().Dot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 	return res
@@ -184,7 +184,7 @@ func (v *vector32) Add(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.creator.handle.saxpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
+	v.ops().Axpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
@@ -194,7 +194,7 @@ func (v *vector32) Sub(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.creator.handle.saxpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
+	v.ops().Axpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
@@ -204,7 +204,7 @@ func (v *vector32) Mul(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.creator.handle.mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	v.ops().Mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
@@ -214,7 +214,7 @@ func (v *vector32) Div(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.creator.handle.div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
+	v.ops().Div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1)
 }
@@ -227,7 +227,7 @@ func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, 
 	aBuf := a.(*vector32).buffer
 	bBuf := b.(*vector32).buffer
 	validateGemm(transA, transB, m, n, k, a.Len(), lda, b.Len(), ldb, v.Len(), ldc)
-	v.creator.handle.sgemm(transA, transB, m, n, k, alpha.(float32), aBuf.ptr,
+	v.ops().Gemm(transA, transB, m, n, k, alpha.(float32), aBuf.ptr,
 		lda, bBuf.ptr, ldb, beta.(float32), v.buffer.ptr, ldc)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(aBuf)
@@ -235,27 +235,27 @@ func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, 
 }
 
 func (v *vector32) Exp() {
-	v.creator.handle.exp(v.Len(), v.buffer.ptr)
+	v.ops().Exp(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Tanh() {
-	v.creator.handle.tanh(v.Len(), v.buffer.ptr)
+	v.ops().Tanh(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Sin() {
-	v.creator.handle.sin(v.Len(), v.buffer.ptr)
+	v.ops().Sin(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) ClipPos() {
-	v.creator.handle.clipPos(v.Len(), v.buffer.ptr)
+	v.ops().ClipPos(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Sum() anyvec.Numeric {
-	res := v.creator.handle.sum(v.Len(), v.buffer.ptr)
+	res := v.ops().Sum(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	return res
 }
@@ -270,13 +270,13 @@ func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
 	chunkSize := v.Len() / v1.Len()
 	numChunks := v1.Len()
 	v1Buf := v1.(*vector32).buffer
-	v.creator.handle.mulChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
+	v.ops().MulChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1Buf)
 }
 
 func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
-	v.creator.handle.genRand(v.Len(), v.buffer.ptr, p)
+	v.ops().GenRand(v.Len(), v.buffer.ptr, p)
 	runtime.KeepAlive(v.buffer)
 }
 
@@ -285,7 +285,7 @@ func (v *vector32) AddRepeated(v1 anyvec.Vector) {
 		panic("repeated vector cannot be empty")
 	}
 	v1Buf := v1.(*vector32).buffer
-	v.creator.handle.addRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
+	v.ops().AddRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1Buf)
 }
@@ -294,4 +294,8 @@ func (v *vector32) assertMatch(v1 anyvec.Vector) {
 	if v.Len() != v1.Len() {
 		panic("sizes do no match")
 	}
+}
+
+func (v *vector32) ops() ops32 {
+	return ops32{h: v.creator.handle}
 }

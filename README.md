@@ -53,7 +53,8 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 
 # TODO
 
- * Clean up CUDA conventions
+ * Better CUDA error reporting
+ * Simplify CUDA buffer set/get funcs
  * CUDA asum and amax
  * Euclidean norm
  * AddChunks
