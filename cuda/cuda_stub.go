@@ -9,14 +9,12 @@ import (
 	"github.com/unixpickle/anyvec"
 )
 
-// These errors indicate various CUDA-related failures.
-var (
-	ErrHandleCreation = errors.New("failed to create cuBLAS handle")
-	ErrMemoryAlloc    = errors.New("failed to allocate CUDA memory")
-	ErrMemoryZero     = errors.New("failed to zero CUDA memory")
-	ErrMemorySet      = errors.New("failed to set CUDA memory")
-	ErrMemoryCopy     = errors.New("failed to transfer CUDA memory")
-	ErrMatrixMultiply = errors.New("matrix multiplication failed")
+type compareType int
+
+const (
+	lessThan compareType = iota
+	greaterThan
+	equalTo
 )
 
 // A Handle manages an internal CUDA context.
@@ -110,6 +108,10 @@ func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
 }
 
 func (o ops32) Nrm2(n int, v unsafe.Pointer) float32 {
+	panic("unimplemented")
+}
+
+func (o ops32) Compare(n int, alpha float32, v unsafe.Pointer, c compareType) {
 	panic("unimplemented")
 }
 

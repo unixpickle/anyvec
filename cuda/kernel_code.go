@@ -802,5 +802,140 @@ BB12_5:
 	ret;
 }
 
+	// .globl	lessThan
+.visible .entry lessThan(
+	.param .f32 lessThan_param_0,
+	.param .u64 lessThan_param_1,
+	.param .u64 lessThan_param_2
+)
+{
+	.reg .pred 	%p<3>;
+	.reg .f32 	%f<3>;
+	.reg .b32 	%r<7>;
+	.reg .b64 	%rd<7>;
+
+
+	ld.param.f32 	%f1, [lessThan_param_0];
+	ld.param.u64 	%rd3, [lessThan_param_1];
+	ld.param.u64 	%rd4, [lessThan_param_2];
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %ntid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r2, %r1, %r3;
+	cvt.u64.u32	%rd1, %r4;
+	setp.ge.u64	%p1, %rd1, %rd4;
+	@%p1 bra 	BB13_4;
+
+	cvta.to.global.u64 	%rd5, %rd3;
+	shl.b64 	%rd6, %rd1, 2;
+	add.s64 	%rd2, %rd5, %rd6;
+	ld.global.f32 	%f2, [%rd2];
+	setp.lt.f32	%p2, %f2, %f1;
+	@%p2 bra 	BB13_3;
+	bra.uni 	BB13_2;
+
+BB13_3:
+	mov.u32 	%r6, 1065353216;
+	st.global.u32 	[%rd2], %r6;
+	bra.uni 	BB13_4;
+
+BB13_2:
+	mov.u32 	%r5, 0;
+	st.global.u32 	[%rd2], %r5;
+
+BB13_4:
+	ret;
+}
+
+	// .globl	greaterThan
+.visible .entry greaterThan(
+	.param .f32 greaterThan_param_0,
+	.param .u64 greaterThan_param_1,
+	.param .u64 greaterThan_param_2
+)
+{
+	.reg .pred 	%p<3>;
+	.reg .f32 	%f<3>;
+	.reg .b32 	%r<7>;
+	.reg .b64 	%rd<7>;
+
+
+	ld.param.f32 	%f1, [greaterThan_param_0];
+	ld.param.u64 	%rd3, [greaterThan_param_1];
+	ld.param.u64 	%rd4, [greaterThan_param_2];
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %ntid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r2, %r1, %r3;
+	cvt.u64.u32	%rd1, %r4;
+	setp.ge.u64	%p1, %rd1, %rd4;
+	@%p1 bra 	BB14_4;
+
+	cvta.to.global.u64 	%rd5, %rd3;
+	shl.b64 	%rd6, %rd1, 2;
+	add.s64 	%rd2, %rd5, %rd6;
+	ld.global.f32 	%f2, [%rd2];
+	setp.gt.f32	%p2, %f2, %f1;
+	@%p2 bra 	BB14_3;
+	bra.uni 	BB14_2;
+
+BB14_3:
+	mov.u32 	%r6, 1065353216;
+	st.global.u32 	[%rd2], %r6;
+	bra.uni 	BB14_4;
+
+BB14_2:
+	mov.u32 	%r5, 0;
+	st.global.u32 	[%rd2], %r5;
+
+BB14_4:
+	ret;
+}
+
+	// .globl	equalTo
+.visible .entry equalTo(
+	.param .f32 equalTo_param_0,
+	.param .u64 equalTo_param_1,
+	.param .u64 equalTo_param_2
+)
+{
+	.reg .pred 	%p<3>;
+	.reg .f32 	%f<3>;
+	.reg .b32 	%r<7>;
+	.reg .b64 	%rd<7>;
+
+
+	ld.param.f32 	%f1, [equalTo_param_0];
+	ld.param.u64 	%rd3, [equalTo_param_1];
+	ld.param.u64 	%rd4, [equalTo_param_2];
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %ntid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r2, %r1, %r3;
+	cvt.u64.u32	%rd1, %r4;
+	setp.ge.u64	%p1, %rd1, %rd4;
+	@%p1 bra 	BB15_4;
+
+	cvta.to.global.u64 	%rd5, %rd3;
+	shl.b64 	%rd6, %rd1, 2;
+	add.s64 	%rd2, %rd5, %rd6;
+	ld.global.f32 	%f2, [%rd2];
+	setp.eq.f32	%p2, %f2, %f1;
+	@%p2 bra 	BB15_3;
+	bra.uni 	BB15_2;
+
+BB15_3:
+	mov.u32 	%r6, 1065353216;
+	st.global.u32 	[%rd2], %r6;
+	bra.uni 	BB15_4;
+
+BB15_2:
+	mov.u32 	%r5, 0;
+	st.global.u32 	[%rd2], %r5;
+
+BB15_4:
+	ret;
+}
+
 
 `

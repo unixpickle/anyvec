@@ -263,3 +263,12 @@ func (o ops32) AddScaler(n int, alpha float32, v unsafe.Pointer) {
 		must(o.h.kernels.AddScaler32(n, alpha, v))
 	})
 }
+
+// Compare performs a comparison, assigning elements to 1
+// if the comparison is true.
+// The vector contains n elements.
+func (o ops32) Compare(n int, alpha float32, v unsafe.Pointer, c compareType) {
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.Compare32(n, alpha, v, c))
+	})
+}

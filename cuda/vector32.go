@@ -319,10 +319,27 @@ func (v *vector32) Norm() anyvec.Numeric {
 	return v.aggregate(v.ops().Nrm2)
 }
 
+func (v *vector32) LessThan(n anyvec.Numeric) {
+	v.comparison(n, lessThan)
+}
+
+func (v *vector32) GreaterThan(n anyvec.Numeric) {
+	v.comparison(n, greaterThan)
+}
+
+func (v *vector32) EqualTo(n anyvec.Numeric) {
+	v.comparison(n, equalTo)
+}
+
 func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Numeric {
 	res := f(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	return res
+}
+
+func (v *vector32) comparison(n anyvec.Numeric, c compareType) {
+	v.ops().Compare(v.Len(), n.(float32), v.buffer.ptr, c)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) assertMatch(v1 anyvec.Vector) {

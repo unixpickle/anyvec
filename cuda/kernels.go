@@ -167,6 +167,19 @@ func (m *mathKernels) AddChunks32(chunkCount, chunkSize int, dst, scal unsafe.Po
 	return m.call2Asym("addChunks", chunkCount*chunkSize, chunkSize, dst, scal)
 }
 
+// Compare32 runs a comparison.
+func (m *mathKernels) Compare32(n int, alpha float32, v unsafe.Pointer, c compareType) error {
+	switch c {
+	case lessThan:
+		return m.call1Scaler("lessThan", n, alpha, v)
+	case greaterThan:
+		return m.call1Scaler("greaterThan", n, alpha, v)
+	case equalTo:
+		return m.call1Scaler("equalTo", n, alpha, v)
+	}
+	panic("unknown compare type")
+}
+
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
 	return m.doneKernel(C.anyvec_cuda_call1(k, C.size_t(n), v))
@@ -201,4 +214,4 @@ func (m *mathKernels) sync() error {
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
-	"addScaler", "addChunks"}
+	"addScaler", "addChunks", "lessThan", "greaterThan", "equalTo"}

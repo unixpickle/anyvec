@@ -20,6 +20,14 @@ import (
 	"unsafe"
 )
 
+type compareType int
+
+const (
+	lessThan compareType = iota
+	greaterThan
+	equalTo
+)
+
 // A Handle manages an internal CUDA context.
 type Handle struct {
 	loop    *cudaLoop

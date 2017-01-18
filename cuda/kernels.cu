@@ -107,3 +107,39 @@ void addChunks(float * dest, float * source, size_t destLen, size_t chunkSize) {
 		dest[tid] += source[tid / chunkSize];
 	}
 }
+
+extern "C" __global__
+void lessThan(float s, float * v, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+    if (v[tid] < s) {
+      v[tid] = 1;
+    } else {
+      v[tid] = 0;
+    }
+	}
+}
+
+extern "C" __global__
+void greaterThan(float s, float * v, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+    if (v[tid] > s) {
+      v[tid] = 1;
+    } else {
+      v[tid] = 0;
+    }
+	}
+}
+
+extern "C" __global__
+void equalTo(float s, float * v, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+    if (v[tid] == s) {
+      v[tid] = 1;
+    } else {
+      v[tid] = 0;
+    }
+	}
+}
