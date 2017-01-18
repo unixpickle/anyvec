@@ -113,6 +113,12 @@ func BenchmarkDiv(b *testing.B) {
 	}
 }
 
+func BenchmarkAddScaler(b *testing.B) {
+	benchmarkIter(1024, b, func(v anyvec.Vector) {
+		v.AddScaler(float32(2.0))
+	})
+}
+
 func BenchmarkAddRepeated(b *testing.B) {
 	h, err := NewHandle()
 	if err != nil {

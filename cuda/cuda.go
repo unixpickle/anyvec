@@ -181,37 +181,11 @@ func (b *buffer) Set32(src []float32) error {
 	return res
 }
 
-// SetRepeated32 copies the same 32-bits again and again
-// to fill the buffer.
-func (b *buffer) SetRepeated32(v float32) error {
-	if b.size%4 != 0 {
-		panic("size not divisible by 4")
-	}
-	buf := make([]float32, b.size/4)
-	for i := range buf {
-		buf[i] = v
-	}
-	return b.Set32(buf)
-}
-
 // Set64 copies 64-bit floats into the buffer.
 func (b *buffer) Set64(src []float64) error {
 	res := b.hostToDevice(len(src)*8, unsafe.Pointer(&src[0]))
 	runtime.KeepAlive(src)
 	return res
-}
-
-// SetRepeated64 copies the same 64-bits again and again
-// to fill the buffer.
-func (b *buffer) SetRepeated64(v float64) error {
-	if b.size%8 != 0 {
-		panic("size not divisible by 8")
-	}
-	buf := make([]float64, b.size/8)
-	for i := range buf {
-		buf[i] = v
-	}
-	return b.Set64(buf)
 }
 
 // Get32 copies 32-bit floats out of the buffer.

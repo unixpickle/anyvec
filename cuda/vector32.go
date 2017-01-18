@@ -161,14 +161,8 @@ func (v *vector32) Scale(s anyvec.Numeric) {
 }
 
 func (v *vector32) AddScaler(s anyvec.Numeric) {
-	constVec, err := newBuffer(v.creator.handle, v.buffer.size)
-	if err != nil {
-		panic(err)
-	}
-	if err := constVec.SetRepeated32(s.(float32)); err != nil {
-		panic(err)
-	}
-	v.Add(&vector32{creator: v.creator, buffer: constVec})
+	v.ops().AddScaler(v.Len(), s.(float32), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {

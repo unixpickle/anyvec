@@ -44,6 +44,13 @@ CUresult anyvec_cuda_call2_asym(CUfunction f, void * p1, void * p2, size_t n1, s
 	kernel_sizes((unsigned int)n1, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
+
+CUresult anyvec_cuda_call1_scaler(CUfunction f, float scaler, void * p1, size_t n) {
+	void * args[] = {&scaler, &p1, &n};
+	unsigned int blockSize, gridSize;
+	kernel_sizes((unsigned int)n, &blockSize, &gridSize);
+	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
+}
 */
 import "C"
 
@@ -189,9 +196,19 @@ func (m *mathKernels) AddRepeated32(target, source unsafe.Pointer, targLen, srcL
 	}
 }
 
+// AddScaler32 adds a scaler to a target.
+func (m *mathKernels) AddScaler32(scaler float32, v unsafe.Pointer, size int) error {
+	return m.call1Scaler("addScaler", scaler, v, size)
+}
+
 func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
 	k := m.kernels[name]
 	return m.doneKernel(C.anyvec_cuda_call1(k, v, C.size_t(n)))
+}
+
+func (m *mathKernels) call1Scaler(name string, s float32, v unsafe.Pointer, n int) error {
+	k := m.kernels[name]
+	return m.doneKernel(C.anyvec_cuda_call1_scaler(k, C.float(s), v, C.size_t(n)))
 }
 
 func (m *mathKernels) call2(name string, v1, v2 unsafe.Pointer, n int) error {
@@ -217,7 +234,7 @@ func (m *mathKernels) sync() error {
 
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
-	"addRepeated", "addRepeatedPow2"}
+	"addRepeated", "addRepeatedPow2", "addScaler"}
 
 const mathKernelsCode string = `
 __global__ void divElements(float * x, float * y, size_t n) {
@@ -286,6 +303,13 @@ __global__ void addRepeatedPow2(float * dest, float * source, size_t destLen, si
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += source[tid & srcMask];
+	}
+}
+
+__global__ void addScaler(float s, float * dest, size_t destLen) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] += s;
 	}
 }
 `

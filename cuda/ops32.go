@@ -192,3 +192,11 @@ func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
 		return o.h.kernels.AddRepeated32(dst, src, dstLen, srcLen)
 	})
 }
+
+// AddScaler adds a scaler s to the components of x.
+// The vector contains n elements.
+func (o ops32) AddScaler(n int, s float32, x unsafe.Pointer) {
+	o.h.runWithKernels(func() error {
+		return o.h.kernels.AddScaler32(s, x, n)
+	})
+}

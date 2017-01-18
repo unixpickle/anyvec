@@ -89,6 +89,10 @@ func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (o ops32) AddScaler(n int, s float32, x unsafe.Pointer) {
+	panic("unimplemented")
+}
+
 type buffer struct {
 	size int
 	ptr  unsafe.Pointer
@@ -118,15 +122,7 @@ func (b *buffer) Set32(source []float32) error {
 	panic("unimplemented")
 }
 
-func (b *buffer) SetRepeated32(v float32) error {
-	panic("unimplemented")
-}
-
 func (b *buffer) Set64(source []float64) error {
-	panic("unimplemented")
-}
-
-func (b *buffer) SetRepeated64(v float64) error {
 	panic("unimplemented")
 }
 

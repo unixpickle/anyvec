@@ -53,13 +53,16 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 
 # TODO
 
- * CUDA asum and amax
+ * CUDA: consistent kernel argument order
+ * CUDA: consistent panic scheme for runWith*
+ * CUDA: asum and amax
  * Euclidean norm
  * AddChunks
  * ScaleRepeated
  * AddLogDomain
- * GreaterThan -> 1 if x>=k, 0 otherwise
+ * Logic routines
+  * GreaterThan
+	* Not (1 - x)
  * On-GPU implementation of Max()
- * Kernelized AddScaler()
  * Kernelized Sum()
  * Kernelized LogSoftmax()
