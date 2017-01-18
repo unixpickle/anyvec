@@ -53,6 +53,11 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 
 # TODO
 
+ * Amax and Asum (for inf-norm and 1-norm)
+ * Euclidean norm
+ * AddChunks
+ * ScaleRepeated
+ * AddLogDomain
  * On-GPU implementation of Max()
  * Kernelized AddScaler()
  * Kernelized Sum()
