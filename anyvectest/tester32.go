@@ -50,6 +50,8 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("ClipPos", t.TestClipPos)
 	test.Run("Max", t.TestMax)
 	test.Run("Sum", t.TestSum)
+	test.Run("AbsMax", t.TestAbsMax)
+	test.Run("AbsSum", t.TestAbsSum)
 	test.Run("LogSoftmax", t.TestLogSoftmax)
 	test.Run("ScaleChunks", t.TestScaleChunks)
 	test.Run("Rand", t.TestRand)
@@ -391,6 +393,38 @@ func (t *Tester32) TestMax(test *testing.T) {
 		}
 		return max
 	}, anyvec.Max)
+}
+
+// TestAbsSum test absolute summation.
+func (t *Tester32) TestAbsSum(test *testing.T) {
+	t.testAgg(test, func(x []float32) float32 {
+		var sum float32
+		for _, k := range x {
+			if k > 0 {
+				sum += k
+			} else {
+				sum -= k
+			}
+		}
+		return sum
+	}, anyvec.AbsSum)
+}
+
+// TestAbsMax tests absolute max computation.
+func (t *Tester32) TestAbsMax(test *testing.T) {
+	t.testAgg(test, func(x []float32) float32 {
+		var max float32
+		for _, k := range x {
+			x := k
+			if x < 0 {
+				x = -x
+			}
+			if x > max {
+				max = x
+			}
+		}
+		return max
+	}, anyvec.AbsMax)
 }
 
 // TestLogSoftmax tests log-domain softmaxing.

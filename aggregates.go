@@ -1,6 +1,9 @@
 package anyvec
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // A Summer can sum up its entries.
 type Summer interface {
@@ -48,6 +51,56 @@ func Max(v Vector) Numeric {
 			for _, x := range data[1:] {
 				if x > max {
 					max = x
+				}
+			}
+			return max
+		})
+	}
+}
+
+// An AbsSummer can sum up its entries' absolute values.
+type AbsSummer interface {
+	AbsSum() Numeric
+}
+
+// AbsSum sums the absolute values of the vector entries.
+// If the vector does not implement AbsSummer, a default
+// implementation is used which supports float32 and
+// float64 values.
+func AbsSum(v Vector) Numeric {
+	if a, ok := v.(AbsSummer); ok {
+		return a.AbsSum()
+	} else {
+		return applyAggregate(v, func(data []float64) float64 {
+			var sum float64
+			for _, x := range data {
+				sum += math.Abs(x)
+			}
+			return sum
+		})
+	}
+}
+
+// An AbsMaxer can compute the greatest absolute value of
+// its components.
+type AbsMaxer interface {
+	AbsMax() Numeric
+}
+
+// AbsMax finds the max of the absolute values of the
+// vector entries.
+// If the vector does not implement AbsMaxer, a default
+// implementation is used which supports float32 and
+// float64 values.
+func AbsMax(v Vector) Numeric {
+	if a, ok := v.(AbsMaxer); ok {
+		return a.AbsMax()
+	} else {
+		return applyAggregate(v, func(data []float64) float64 {
+			var max float64
+			for _, x := range data {
+				if m := math.Abs(x); m > max {
+					max = m
 				}
 			}
 			return max
