@@ -148,9 +148,24 @@ func (m *mathKernels) AddRepeated32(dstLen, srcLen int, dst, src unsafe.Pointer)
 	}
 }
 
+// ScaleRepeated32 scales a target by a repeated vector.
+func (m *mathKernels) ScaleRepeated32(dstLen, srcLen int, dst, src unsafe.Pointer) error {
+	log2 := uint(math.Log2(float64(srcLen)))
+	if (1 << log2) == srcLen {
+		return m.call2Asym("scaleRepeatedPow2", dstLen, srcLen-1, dst, src)
+	} else {
+		return m.call2Asym("scaleRepeated", dstLen, srcLen, dst, src)
+	}
+}
+
 // AddScaler32 adds a scaler to a target.
 func (m *mathKernels) AddScaler32(n int, alpha float32, v unsafe.Pointer) error {
 	return m.call1Scaler("addScaler", n, alpha, v)
+}
+
+// AddChunks32 adds a set of scalers in chunks.
+func (m *mathKernels) AddChunks32(chunkCount, chunkSize int, dst, scal unsafe.Pointer) error {
+	return m.call2Asym("addChunks", chunkCount*chunkSize, chunkSize, dst, scal)
 }
 
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
@@ -186,4 +201,5 @@ func (m *mathKernels) sync() error {
 
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
-	"addRepeated", "addRepeatedPow2", "addScaler"}
+	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
+	"addScaler", "addChunks"}

@@ -148,6 +148,13 @@ func (o ops32) MulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) 
 	})
 }
 
+// AddChunks is like ScaleChunks, but for addition.
+func (o ops32) AddChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.AddChunks32(chunkCount, chunkSize, vec, scales))
+	})
+}
+
 // Sum computes the sum of the components in the vector.
 // The vector contains n elements.
 func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
@@ -235,6 +242,17 @@ func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
 	o.h.runWithKernels(func() {
 		must(o.h.kernels.AddRepeated32(dstLen, srcLen, dst, src))
+	})
+}
+
+// ScaleRepeated updates the components of dst as
+// dst[i] *= src[i%srcLen].
+//
+// The dst vector contains dstLen components.
+// The src vector contains srcLen components.
+func (o ops32) ScaleRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.ScaleRepeated32(dstLen, srcLen, dst, src))
 	})
 }
 

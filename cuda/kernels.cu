@@ -77,9 +77,33 @@ void addRepeatedPow2(float * dest, float * source, size_t destLen, size_t srcMas
 }
 
 extern "C" __global__
+void scaleRepeated(float * dest, float * source, size_t destLen, size_t sourceLen) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] *= source[tid % sourceLen];
+	}
+}
+
+extern "C" __global__
+void scaleRepeatedPow2(float * dest, float * source, size_t destLen, size_t srcMask) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] *= source[tid & srcMask];
+	}
+}
+
+extern "C" __global__
 void addScaler(float s, float * dest, size_t destLen) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += s;
+	}
+}
+
+extern "C" __global__
+void addChunks(float * dest, float * source, size_t destLen, size_t chunkSize) {
+  size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] += source[tid / chunkSize];
 	}
 }

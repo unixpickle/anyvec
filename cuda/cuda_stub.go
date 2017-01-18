@@ -57,6 +57,10 @@ func (o ops32) MulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) 
 	panic("unimplemented")
 }
 
+func (o ops32) AddChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
+	panic("unimplemented")
+}
+
 func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 	panic("unimplemented")
 }
@@ -86,6 +90,10 @@ func (o ops32) GenRand(n int, a unsafe.Pointer, dist anyvec.ProbDist) {
 }
 
 func (o ops32) AddRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
+	panic("unimplemented")
+}
+
+func (o ops32) ScaleRepeated(dstLen, srcLen int, dst, src unsafe.Pointer) {
 	panic("unimplemented")
 }
 

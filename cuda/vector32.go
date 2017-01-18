@@ -267,6 +267,21 @@ func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
 	runtime.KeepAlive(v1Buf)
 }
 
+func (v *vector32) AddChunks(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
+	if v.Len()%v1.Len() != 0 {
+		panic("number of scalers must divide vector size")
+	}
+	chunkSize := v.Len() / v1.Len()
+	numChunks := v1.Len()
+	v1Buf := v1.(*vector32).buffer
+	v.ops().AddChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1Buf)
+}
+
 func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
 	v.ops().GenRand(v.Len(), v.buffer.ptr, p)
 	runtime.KeepAlive(v.buffer)
@@ -278,6 +293,16 @@ func (v *vector32) AddRepeated(v1 anyvec.Vector) {
 	}
 	v1Buf := v1.(*vector32).buffer
 	v.ops().AddRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
+	runtime.KeepAlive(v.buffer)
+	runtime.KeepAlive(v1Buf)
+}
+
+func (v *vector32) ScaleRepeated(v1 anyvec.Vector) {
+	if v1.Len() == 0 {
+		panic("repeated vector cannot be empty")
+	}
+	v1Buf := v1.(*vector32).buffer
+	v.ops().ScaleRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
 	runtime.KeepAlive(v.buffer)
 	runtime.KeepAlive(v1Buf)
 }

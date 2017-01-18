@@ -615,6 +615,103 @@ BB8_2:
 	ret;
 }
 
+	// .globl	scaleRepeated
+.visible .entry scaleRepeated(
+	.param .u64 scaleRepeated_param_0,
+	.param .u64 scaleRepeated_param_1,
+	.param .u64 scaleRepeated_param_2,
+	.param .u64 scaleRepeated_param_3
+)
+{
+	.reg .pred 	%p<3>;
+	.reg .f32 	%f<4>;
+	.reg .b32 	%r<8>;
+	.reg .b64 	%rd<17>;
+
+
+	ld.param.u64 	%rd5, [scaleRepeated_param_0];
+	ld.param.u64 	%rd6, [scaleRepeated_param_1];
+	ld.param.u64 	%rd8, [scaleRepeated_param_2];
+	ld.param.u64 	%rd7, [scaleRepeated_param_3];
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %ntid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r2, %r1, %r3;
+	cvt.u64.u32	%rd1, %r4;
+	setp.ge.u64	%p1, %rd1, %rd8;
+	@%p1 bra 	BB9_5;
+
+	and.b64  	%rd9, %rd7, -4294967296;
+	setp.eq.s64	%p2, %rd9, 0;
+	@%p2 bra 	BB9_3;
+
+	rem.u64 	%rd16, %rd1, %rd7;
+	bra.uni 	BB9_4;
+
+BB9_3:
+	cvt.u32.u64	%r5, %rd7;
+	cvt.u32.u64	%r6, %rd1;
+	rem.u32 	%r7, %r6, %r5;
+	cvt.u64.u32	%rd16, %r7;
+
+BB9_4:
+	cvta.to.global.u64 	%rd10, %rd6;
+	cvta.to.global.u64 	%rd11, %rd5;
+	shl.b64 	%rd12, %rd1, 2;
+	add.s64 	%rd13, %rd11, %rd12;
+	ld.global.f32 	%f1, [%rd13];
+	shl.b64 	%rd14, %rd16, 2;
+	add.s64 	%rd15, %rd10, %rd14;
+	ld.global.f32 	%f2, [%rd15];
+	mul.f32 	%f3, %f2, %f1;
+	st.global.f32 	[%rd13], %f3;
+
+BB9_5:
+	ret;
+}
+
+	// .globl	scaleRepeatedPow2
+.visible .entry scaleRepeatedPow2(
+	.param .u64 scaleRepeatedPow2_param_0,
+	.param .u64 scaleRepeatedPow2_param_1,
+	.param .u64 scaleRepeatedPow2_param_2,
+	.param .u64 scaleRepeatedPow2_param_3
+)
+{
+	.reg .pred 	%p<2>;
+	.reg .f32 	%f<4>;
+	.reg .b32 	%r<5>;
+	.reg .b64 	%rd<13>;
+
+
+	ld.param.u64 	%rd2, [scaleRepeatedPow2_param_0];
+	ld.param.u64 	%rd3, [scaleRepeatedPow2_param_1];
+	ld.param.u64 	%rd5, [scaleRepeatedPow2_param_2];
+	ld.param.u64 	%rd4, [scaleRepeatedPow2_param_3];
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %ntid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r2, %r1, %r3;
+	cvt.u64.u32	%rd1, %r4;
+	setp.ge.u64	%p1, %rd1, %rd5;
+	@%p1 bra 	BB10_2;
+
+	cvta.to.global.u64 	%rd6, %rd3;
+	and.b64  	%rd7, %rd1, %rd4;
+	shl.b64 	%rd8, %rd7, 2;
+	add.s64 	%rd9, %rd6, %rd8;
+	cvta.to.global.u64 	%rd10, %rd2;
+	shl.b64 	%rd11, %rd1, 2;
+	add.s64 	%rd12, %rd10, %rd11;
+	ld.global.f32 	%f1, [%rd12];
+	ld.global.f32 	%f2, [%rd9];
+	mul.f32 	%f3, %f2, %f1;
+	st.global.f32 	[%rd12], %f3;
+
+BB10_2:
+	ret;
+}
+
 	// .globl	addScaler
 .visible .entry addScaler(
 	.param .f32 addScaler_param_0,
@@ -637,7 +734,7 @@ BB8_2:
 	mad.lo.s32 	%r4, %r2, %r1, %r3;
 	cvt.u64.u32	%rd1, %r4;
 	setp.ge.u64	%p1, %rd1, %rd3;
-	@%p1 bra 	BB9_2;
+	@%p1 bra 	BB11_2;
 
 	cvta.to.global.u64 	%rd4, %rd2;
 	shl.b64 	%rd5, %rd1, 2;
@@ -646,7 +743,62 @@ BB8_2:
 	add.f32 	%f3, %f2, %f1;
 	st.global.f32 	[%rd6], %f3;
 
-BB9_2:
+BB11_2:
+	ret;
+}
+
+	// .globl	addChunks
+.visible .entry addChunks(
+	.param .u64 addChunks_param_0,
+	.param .u64 addChunks_param_1,
+	.param .u64 addChunks_param_2,
+	.param .u64 addChunks_param_3
+)
+{
+	.reg .pred 	%p<3>;
+	.reg .f32 	%f<4>;
+	.reg .b32 	%r<8>;
+	.reg .b64 	%rd<17>;
+
+
+	ld.param.u64 	%rd5, [addChunks_param_0];
+	ld.param.u64 	%rd6, [addChunks_param_1];
+	ld.param.u64 	%rd8, [addChunks_param_2];
+	ld.param.u64 	%rd7, [addChunks_param_3];
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %ntid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r2, %r1, %r3;
+	cvt.u64.u32	%rd1, %r4;
+	setp.ge.u64	%p1, %rd1, %rd8;
+	@%p1 bra 	BB12_5;
+
+	and.b64  	%rd9, %rd7, -4294967296;
+	setp.eq.s64	%p2, %rd9, 0;
+	@%p2 bra 	BB12_3;
+
+	div.u64 	%rd16, %rd1, %rd7;
+	bra.uni 	BB12_4;
+
+BB12_3:
+	cvt.u32.u64	%r5, %rd7;
+	cvt.u32.u64	%r6, %rd1;
+	div.u32 	%r7, %r6, %r5;
+	cvt.u64.u32	%rd16, %r7;
+
+BB12_4:
+	cvta.to.global.u64 	%rd10, %rd6;
+	cvta.to.global.u64 	%rd11, %rd5;
+	shl.b64 	%rd12, %rd1, 2;
+	add.s64 	%rd13, %rd11, %rd12;
+	ld.global.f32 	%f1, [%rd13];
+	shl.b64 	%rd14, %rd16, 2;
+	add.s64 	%rd15, %rd10, %rd14;
+	ld.global.f32 	%f2, [%rd15];
+	add.f32 	%f3, %f2, %f1;
+	st.global.f32 	[%rd13], %f3;
+
+BB12_5:
 	ret;
 }
 
