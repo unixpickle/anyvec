@@ -54,9 +54,11 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("AbsSum", t.TestAbsSum)
 	test.Run("Norm", t.TestNorm)
 	test.Run("LogSoftmax", t.TestLogSoftmax)
+	test.Run("AddChunks", t.TestAddChunks)
 	test.Run("ScaleChunks", t.TestScaleChunks)
 	test.Run("Rand", t.TestRand)
 	test.Run("AddRepeated", t.TestAddRepeated)
+	test.Run("ScaleRepeated", t.TestScaleRepeated)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -464,6 +466,20 @@ func (t *Tester32) TestLogSoftmax(test *testing.T) {
 	assertClose(test, v.Data().([]float32), expected)
 }
 
+// TestAddChunks tests chunk addition.
+func (t *Tester32) TestAddChunks(test *testing.T) {
+	data := []float32{-0.66886, -2.12313, -0.49031, -1.00323, -0.82617, 1.16384, -1.84009,
+		-0.24389, 0.25384, -0.78570}
+	scalers := []float32{-0.25492, -0.50632}
+	expected := make([]float32, len(data))
+	for i, x := range data {
+		expected[i] = x + scalers[i/5]
+	}
+	v := t.Creator.MakeVectorData(data)
+	anyvec.AddChunks(v, t.Creator.MakeVectorData(scalers))
+	assertClose(test, v.Data().([]float32), expected)
+}
+
 // TestScaleChunks tests chunk scaling.
 func (t *Tester32) TestScaleChunks(test *testing.T) {
 	data := []float32{-0.66886, -2.12313, -0.49031, -1.00323, -0.82617, 1.16384, -1.84009,
@@ -478,6 +494,10 @@ func (t *Tester32) TestScaleChunks(test *testing.T) {
 
 // TestRand tests random sampling.
 func (t *Tester32) TestRand(test *testing.T) {
+	if testing.Short() {
+		test.Skip("not running in short mode")
+	}
+
 	const numSamples = 20000
 	const vecSize = 15
 	r := rand.New(rand.NewSource(1337))
@@ -523,6 +543,27 @@ func (t *Tester32) TestAddRepeated(test *testing.T) {
 	v = t.Creator.MakeVectorData([]float32{1, 2, 3, 4, 5, 6, 7, 8})
 	anyvec.AddRepeated(v, v1)
 	expected = []float32{0, 0, 3 - 1, 4 - 2, 5 - 1, 6 - 2, 7 - 1, 8 - 2}
+	assertClose(test, v.Data().([]float32), expected)
+}
+
+// TestScaleRepeated tests scaling a repeated vector.
+func (t *Tester32) TestScaleRepeated(test *testing.T) {
+	v := t.Creator.MakeVectorData([]float32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+	v1 := t.Creator.MakeVectorData([]float32{-3, -4, -5})
+
+	anyvec.ScaleRepeated(v, v1)
+	expected := []float32{1 * -3, 2 * -4, 3 * -5, 4 * -3, 5 * -4, 6 * -5, 7 * -3,
+		8 * -4, 9 * -5, 10 * -3}
+	assertClose(test, v.Data().([]float32), expected)
+
+	anyvec.ScaleRepeated(v1, v)
+	expected = []float32{-3 * expected[0], -4 * expected[1], -5 * expected[2]}
+	assertClose(test, v1.Data().([]float32), expected)
+
+	v1 = t.Creator.MakeVectorData([]float32{-1, -2})
+	v = t.Creator.MakeVectorData([]float32{1, 2, 3, 4, 5, 6, 7, 8})
+	anyvec.ScaleRepeated(v, v1)
+	expected = []float32{-1, -4, -3, -8, -5, -12, -7, -16}
 	assertClose(test, v.Data().([]float32), expected)
 }
 
