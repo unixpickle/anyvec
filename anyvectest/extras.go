@@ -29,6 +29,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("ScaleRepeated", t.TestScaleRepeated)
 	test.Run("Comparisons", t.TestComparisons)
 	test.Run("TestComplement", t.TestComplement)
+	test.Run("TestAddLogs", t.TestAddLogs)
 }
 
 // TestExp tests exponentiation.
@@ -278,4 +279,28 @@ func (t *Tester) TestComplement(test *testing.T) {
 	anyvec.Complement(v)
 	expected := []float64{0, 2, -1, 3, -2, 4, -0.5, -6, 1, 0}
 	t.assertClose(test, v.Data(), expected)
+}
+
+// TestAddLogs tests the LogAdder interface.
+func (t *Tester) TestAddLogs(test *testing.T) {
+	data := []float64{1, 2, 0.5, -2.5, 1, -1, -1, -0.5}
+	v := t.vec(data)
+	sum := anyvec.AddLogs(v, 4)
+	expected := []float64{2.47132687702842, 1.40132369536570}
+	t.assertClose(test, sum.Data(), expected)
+
+	if !testing.Short() {
+		data = make([]float64, 300*3)
+		expected = make([]float64, len(data)/300)
+		for i := range data {
+			data[i] = rand.NormFloat64()
+			expected[i/300] += math.Exp(data[i])
+		}
+		for i, x := range expected {
+			expected[i] = math.Log(x)
+		}
+		v = t.vec(data)
+		sum = anyvec.AddLogs(v, 300)
+		t.assertClose(test, sum.Data(), expected)
+	}
 }

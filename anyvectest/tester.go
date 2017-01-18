@@ -9,6 +9,11 @@ import (
 	"github.com/unixpickle/anyvec"
 )
 
+const (
+	singlePrec = 1e-3
+	doublePrec = 1e-3
+)
+
 // Tester tests an anyvec.Creator which uses float32
 // or float64 numerics.
 type Tester struct {
@@ -137,12 +142,12 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 	switch actual := actual.(type) {
 	case float32:
 		expected := t.unnum(expected)
-		if math.Abs(float64(actual)-expected) > 1e-3 {
+		if math.Abs(float64(actual)-expected) > singlePrec {
 			test.Errorf("expected %v but got %v", expected, actual)
 		}
 	case float64:
 		expected := t.unnum(expected)
-		if math.Abs(actual-expected) > 1e-5 {
+		if math.Abs(actual-expected) > doublePrec {
 			test.Errorf("expected %v but got %v", expected, actual)
 		}
 	case []float32:
@@ -153,7 +158,7 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 		}
 		for i, x := range expected {
 			y := actual[i]
-			if math.Abs(x-float64(y)) > 1e-3 {
+			if math.Abs(x-float64(y)) > singlePrec {
 				test.Errorf("index %d: expected %v but got %v", i, x, y)
 				return
 			}
@@ -166,7 +171,7 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 		}
 		for i, x := range expected {
 			y := actual[i]
-			if math.Abs(x-y) > 1e-5 {
+			if math.Abs(x-y) > doublePrec {
 				test.Errorf("index %d: expected %v but got %v", i, x, y)
 				return
 			}
