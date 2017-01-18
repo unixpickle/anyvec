@@ -93,6 +93,14 @@ func (o ops32) AddScaler(n int, s float32, x unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (o ops32) Asum(n int, v unsafe.Pointer) float32 {
+	panic("unimplemented")
+}
+
+func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
+	panic("unimplemented")
+}
+
 type buffer struct {
 	size int
 	ptr  unsafe.Pointer
