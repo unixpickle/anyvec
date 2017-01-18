@@ -59,6 +59,8 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("Rand", t.TestRand)
 	test.Run("AddRepeated", t.TestAddRepeated)
 	test.Run("ScaleRepeated", t.TestScaleRepeated)
+	test.Run("Comparisons", t.TestComparisons)
+	test.Run("TestComplement", t.TestComplement)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -564,6 +566,34 @@ func (t *Tester32) TestScaleRepeated(test *testing.T) {
 	v = t.Creator.MakeVectorData([]float32{1, 2, 3, 4, 5, 6, 7, 8})
 	anyvec.ScaleRepeated(v, v1)
 	expected = []float32{-1, -4, -3, -8, -5, -12, -7, -16}
+	assertClose(test, v.Data().([]float32), expected)
+}
+
+// TestComparisons tests the Comparer interface.
+func (t *Tester32) TestComparisons(test *testing.T) {
+	data := []float32{1, -1, 2, -2, 3, -3, 1.5, 7, 0, 1}
+	v := t.Creator.MakeVectorData(data)
+	anyvec.GreaterThan(v, float32(1.5))
+	expected := []float32{0, 0, 1, 0, 1, 0, 0, 1, 0, 0}
+	assertClose(test, v.Data().([]float32), expected)
+
+	v = t.Creator.MakeVectorData(data)
+	anyvec.LessThan(v, float32(-1))
+	expected = []float32{0, 0, 0, 1, 0, 1, 0, 0, 0, 0}
+	assertClose(test, v.Data().([]float32), expected)
+
+	v = t.Creator.MakeVectorData(data)
+	anyvec.EqualTo(v, float32(2))
+	expected = []float32{0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
+	assertClose(test, v.Data().([]float32), expected)
+}
+
+// TestComplement tests the Complementer interface.
+func (t *Tester32) TestComplement(test *testing.T) {
+	data := []float32{1, -1, 2, -2, 3, -3, 1.5, 7, 0, 1}
+	v := t.Creator.MakeVectorData(data)
+	anyvec.Complement(v)
+	expected := []float32{0, 2, -1, 3, -2, 4, -0.5, -6, 1, 0}
 	assertClose(test, v.Data().([]float32), expected)
 }
 
