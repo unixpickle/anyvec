@@ -6,7 +6,6 @@ package cuda
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 #include "cublas_v2.h"
-#include "nvrtc.h"
 #include "curand.h"
 
 const char * nullMessage = NULL;
@@ -111,37 +110,6 @@ const char * anyvec_cublas_err(cublasStatus_t s) {
 	}
 }
 
-const char * anyvec_nvrtc_err(nvrtcResult res) {
-	switch (res) {
-	case NVRTC_SUCCESS:
-		return NULL;
-	case NVRTC_ERROR_OUT_OF_MEMORY:
-		return "NVRTC_ERROR_OUT_OF_MEMORY";
-	case NVRTC_ERROR_PROGRAM_CREATION_FAILURE:
-		return "NVRTC_ERROR_PROGRAM_CREATION_FAILURE";
-	case NVRTC_ERROR_INVALID_INPUT:
-		return "NVRTC_ERROR_INVALID_INPUT";
-	case NVRTC_ERROR_INVALID_PROGRAM:
-		return "NVRTC_ERROR_INVALID_PROGRAM";
-	case NVRTC_ERROR_INVALID_OPTION:
-		return "NVRTC_ERROR_INVALID_OPTION";
-	case NVRTC_ERROR_COMPILATION:
-		return "NVRTC_ERROR_COMPILATION";
-	case NVRTC_ERROR_BUILTIN_OPERATION_FAILURE:
-		return "NVRTC_ERROR_BUILTIN_OPERATION_FAILURE";
-	case NVRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION:
-		return "NVRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION";
-	case NVRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION:
-		return "NVRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION";
-	case NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID:
-		return "NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID";
-	case NVRTC_ERROR_INTERNAL_ERROR:
-		return "NVRTC_ERROR_INTERNAL_ERROR";
-	default:
-		return "unknown NVRTC error";
-	}
-}
-
 const char * anyvec_curand_err(curandStatus_t s) {
 	switch (s) {
 	case CURAND_STATUS_SUCCESS:
@@ -197,12 +165,6 @@ func cudaError(context string, e C.cudaError_t) error {
 // nil if there is no error.
 func cublasError(context string, e C.cublasStatus_t) error {
 	return errForCStr(context, C.anyvec_cublas_err(e))
-}
-
-// nvrtcError returns an error for an nvrtcResult, or nil
-// if there is no error.
-func nvrtcError(context string, e C.nvrtcResult) error {
-	return errForCStr(context, C.anyvec_nvrtc_err(e))
 }
 
 // curandError returns an error for a curandStatus_t, or

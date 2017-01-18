@@ -62,52 +62,11 @@ import (
 type mathKernels struct {
 	module  C.CUmodule
 	kernels map[string]C.CUfunction
-	prog    C.nvrtcProgram
 }
 
 func newMathKernels() (kernels *mathKernels, err error) {
-	code := C.CString(mathKernelsCode)
-	defer C.free(unsafe.Pointer(code))
-	fileName := C.CString("prog.cu")
-	defer C.free(unsafe.Pointer(fileName))
-
-	var prog C.nvrtcProgram
-	res := C.nvrtcCreateProgram(&prog, code, fileName, 0,
-		C.nullStrPtr, C.nullStrPtr)
-	if err := nvrtcError("nvrtcCreateProgram", res); err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if kernels == nil {
-			C.nvrtcDestroyProgram(&prog)
-		}
-	}()
-
-	for _, name := range mathKernelNames {
-		cName := C.CString(name)
-		res = C.nvrtcAddNameExpression(prog, cName)
-		C.free(unsafe.Pointer(cName))
-		if err := nvrtcError("nvrtcAddNameExpression", res); err != nil {
-			return nil, err
-		}
-	}
-	res = C.nvrtcCompileProgram(prog, 0, C.nullStrPtr)
-	fixSignals()
-	if err := nvrtcError("nvrtcCompileProgram", res); err != nil {
-		return nil, err
-	}
-	var ptxSize C.size_t
-	res = C.nvrtcGetPTXSize(prog, &ptxSize)
-	if err := nvrtcError("nvrtcGetPTXSize", res); err != nil {
-		return nil, err
-	}
-	ptx := C.malloc(ptxSize)
+	ptx := unsafe.Pointer(C.CString(kernelPTX))
 	defer C.free(ptx)
-	res = C.nvrtcGetPTX(prog, (*C.char)(ptx))
-	if err := nvrtcError("nvrtcGetPTX", res); err != nil {
-		return nil, err
-	}
 
 	var module C.CUmodule
 	cuRes := C.cuModuleLoadDataEx(&module, ptx, 0, C.nullJitOptions, C.nullPtrPtr)
@@ -122,15 +81,10 @@ func newMathKernels() (kernels *mathKernels, err error) {
 
 	kernelMap := map[string]C.CUfunction{}
 	for _, nameStr := range mathKernelNames {
-		var name *C.char
-		origName := C.CString(nameStr)
-		defer C.free(unsafe.Pointer(origName))
-		res = C.nvrtcGetLoweredName(prog, origName, &name)
-		if err := nvrtcError("nvrtcGetLoweredName", res); err != nil {
-			return nil, err
-		}
+		cName := C.CString(nameStr)
+		defer C.free(unsafe.Pointer(cName))
 		var kernel C.CUfunction
-		cuRes := C.cuModuleGetFunction(&kernel, module, name)
+		cuRes := C.cuModuleGetFunction(&kernel, module, cName)
 		if err := cuError("cuModuleGetFunction", cuRes); err != nil {
 			return nil, err
 		}
@@ -140,13 +94,11 @@ func newMathKernels() (kernels *mathKernels, err error) {
 	return &mathKernels{
 		module:  module,
 		kernels: kernelMap,
-		prog:    prog,
 	}, nil
 }
 
 func (m *mathKernels) Destroy() {
 	C.cuModuleUnload(m.module)
-	C.nvrtcDestroyProgram(&m.prog)
 }
 
 // Div32 performs element-wise division.
@@ -235,81 +187,3 @@ func (m *mathKernels) sync() error {
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "addScaler"}
-
-const mathKernelsCode string = `
-__global__ void divElements(float * x, float * y, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		x[tid] /= y[tid];
-	}
-}
-
-__global__ void expElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		x[tid] = expf(x[tid]);
-	}
-}
-
-__global__ void tanhElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		x[tid] = tanhf(x[tid]);
-	}
-}
-
-__global__ void sinElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		x[tid] = sinf(x[tid]);
-	}
-}
-
-__global__ void clipPositive(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		x[tid] = fmaxf(0, x[tid]);
-	}
-}
-
-__global__ void shiftRandUniform(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		if (x[tid] == 1.0f) {
-			x[tid] = 0;
-		}
-	}
-}
-
-__global__ void uniformToBernoulli(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n) {
-		if (x[tid] > 0.5) {
-			x[tid] = 1;
-		} else {
-			x[tid] = 0;
-		}
-	}
-}
-
-__global__ void addRepeated(float * dest, float * source, size_t destLen, size_t sourceLen) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < destLen) {
-		dest[tid] += source[tid % sourceLen];
-	}
-}
-
-__global__ void addRepeatedPow2(float * dest, float * source, size_t destLen, size_t srcMask) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < destLen) {
-		dest[tid] += source[tid & srcMask];
-	}
-}
-
-__global__ void addScaler(float s, float * dest, size_t destLen) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < destLen) {
-		dest[tid] += s;
-	}
-}
-`
