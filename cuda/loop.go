@@ -6,10 +6,6 @@ package cuda
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 #include "cublas_v2.h"
-
-extern CUresult cuSuccess;
-extern cublasStatus_t cublasSuccess;
-
 */
 import "C"
 import (
@@ -108,19 +104,24 @@ type cudaState struct {
 
 func newCudaState() (*cudaState, error) {
 	C.cuInit(0)
+
 	var dev C.CUdevice
-	if C.cuDeviceGet((*C.CUdevice)(&dev), 0) != C.cuSuccess {
-		return nil, ErrGetDevice
+	err := cuError("cuDeviceGet", C.cuDeviceGet((*C.CUdevice)(&dev), 0))
+	if err != nil {
+		return nil, err
 	}
+
 	var ctx C.CUcontext
-	if C.cuCtxCreate((*C.CUcontext)(&ctx), C.uint(0), dev) != C.cuSuccess {
-		return nil, ErrMakeContext
+	err = cuError("cuCtxCreate", C.cuCtxCreate((*C.CUcontext)(&ctx), C.uint(0), dev))
+	if err != nil {
+		return nil, err
 	}
 
 	var handle C.cublasHandle_t
-	if C.cublasCreate(&handle) != C.cublasSuccess {
+	err = cublasError("cublasCreate", C.cublasCreate(&handle))
+	if err != nil {
 		C.cuCtxDestroy(ctx)
-		return nil, ErrMakeHandle
+		return nil, err
 	}
 
 	return &cudaState{

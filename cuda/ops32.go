@@ -37,7 +37,8 @@ type ops32 struct {
 // The vector contains n elements.
 func (o ops32) Scal(n int, s float32, x unsafe.Pointer) {
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		panicOnBLASError(C.cublasSscal(blas, C.int(n), (*C.float)(&s), (*C.float)(x), 1))
+		mustBLAS("Sscal", C.cublasSscal(blas, C.int(n), (*C.float)(&s),
+			(*C.float)(x), 1))
 	})
 }
 
@@ -47,8 +48,8 @@ func (o ops32) Dot(n int, x, y unsafe.Pointer) float32 {
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		var tempRes C.float
-		panicOnBLASError(C.cublasSdot(blas, C.int(n), (*C.float)(x), 1, (*C.float)(y),
-			1, &tempRes))
+		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(x), 1,
+			(*C.float)(y), 1, &tempRes))
 		res = float32(tempRes)
 	})
 	return res
@@ -59,8 +60,8 @@ func (o ops32) Dot(n int, x, y unsafe.Pointer) float32 {
 func (o ops32) Axpy(n int, alpha float32, x, y unsafe.Pointer) {
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		a := C.float(alpha)
-		panicOnBLASError(C.cublasSaxpy(blas, C.int(n), (*C.float)(&a), (*C.float)(x),
-			1, (*C.float)(y), 1))
+		mustBLAS("Saxpy", C.cublasSaxpy(blas, C.int(n), (*C.float)(&a),
+			(*C.float)(x), 1, (*C.float)(y), 1))
 	})
 }
 
@@ -71,7 +72,7 @@ func (o ops32) Gemm(transA, transB bool, m, n, k int, alpha float32, a unsafe.Po
 		alphaC := C.float(alpha)
 		betaC := C.float(beta)
 		// Stuff is ordered to emulate column-major storage.
-		panicOnBLASError(C.cublasSgemm(blas, blasTransposeOp(transB),
+		mustBLAS("Sgemm", C.cublasSgemm(blas, blasTransposeOp(transB),
 			blasTransposeOp(transA), C.int(n), C.int(m), C.int(k),
 			(*C.float)(&alphaC), (*C.float)(b), C.int(ldb),
 			(*C.float)(a), C.int(lda), (*C.float)(&betaC),
@@ -84,7 +85,7 @@ func (o ops32) Gemm(transA, transB bool, m, n, k int, alpha float32, a unsafe.Po
 // The vectors both contain n elements.
 func (o ops32) Mul(n int, a, b unsafe.Pointer) {
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		panicOnBLASError(C.cublasSdgmm(blas, C.sideModeRight, 1, C.int(n),
+		mustBLAS("Sdgmm", C.cublasSdgmm(blas, C.sideModeRight, 1, C.int(n),
 			(*C.float)(a), 1, (*C.float)(b), 1, (*C.float)(a), 1))
 	})
 }
@@ -96,7 +97,7 @@ func (o ops32) Mul(n int, a, b unsafe.Pointer) {
 // scales contains one component per chunk.
 func (o ops32) MulChunks(chunkCount, chunkSize int, vec, scales unsafe.Pointer) {
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		panicOnBLASError(C.cublasSdgmm(blas, C.sideModeRight, C.int(chunkSize),
+		mustBLAS("Sdgmm", C.cublasSdgmm(blas, C.sideModeRight, C.int(chunkSize),
 			C.int(chunkCount), (*C.float)(vec), C.int(chunkSize), (*C.float)(scales), 1,
 			(*C.float)(vec), C.int(chunkSize)))
 	})
@@ -111,16 +112,12 @@ func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		var tempBuf unsafe.Pointer
-		if C.cudaMalloc(&tempBuf, C.size_t(n*4)) != C.cudaSuccess {
-			panic(ErrMemoryAlloc)
-		}
+		must(cudaError("cudaMalloc", C.cudaMalloc(&tempBuf, C.size_t(n*4))))
 		defer C.cudaFree(tempBuf)
-		if C.anyvec_cuda_set1_32(C.size_t(n), tempBuf) != C.cuSuccess {
-			panic(ErrMemorySet)
-		}
+		must(cuError("cuMemsetD32", C.anyvec_cuda_set1_32(C.size_t(n), tempBuf)))
 		var tempRes C.float
-		panicOnBLASError(C.cublasSdot(blas, C.int(n), (*C.float)(a), 1, (*C.float)(tempBuf),
-			1, &tempRes))
+		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(a), 1,
+			(*C.float)(tempBuf), 1, &tempRes))
 		res = float32(tempRes)
 	})
 	return res

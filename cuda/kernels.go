@@ -7,8 +7,6 @@ package cuda
 #include "cuda_runtime_api.h"
 #include "nvrtc.h"
 
-extern CUresult cuSuccess;
-const nvrtcResult nvrtcSuccess = NVRTC_SUCCESS;
 const char ** nullStrPtr = NULL;
 const CUjit_option * nullJitOptions = NULL;
 const void ** nullPtrPtr = NULL;
@@ -50,7 +48,6 @@ CUresult anyvec_cuda_call2_asym(CUfunction f, void * p1, void * p2, size_t n1, s
 import "C"
 
 import (
-	"errors"
 	"math"
 	"unsafe"
 )
@@ -107,8 +104,8 @@ func newMathKernels() (kernels *mathKernels, err error) {
 
 	var module C.CUmodule
 	cuRes := C.cuModuleLoadDataEx(&module, ptx, 0, C.nullJitOptions, C.nullPtrPtr)
-	if cuRes != C.cuSuccess {
-		return nil, errors.New("cuModuleLoadDataEx failed")
+	if err := cuError("cuModuleLoadDataEx", cuRes); err != nil {
+		return nil, err
 	}
 	defer func() {
 		if kernels == nil {
@@ -127,8 +124,8 @@ func newMathKernels() (kernels *mathKernels, err error) {
 		}
 		var kernel C.CUfunction
 		cuRes := C.cuModuleGetFunction(&kernel, module, name)
-		if cuRes != C.cuSuccess {
-			return nil, errors.New("cuModuleGetFunction failed")
+		if err := cuError("cuModuleGetFunction", cuRes); err != nil {
+			return nil, err
 		}
 		kernelMap[nameStr] = kernel
 	}
@@ -194,48 +191,28 @@ func (m *mathKernels) AddRepeated32(target, source unsafe.Pointer, targLen, srcL
 
 func (m *mathKernels) call1(name string, v unsafe.Pointer, n int) error {
 	k := m.kernels[name]
-	res := C.anyvec_cuda_call1(k, v, C.size_t(n))
-	if res != C.cuSuccess {
-		return errors.New("cuLaunchKernel failed")
-	}
-	res = C.cuCtxSynchronize()
-	if res != C.cuSuccess {
-		return errors.New("cuCtxSynchronize failed")
-	}
-	return nil
+	return m.doneKernel(C.anyvec_cuda_call1(k, v, C.size_t(n)))
 }
 
 func (m *mathKernels) call2(name string, v1, v2 unsafe.Pointer, n int) error {
 	k := m.kernels[name]
-	res := C.anyvec_cuda_call2(k, v1, v2, C.size_t(n))
-	if res != C.cuSuccess {
-		return errors.New("cuLaunchKernel failed")
-	}
-	res = C.cuCtxSynchronize()
-	if res != C.cuSuccess {
-		return errors.New("cuCtxSynchronize failed")
-	}
-	return nil
+	return m.doneKernel(C.anyvec_cuda_call2(k, v1, v2, C.size_t(n)))
 }
 
 func (m *mathKernels) call2Asym(name string, v1, v2 unsafe.Pointer, n1, n2 int) error {
 	k := m.kernels[name]
-	res := C.anyvec_cuda_call2_asym(k, v1, v2, C.size_t(n1), C.size_t(n2))
-	if res != C.cuSuccess {
-		return errors.New("cuLaunchKernel failed")
-	}
-	res = C.cuCtxSynchronize()
-	if res != C.cuSuccess {
-		return errors.New("cuCtxSynchronize failed")
-	}
-	return nil
+	return m.doneKernel(C.anyvec_cuda_call2_asym(k, v1, v2, C.size_t(n1), C.size_t(n2)))
 }
 
-func nvrtcError(funcName string, status C.nvrtcResult) error {
-	if status != C.nvrtcSuccess {
-		return errors.New(funcName + " failed")
+func (m *mathKernels) doneKernel(res C.CUresult) error {
+	if err := cuError("cuLaunchKernel", res); err != nil {
+		return err
 	}
-	return nil
+	return m.sync()
+}
+
+func (m *mathKernels) sync() error {
+	return cuError("cuCtxSynchronize", C.cuCtxSynchronize())
 }
 
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",

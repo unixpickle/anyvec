@@ -11,8 +11,6 @@ cublasOperation_t noTranspose = CUBLAS_OP_N;
 cublasOperation_t transpose = CUBLAS_OP_T;
 cublasSideMode_t sideModeRight = CUBLAS_SIDE_RIGHT;
 cublasSideMode_t sideModeLeft = CUBLAS_SIDE_LEFT;
-CUresult cuSuccess = CUDA_SUCCESS;
-cublasStatus_t cublasSuccess = CUBLAS_STATUS_SUCCESS;
 */
 import "C"
 
@@ -20,18 +18,6 @@ import (
 	"errors"
 	"runtime"
 	"unsafe"
-)
-
-// These errors indicate various CUDA-related failures.
-var (
-	ErrMakeHandle     = errors.New("failed to create cuBLAS handle")
-	ErrGetDevice      = errors.New("failed to get CUDA device")
-	ErrMakeContext    = errors.New("failed to create CUDA context")
-	ErrMemoryAlloc    = errors.New("failed to allocate CUDA memory")
-	ErrMemoryZero     = errors.New("failed to zero CUDA memory")
-	ErrMemorySet      = errors.New("failed to set CUDA memory")
-	ErrMemoryCopy     = errors.New("failed to transfer CUDA memory")
-	ErrMatrixMultiply = errors.New("matrix multiplication failed")
 )
 
 // A Handle manages an internal CUDA context.
@@ -107,19 +93,16 @@ type buffer struct {
 }
 
 // newBuffer allocates a buffer.
-func newBuffer(h *Handle, size int) (*buffer, error) {
-	var res *buffer
-	var err error
+func newBuffer(h *Handle, size int) (res *buffer, err error) {
 	h.loop.Run(func() {
 		var buf unsafe.Pointer
-		if C.cudaMalloc(&buf, C.size_t(size)) != C.cudaSuccess {
-			err = ErrMemoryAlloc
-			return
-		}
-		res = &buffer{
-			handle: h,
-			size:   size,
-			ptr:    buf,
+		err = cudaError("cudaMalloc", C.cudaMalloc(&buf, C.size_t(size)))
+		if err == nil {
+			res = &buffer{
+				handle: h,
+				size:   size,
+				ptr:    buf,
+			}
 		}
 	})
 	if err != nil {
@@ -148,7 +131,7 @@ func newBufferConcat(h *Handle, bufs []*buffer) (*buffer, error) {
 		for _, x := range bufs {
 			dest := unsafe.Pointer(uintptr(buf.ptr) + idx)
 			idx += uintptr(x.size)
-			err = buf.memcpyErr(C.cudaMemcpy(dest, x.ptr, C.size_t(x.size),
+			err = cudaError("cudaMemcpy", C.cudaMemcpy(dest, x.ptr, C.size_t(x.size),
 				C.cudaMemcpyDeviceToDevice))
 			if err != nil {
 				return
@@ -168,15 +151,12 @@ func (b *buffer) Len() int {
 
 // Clear zeroes the buffer.
 func (b *buffer) Clear() error {
-	var res C.cudaError_t
+	var err error
 	b.handle.loop.Run(func() {
-		res = C.cudaMemset(b.ptr, 0, C.size_t(b.size))
+		err = cudaError("cudaMemset", C.cudaMemset(b.ptr, 0, C.size_t(b.size)))
 	})
 	runtime.KeepAlive(b)
-	if res != C.cudaSuccess {
-		return ErrMemoryZero
-	}
-	return nil
+	return err
 }
 
 // Set copies the contents of a buffer into b.
@@ -186,7 +166,7 @@ func (b *buffer) Set(b1 *buffer) error {
 	}
 	var res error
 	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(b.ptr, b1.ptr, C.size_t(b.size),
+		res = cudaError("cudaMemcpy", C.cudaMemcpy(b.ptr, b1.ptr, C.size_t(b.size),
 			C.cudaMemcpyDeviceToDevice))
 	})
 	runtime.KeepAlive(b1)
@@ -254,7 +234,7 @@ func (b *buffer) hostToDevice(size int, src unsafe.Pointer) error {
 	}
 	var res error
 	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(b.ptr, src, C.size_t(size),
+		res = cudaError("cudaMemcpy", C.cudaMemcpy(b.ptr, src, C.size_t(size),
 			C.cudaMemcpyHostToDevice))
 	})
 	runtime.KeepAlive(b)
@@ -267,18 +247,11 @@ func (b *buffer) deviceToHost(size int, dst unsafe.Pointer) error {
 	}
 	var res error
 	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(dst, b.ptr, C.size_t(size),
+		res = cudaError("cudaMemcpy", C.cudaMemcpy(dst, b.ptr, C.size_t(size),
 			C.cudaMemcpyDeviceToHost))
 	})
 	runtime.KeepAlive(b)
 	return res
-}
-
-func (b *buffer) memcpyErr(status C.cudaError_t) error {
-	if status == C.cudaSuccess {
-		return nil
-	}
-	return ErrMemoryCopy
 }
 
 func blasTransposeOp(trans bool) C.cublasOperation_t {
@@ -286,10 +259,4 @@ func blasTransposeOp(trans bool) C.cublasOperation_t {
 		return C.transpose
 	}
 	return C.noTranspose
-}
-
-func panicOnBLASError(s C.cublasStatus_t) {
-	if s != C.cublasSuccess {
-		panic("cuBLAS operation failed")
-	}
 }
