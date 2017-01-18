@@ -175,6 +175,11 @@ func (m *mathKernels) AddChunks32(chunkCount, chunkSize int, dst, scal unsafe.Po
 	return m.call2Asym("addChunks", chunkCount*chunkSize, chunkSize, dst, scal)
 }
 
+// SubChunks32 is like AddChunks32, but for subtraction.
+func (m *mathKernels) SubChunks32(chunkCount, chunkSize int, dst, scal unsafe.Pointer) error {
+	return m.call2Asym("subChunks", chunkCount*chunkSize, chunkSize, dst, scal)
+}
+
 // Compare32 runs a comparison.
 func (m *mathKernels) Compare32(n int, alpha float32, v unsafe.Pointer, c compareType) error {
 	switch c {
@@ -263,5 +268,5 @@ func (m *mathKernels) sync() error {
 var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
-	"addScaler", "addChunks", "lessThan", "greaterThan", "equalTo",
+	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
 	"addLogs"}

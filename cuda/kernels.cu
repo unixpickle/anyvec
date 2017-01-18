@@ -109,6 +109,14 @@ void addChunks(float * dest, float * source, size_t destLen, size_t chunkSize) {
 }
 
 extern "C" __global__
+void subChunks(float * dest, float * source, size_t destLen, size_t chunkSize) {
+  size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] -= source[tid / chunkSize];
+	}
+}
+
+extern "C" __global__
 void lessThan(float s, float * v, size_t n) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {

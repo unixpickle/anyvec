@@ -333,7 +333,7 @@ func (v *vector32) EqualTo(n anyvec.Numeric) {
 
 func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
 	if chunkSize == 0 {
-		panic("chunk size cannot be zero")
+		chunkSize = v.Len()
 	} else if v.Len()%chunkSize != 0 {
 		panic("chunk size must divide vector size")
 	}
@@ -349,6 +349,19 @@ func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
 		creator: v.creator,
 		buffer:  newBufferPtr(v.creator.handle, rows*4, newPtr),
 	}
+}
+
+func (v *vector32) LogSoftmax(chunkSize int) {
+	if chunkSize == 0 {
+		chunkSize = v.Len()
+	} else if v.Len()%chunkSize != 0 {
+		panic("chunk size must divide vector size")
+	}
+	if v.Len() == 0 {
+		return
+	}
+	v.ops().LogSoftmax(v.Len()/chunkSize, chunkSize, v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
 }
 
 func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Numeric {

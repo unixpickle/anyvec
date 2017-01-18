@@ -285,3 +285,14 @@ func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
 	})
 	return res
 }
+
+// LogSoftmax computes the log of the softmax.
+func (o ops32) LogSoftmax(rows, cols int, vecs unsafe.Pointer) {
+	o.h.runWithKernels(func() {
+		var sums unsafe.Pointer
+		must(cudaError("cudaMalloc", C.cudaMalloc(&sums, C.size_t(4*rows))))
+		defer C.cudaFree(sums)
+		must(o.h.kernels.AddLogs32(rows, cols, sums, vecs))
+		must(o.h.kernels.SubChunks32(rows, cols, vecs, sums))
+	})
+}
