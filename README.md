@@ -53,7 +53,6 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 
 # TODO
 
- * Euclidean norm
  * AddChunks
  * ScaleRepeated
  * AddLogDomain

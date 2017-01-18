@@ -52,6 +52,7 @@ func (t *Tester32) TestExtras(test *testing.T) {
 	test.Run("Sum", t.TestSum)
 	test.Run("AbsMax", t.TestAbsMax)
 	test.Run("AbsSum", t.TestAbsSum)
+	test.Run("Norm", t.TestNorm)
 	test.Run("LogSoftmax", t.TestLogSoftmax)
 	test.Run("ScaleChunks", t.TestScaleChunks)
 	test.Run("Rand", t.TestRand)
@@ -371,7 +372,7 @@ func (t *Tester32) TestClipPos(test *testing.T) {
 	}, anyvec.ClipPos)
 }
 
-// TestSum test summation.
+// TestSum tests summation.
 func (t *Tester32) TestSum(test *testing.T) {
 	t.testAgg(test, func(x []float32) float32 {
 		var sum float32
@@ -395,7 +396,7 @@ func (t *Tester32) TestMax(test *testing.T) {
 	}, anyvec.Max)
 }
 
-// TestAbsSum test absolute summation.
+// TestAbsSum tests absolute summation.
 func (t *Tester32) TestAbsSum(test *testing.T) {
 	t.testAgg(test, func(x []float32) float32 {
 		var sum float32
@@ -408,6 +409,17 @@ func (t *Tester32) TestAbsSum(test *testing.T) {
 		}
 		return sum
 	}, anyvec.AbsSum)
+}
+
+// TestNorm tests the Euclidean norm.
+func (t *Tester32) TestNorm(test *testing.T) {
+	t.testAgg(test, func(x []float32) float32 {
+		var sum float64
+		for _, k := range x {
+			sum += float64(k) * float64(k)
+		}
+		return float32(math.Sqrt(sum))
+	}, anyvec.Norm)
 }
 
 // TestAbsMax tests absolute max computation.

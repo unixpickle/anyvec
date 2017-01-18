@@ -101,6 +101,10 @@ func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
 	panic("unimplemented")
 }
 
+func (o ops32) Nrm2(n int, v unsafe.Pointer) float32 {
+	panic("unimplemented")
+}
+
 type buffer struct {
 	size int
 	ptr  unsafe.Pointer

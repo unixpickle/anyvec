@@ -249,9 +249,7 @@ func (v *vector32) ClipPos() {
 }
 
 func (v *vector32) Sum() anyvec.Numeric {
-	res := v.ops().Sum(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	return res
+	return v.aggregate(v.ops().Sum)
 }
 
 func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
@@ -285,19 +283,19 @@ func (v *vector32) AddRepeated(v1 anyvec.Vector) {
 }
 
 func (v *vector32) AbsSum() anyvec.Numeric {
-	if v.Len() == 0 {
-		return float32(0)
-	}
-	res := v.ops().Asum(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	return res
+	return v.aggregate(v.ops().Asum)
 }
 
 func (v *vector32) AbsMax() anyvec.Numeric {
-	if v.Len() == 0 {
-		return float32(0)
-	}
-	res := v.ops().Amax(v.Len(), v.buffer.ptr)
+	return v.aggregate(v.ops().Amax)
+}
+
+func (v *vector32) Norm() anyvec.Numeric {
+	return v.aggregate(v.ops().Nrm2)
+}
+
+func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Numeric {
+	res := f(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)
 	return res
 }

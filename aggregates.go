@@ -3,6 +3,9 @@ package anyvec
 import (
 	"fmt"
 	"math"
+
+	"github.com/gonum/blas/blas32"
+	"github.com/gonum/blas/blas64"
 )
 
 // A Summer can sum up its entries.
@@ -105,6 +108,30 @@ func AbsMax(v Vector) Numeric {
 			}
 			return max
 		})
+	}
+}
+
+// A Normer can compute the Euclidean norm of itself.
+type Normer interface {
+	Norm() Numeric
+}
+
+// Norm computes the Euclidean norm of the vector.
+// If the vector does not implement Normer, a default
+// implementation is used which supports float32 and
+// float64 values.
+func Norm(v Vector) Numeric {
+	if n, ok := v.(Normer); ok {
+		return n.Norm()
+	} else {
+		switch data := v.Data().(type) {
+		case []float32:
+			return blas32.Nrm2(v.Len(), blas32.Vector{Data: data, Inc: 1})
+		case []float64:
+			return blas64.Nrm2(v.Len(), blas64.Vector{Data: data, Inc: 1})
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
 	}
 }
 

@@ -113,6 +113,18 @@ func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
 	return res
 }
 
+// Nrm2 computes the Euclidean norm.
+// The vector contains n elements.
+func (o ops32) Nrm2(n int, v unsafe.Pointer) float32 {
+	var res float32
+	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
+		var tempRes C.float
+		mustBLAS("Snrm2", C.cublasSnrm2(blas, C.int(n), (*C.float)(v), 1, &tempRes))
+		res = float32(tempRes)
+	})
+	return res
+}
+
 // Mul performs component-wise multiplication and stores
 // the result in a.
 // The vectors both contain n elements.
