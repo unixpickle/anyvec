@@ -195,17 +195,9 @@ func (b *buffer) Set(b1 *buffer) error {
 }
 
 // Set32 copies 32-bit floats into the buffer.
-func (b *buffer) Set32(source []float32) error {
-	if len(source)*4 > b.size {
-		panic("buffer overflow")
-	}
-	var res error
-	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(b.ptr, unsafe.Pointer(&source[0]),
-			C.size_t(len(source)*4), C.cudaMemcpyHostToDevice))
-	})
-	runtime.KeepAlive(source)
-	runtime.KeepAlive(b)
+func (b *buffer) Set32(src []float32) error {
+	res := b.hostToDevice(len(src)*4, unsafe.Pointer(&src[0]))
+	runtime.KeepAlive(src)
 	return res
 }
 
@@ -223,17 +215,9 @@ func (b *buffer) SetRepeated32(v float32) error {
 }
 
 // Set64 copies 64-bit floats into the buffer.
-func (b *buffer) Set64(source []float64) error {
-	if len(source)*8 > b.size {
-		panic("buffer overflow")
-	}
-	var res error
-	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(b.ptr, unsafe.Pointer(&source[0]),
-			C.size_t(len(source)*8), C.cudaMemcpyHostToDevice))
-	})
-	runtime.KeepAlive(source)
-	runtime.KeepAlive(b)
+func (b *buffer) Set64(src []float64) error {
+	res := b.hostToDevice(len(src)*8, unsafe.Pointer(&src[0]))
+	runtime.KeepAlive(src)
 	return res
 }
 
@@ -251,31 +235,41 @@ func (b *buffer) SetRepeated64(v float64) error {
 }
 
 // Get32 copies 32-bit floats out of the buffer.
-func (b *buffer) Get32(source []float32) error {
-	if len(source)*4 > b.size {
-		panic("buffer overflow")
-	}
-	var res error
-	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(unsafe.Pointer(&source[0]), b.ptr,
-			C.size_t(len(source)*4), C.cudaMemcpyDeviceToHost))
-	})
-	runtime.KeepAlive(source)
-	runtime.KeepAlive(b)
+func (b *buffer) Get32(dst []float32) error {
+	res := b.deviceToHost(len(dst)*4, unsafe.Pointer(&dst[0]))
+	runtime.KeepAlive(dst)
 	return res
 }
 
 // Get64 copies 64-bit floats out of the buffer.
-func (b *buffer) Get64(source []float64) error {
-	if len(source)*8 > b.size {
+func (b *buffer) Get64(dst []float64) error {
+	res := b.deviceToHost(len(dst)*8, unsafe.Pointer(&dst[0]))
+	runtime.KeepAlive(dst)
+	return res
+}
+
+func (b *buffer) hostToDevice(size int, src unsafe.Pointer) error {
+	if size > b.size {
 		panic("buffer overflow")
 	}
 	var res error
 	b.handle.loop.Run(func() {
-		res = b.memcpyErr(C.cudaMemcpy(unsafe.Pointer(&source[0]), b.ptr,
-			C.size_t(len(source)*8), C.cudaMemcpyDeviceToHost))
+		res = b.memcpyErr(C.cudaMemcpy(b.ptr, src, C.size_t(size),
+			C.cudaMemcpyHostToDevice))
 	})
-	runtime.KeepAlive(source)
+	runtime.KeepAlive(b)
+	return res
+}
+
+func (b *buffer) deviceToHost(size int, dst unsafe.Pointer) error {
+	if size > b.size {
+		panic("buffer overflow")
+	}
+	var res error
+	b.handle.loop.Run(func() {
+		res = b.memcpyErr(C.cudaMemcpy(dst, b.ptr, C.size_t(size),
+			C.cudaMemcpyDeviceToHost))
+	})
 	runtime.KeepAlive(b)
 	return res
 }
