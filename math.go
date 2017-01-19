@@ -101,14 +101,26 @@ type Power interface {
 
 // Pow raises the vector to the n-th power.
 // If the vector does not implement Power, a default
-// implementation is used.
+// implementation is used which supports float32 and
+// float64 values.
 func Pow(v Vector, n Numeric) {
 	if p, ok := v.(Power); ok {
 		p.Pow(n)
 	} else {
-		Log(v)
-		v.Scale(n)
-		Exp(v)
+		switch data := v.Data().(type) {
+		case []float64:
+			for i, x := range data {
+				data[i] = math.Pow(x, n.(float64))
+			}
+			v.SetData(data)
+		case []float32:
+			for i, x := range data {
+				data[i] = float32(math.Pow(float64(x), float64(n.(float32))))
+			}
+			v.SetData(data)
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
 	}
 }
 
