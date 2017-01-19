@@ -142,12 +142,12 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 	switch actual := actual.(type) {
 	case float32:
 		expected := t.unnum(expected)
-		if math.Abs(float64(actual)-expected) > singlePrec {
+		if !floatsClose(float64(actual), expected, singlePrec) {
 			test.Errorf("expected %v but got %v", expected, actual)
 		}
 	case float64:
 		expected := t.unnum(expected)
-		if math.Abs(actual-expected) > doublePrec {
+		if !floatsClose(actual, expected, doublePrec) {
 			test.Errorf("expected %v but got %v", expected, actual)
 		}
 	case []float32:
@@ -158,7 +158,7 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 		}
 		for i, x := range expected {
 			y := actual[i]
-			if math.Abs(x-float64(y)) > singlePrec {
+			if !floatsClose(x, float64(y), singlePrec) {
 				test.Errorf("index %d: expected %v but got %v", i, x, y)
 				return
 			}
@@ -171,7 +171,7 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 		}
 		for i, x := range expected {
 			y := actual[i]
-			if math.Abs(x-y) > doublePrec {
+			if !floatsClose(x, y, doublePrec) {
 				test.Errorf("index %d: expected %v but got %v", i, x, y)
 				return
 			}
@@ -182,6 +182,8 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 }
 
 func floatsClose(f1, f2, prec float64) bool {
-	mag := math.Max(1, math.Min(math.Abs(f1), math.Abs(f2)))
-	return math.Abs(f1-f2)/mag < prec
+	if math.IsNaN(f1) {
+		return math.IsNaN(f2)
+	}
+	return math.Abs(f1-f2) < prec
 }
