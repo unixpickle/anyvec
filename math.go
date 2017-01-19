@@ -58,6 +58,23 @@ func Exp(v Vector) {
 	}
 }
 
+// A Logger can take the natural logs of its entries.
+type Logger interface {
+	Log()
+}
+
+// Log takes the natural logarithm of the vector entries.
+// If the vector does not implement Logger, a default
+// implementation is used which supports float32 and
+// float64 values.
+func Log(v Vector) {
+	if l, ok := v.(Logger); ok {
+		l.Log()
+	} else {
+		applyUnitary(v, math.Log)
+	}
+}
+
 // A PosClipper can clip its values using max(0, x).
 type PosClipper interface {
 	ClipPos()
@@ -74,6 +91,24 @@ func ClipPos(v Vector) {
 		applyUnitary(v, func(arg float64) float64 {
 			return math.Max(0, arg)
 		})
+	}
+}
+
+// A Power can raise its contents to a constant power.
+type Power interface {
+	Pow(p Numeric)
+}
+
+// Pow raises the vector to the n-th power.
+// If the vector does not implement Power, a default
+// implementation is used.
+func Pow(v Vector, n Numeric) {
+	if p, ok := v.(Power); ok {
+		p.Pow(n)
+	} else {
+		Log(v)
+		v.Scale(n)
+		Exp(v)
 	}
 }
 

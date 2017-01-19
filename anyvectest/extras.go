@@ -13,9 +13,11 @@ import (
 // methods the Vector may implement.
 func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("Exp", t.TestExp)
+	test.Run("Log", t.TestLog)
 	test.Run("Sin", t.TestSin)
 	test.Run("Tanh", t.TestTanh)
 	test.Run("ClipPos", t.TestClipPos)
+	test.Run("Pow", t.TestPow)
 	test.Run("Max", t.TestMax)
 	test.Run("Sum", t.TestSum)
 	test.Run("AbsMax", t.TestAbsMax)
@@ -34,9 +36,12 @@ func (t *Tester) TestExtras(test *testing.T) {
 
 // TestExp tests exponentiation.
 func (t *Tester) TestExp(test *testing.T) {
-	t.testOp(test, func(x float64) float64 {
-		return math.Exp(x)
-	}, anyvec.Exp)
+	t.testOp(test, math.Exp, anyvec.Exp)
+}
+
+// TestLog tests logarithms.
+func (t *Tester) TestLog(test *testing.T) {
+	t.testOp(test, math.Log, anyvec.Log)
 }
 
 // TestSin tests sine.
@@ -58,6 +63,32 @@ func (t *Tester) TestClipPos(test *testing.T) {
 	t.testOp(test, func(x float64) float64 {
 		return math.Max(0, x)
 	}, anyvec.ClipPos)
+}
+
+// TestPow tests power taking.
+func (t *Tester) TestPow(test *testing.T) {
+	t.testOp(test, func(x float64) float64 {
+		return math.Pow(x/5, 2)
+	}, func(v anyvec.Vector) {
+		v.Scale(t.num(0.2))
+		anyvec.Pow(v, t.num(2))
+	})
+
+	data := make([]float64, 10)
+	expected := make([]float64, 10)
+	for i := range data {
+		data[i] = math.Abs(rand.NormFloat64()) + 1
+		expected[i] = math.Pow(data[i], -2.5)
+	}
+	v := t.vec(data)
+	anyvec.Pow(v, t.num(-2.5))
+	t.assertClose(test, v.Data(), expected)
+
+	v = t.vec([]float64{rand.Float64(), rand.Float64() * 10, rand.Float64() * 100})
+	old := v.Data()
+	anyvec.Pow(v, t.num(0.3))
+	anyvec.Pow(v, t.num(1/0.3))
+	t.assertClose(test, v.Data(), old)
 }
 
 // TestSum tests summation.

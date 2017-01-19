@@ -180,3 +180,8 @@ func (t *Tester) assertClose(test *testing.T, actual, expected interface{}) {
 		test.Fatalf("unsupported type: %T", actual)
 	}
 }
+
+func floatsClose(f1, f2, prec float64) bool {
+	mag := math.Max(1, math.Min(math.Abs(f1), math.Abs(f2)))
+	return math.Abs(f1-f2)/mag < prec
+}
