@@ -369,6 +369,11 @@ func (v *vector32) LogSoftmax(chunkSize int) {
 	runtime.KeepAlive(v.buffer)
 }
 
+func (v *vector32) Pow(n anyvec.Numeric) {
+	v.ops().Pow(v.Len(), n.(float32), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+}
+
 func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Numeric {
 	res := f(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)

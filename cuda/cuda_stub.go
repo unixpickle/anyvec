@@ -127,6 +127,10 @@ func (o ops32) LogSoftmax(rows, cols int, vecs unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (o ops32) Pow(n int, p float32, vecs unsafe.Pointer) {
+	panic("unimplemented")
+}
+
 type buffer struct {
 	size int
 	ptr  unsafe.Pointer

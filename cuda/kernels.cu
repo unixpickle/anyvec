@@ -188,3 +188,11 @@ void addLogs(float * dst, float * src, size_t rowSize) {
     dst[blockIdx.x + blockIdx.y*gridDim.x] = chunk[0];
   }
 }
+
+extern "C" __global__
+void powScaler(float s, float * dest, size_t destLen) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < destLen) {
+		dest[tid] = powf(dest[tid], s);
+	}
+}

@@ -304,3 +304,10 @@ func (o ops32) LogSoftmax(rows, cols int, vecs unsafe.Pointer) {
 		must(o.h.kernels.SubChunks32(rows, cols, vecs, sums))
 	})
 }
+
+// Pow raises the componetns to the given power.
+func (o ops32) Pow(n int, p float32, v unsafe.Pointer) {
+	o.h.runWithKernels(func() {
+		o.h.kernels.PowScaler32(n, p, v)
+	})
+}

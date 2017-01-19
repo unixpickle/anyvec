@@ -239,6 +239,11 @@ func (m *mathKernels) AddLogs32(rows, cols int, dst, src unsafe.Pointer) error {
 	return m.doneKernel(res)
 }
 
+// PowScaler32 raises the entries to a power.
+func (m *mathKernels) PowScaler32(n int, p float32, v unsafe.Pointer) error {
+	return m.call1Scaler("powScaler", n, p, v)
+}
+
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
 	return m.doneKernel(C.anyvec_cuda_call1(k, C.size_t(n), v))
@@ -274,4 +279,4 @@ var mathKernelNames = []string{"divElements", "expElements", "logElements", "tan
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
 	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
-	"addLogs"}
+	"addLogs", "powScaler"}
