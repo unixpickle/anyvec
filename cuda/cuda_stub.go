@@ -71,6 +71,10 @@ func (o ops32) Exp(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }
 
+func (o ops32) Log(n int, a unsafe.Pointer) {
+	panic("unimplemented")
+}
+
 func (o ops32) Tanh(n int, a unsafe.Pointer) {
 	panic("unimplemented")
 }

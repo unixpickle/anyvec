@@ -192,6 +192,14 @@ func (o ops32) Exp(n int, a unsafe.Pointer) {
 	})
 }
 
+// Log takes the natural log of the vector components.
+// The vector contains n elements.
+func (o ops32) Log(n int, a unsafe.Pointer) {
+	o.h.runWithKernels(func() {
+		must(o.h.kernels.Log32(n, a))
+	})
+}
+
 // Tanh computes the hyperbolic tangent of the vector
 // components.
 // The vector contains n elements.

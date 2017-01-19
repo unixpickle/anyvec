@@ -15,6 +15,14 @@ void expElements(float * x, size_t n) {
 }
 
 extern "C" __global__
+void logElements(float * x, size_t n) {
+  size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		x[tid] = logf(x[tid]);
+	}
+}
+
+extern "C" __global__
 void tanhElements(float * x, size_t n) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {

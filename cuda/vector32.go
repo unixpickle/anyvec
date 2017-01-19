@@ -233,6 +233,11 @@ func (v *vector32) Exp() {
 	runtime.KeepAlive(v.buffer)
 }
 
+func (v *vector32) Log() {
+	v.ops().Log(v.Len(), v.buffer.ptr)
+	runtime.KeepAlive(v.buffer)
+}
+
 func (v *vector32) Tanh() {
 	v.ops().Tanh(v.Len(), v.buffer.ptr)
 	runtime.KeepAlive(v.buffer)

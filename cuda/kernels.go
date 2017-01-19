@@ -118,6 +118,11 @@ func (m *mathKernels) Exp32(n int, v unsafe.Pointer) error {
 	return m.call1("expElements", n, v)
 }
 
+// Log32 performs element-wise logarithms.
+func (m *mathKernels) Log32(n int, v unsafe.Pointer) error {
+	return m.call1("logElements", n, v)
+}
+
 // Tanh32 performs element-wise hyperbolic tangent.
 func (m *mathKernels) Tanh32(n int, v unsafe.Pointer) error {
 	return m.call1("tanhElements", n, v)
@@ -265,7 +270,7 @@ func (m *mathKernels) sync() error {
 	return cuError("cuCtxSynchronize", C.cuCtxSynchronize())
 }
 
-var mathKernelNames = []string{"divElements", "expElements", "tanhElements",
+var mathKernelNames = []string{"divElements", "expElements", "logElements", "tanhElements",
 	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
 	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
