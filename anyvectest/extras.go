@@ -32,6 +32,8 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("Comparisons", t.TestComparisons)
 	test.Run("TestComplement", t.TestComplement)
 	test.Run("TestAddLogs", t.TestAddLogs)
+	test.Run("TestSumRows", t.TestSumRows)
+	test.Run("TestSumCols", t.TestSumCols)
 }
 
 // TestExp tests exponentiation.
@@ -337,4 +339,31 @@ func (t *Tester) TestAddLogs(test *testing.T) {
 		sum = anyvec.AddLogs(v, 300)
 		t.assertClose(test, sum.Data(), expected)
 	}
+}
+
+// TestSumRows tests the RowSummer interface.
+func (t *Tester) TestSumRows(test *testing.T) {
+	v := t.vec([]float64{
+		0.305985279638971, 1.058956965872622, -0.780664183736345,
+		-2.213119641375825, 0.511557156875536, -1.025825432279111,
+		-0.193978187968917, 1.247563683930367, 0.769710039307595,
+		0.699426864914262, 1.165449702401210, 0.500689376716200,
+	})
+	actual := anyvec.SumRows(v, 3).Data()
+	expected := []float64{-1.401685684791509, 3.983527509079735, -0.536090199991662}
+	t.assertClose(test, actual, expected)
+}
+
+// TestSumCols tests the ColSummer interface.
+func (t *Tester) TestSumCols(test *testing.T) {
+	v := t.vec([]float64{
+		0.305985279638971, 1.058956965872622, -0.780664183736345,
+		-2.213119641375825, 0.511557156875536, -1.025825432279111,
+		-0.193978187968917, 1.247563683930367, 0.769710039307595,
+		0.699426864914262, 1.165449702401210, 0.500689376716200,
+	})
+	actual := anyvec.SumCols(v, 4).Data()
+	expected := []float64{0.584278061775247, -2.727387916779400, 1.823295535269045,
+		2.365565944031672}
+	t.assertClose(test, actual, expected)
 }

@@ -172,3 +172,84 @@ func ScaleRepeated(v, scalers Vector) {
 		v.Mul(v.Creator().Concat(joinMe...).Slice(0, v.Len()))
 	}
 }
+
+// A RowSummer can sum the rows of a row-major matrix.
+// The number of columns must divide the size of the
+// vector.
+type RowSummer interface {
+	SumRows(cols int) Vector
+}
+
+// SumRows sums the rows of a row-major matrix.
+// If the vector does not implement RowSummer, a default
+// implementation is used.
+func SumRows(v Vector, cols int) Vector {
+	if r, ok := v.(RowSummer); ok {
+		return r.SumRows(cols)
+	} else {
+		if v.Len()%cols != 0 {
+			panic("number of columns must divide vector size")
+		}
+		rows := v.Len() / cols
+		oneVec := v.Creator().MakeVector(rows)
+		oneVec.AddScaler(v.Creator().MakeNumeric(1))
+		oneMat := &Matrix{
+			Data: oneVec,
+			Rows: rows,
+			Cols: 1,
+		}
+		vMat := &Matrix{
+			Data: v,
+			Rows: rows,
+			Cols: cols,
+		}
+		outMat := &Matrix{
+			Data: v.Creator().MakeVector(cols),
+			Rows: cols,
+			Cols: 1,
+		}
+		outMat.Product(true, false, v.Creator().MakeNumeric(1), vMat, oneMat,
+			v.Creator().MakeNumeric(0))
+		return outMat.Data
+	}
+}
+
+// A ColSummer can sum the columns of a row-major matrix.
+// The number of rows must divide the size of the vector.
+type ColSummer interface {
+	SumCols(rows int) Vector
+}
+
+// SumCols sums the columns of a row-major matrix.
+// If the vector does not implement ColSummer, a default
+// implementation is used.
+func SumCols(v Vector, rows int) Vector {
+	if c, ok := v.(ColSummer); ok {
+		return c.SumCols(rows)
+	} else {
+		if v.Len()%rows != 0 {
+			panic("number of rows must divide vector size")
+		}
+		cols := v.Len() / rows
+		oneVec := v.Creator().MakeVector(cols)
+		oneVec.AddScaler(v.Creator().MakeNumeric(1))
+		oneMat := &Matrix{
+			Data: oneVec,
+			Rows: cols,
+			Cols: 1,
+		}
+		vMat := &Matrix{
+			Data: v,
+			Rows: rows,
+			Cols: cols,
+		}
+		outMat := &Matrix{
+			Data: v.Creator().MakeVector(rows),
+			Rows: rows,
+			Cols: 1,
+		}
+		outMat.Product(false, false, v.Creator().MakeNumeric(1), vMat, oneMat,
+			v.Creator().MakeNumeric(0))
+		return outMat.Data
+	}
+}
