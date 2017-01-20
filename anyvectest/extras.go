@@ -19,6 +19,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("ClipPos", t.TestClipPos)
 	test.Run("Pow", t.TestPow)
 	test.Run("Max", t.TestMax)
+	test.Run("MaxIndex", t.TestMaxIndex)
 	test.Run("Sum", t.TestSum)
 	test.Run("AbsMax", t.TestAbsMax)
 	test.Run("AbsSum", t.TestAbsSum)
@@ -115,6 +116,27 @@ func (t *Tester) TestMax(test *testing.T) {
 		}
 		return max
 	}, anyvec.Max)
+}
+
+// TestMaxIndex tests max index computation.
+func (t *Tester) TestMaxIndex(test *testing.T) {
+	// If each random vector is 512, then the probability of
+	// getting the same index 3 times in a row is 2^(-36).
+	for i := 0; i < 4; i++ {
+		vec := t.randomVecLen(512)
+		max := math.Inf(-1)
+		maxIdx := 0
+		for i, x := range t.unlist(vec.Data()) {
+			if x > max {
+				max = x
+				maxIdx = i
+			}
+		}
+		actual := anyvec.MaxIndex(vec)
+		if maxIdx != actual {
+			test.Errorf("expected index %d but got %d", maxIdx, actual)
+		}
+	}
 }
 
 // TestAbsSum tests absolute summation.

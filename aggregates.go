@@ -135,6 +135,46 @@ func Norm(v Vector) Numeric {
 	}
 }
 
+// A MaxIndexer can find the index of its largest element.
+type MaxIndexer interface {
+	MaxIndex() int
+}
+
+// MaxIndex computes the index of the largest element.
+// If the vector does not implement MaxIndexer, a default
+// implementation is used which supports float32 and
+// float64 values.
+func MaxIndex(v Vector) int {
+	if m, ok := v.(MaxIndexer); ok {
+		return m.MaxIndex()
+	} else {
+		switch data := v.Data().(type) {
+		case []float32:
+			var idx int
+			value := float32(math.Inf(-1))
+			for i, x := range data {
+				if x > value {
+					value = x
+					idx = i
+				}
+			}
+			return idx
+		case []float64:
+			var idx int
+			value := math.Inf(-1)
+			for i, x := range data {
+				if x > value {
+					value = x
+					idx = i
+				}
+			}
+			return idx
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
+	}
+}
+
 func applyAggregate(v Vector, f func([]float64) float64) Numeric {
 	data := v.Data()
 	switch data := data.(type) {
