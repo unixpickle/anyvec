@@ -352,7 +352,7 @@ func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
 
 	return &vector32{
 		creator: v.creator,
-		buffer:  newBufferPtr(v.creator.handle, rows*4, newPtr),
+		buffer:  newBufferPtr(v.creator.handle, rows*4, newPtr, false),
 	}
 }
 

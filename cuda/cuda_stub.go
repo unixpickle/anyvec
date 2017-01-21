@@ -136,7 +136,7 @@ type buffer struct {
 	ptr  unsafe.Pointer
 }
 
-func newBufferPtr(h *Handle, size int, buf unsafe.Pointer) *buffer {
+func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer {
 	panic("unimplemented")
 }
 

@@ -30,6 +30,7 @@ const (
 
 // A Handle manages an internal CUDA context.
 type Handle struct {
+	gc      *gc
 	loop    *cudaLoop
 	kernels *mathKernels
 	rand    *randomizer
@@ -41,7 +42,7 @@ func NewHandle() (*Handle, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := &Handle{loop: getMainLoop()}
+	res := &Handle{gc: newGC(), loop: getMainLoop()}
 	runtime.SetFinalizer(res, func(obj *Handle) {
 		obj.loop.Run(func() {
 			if obj.kernels != nil {
@@ -96,15 +97,25 @@ type buffer struct {
 
 // newBufferPtr creates a buffer around an existing piece
 // of device memory.
-func newBufferPtr(h *Handle, size int, buf unsafe.Pointer) *buffer {
+// The inLoop argument indicates whether or not the call
+// is being made from the handle's loop.
+func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer {
 	res := &buffer{
 		handle: h,
 		size:   size,
 		ptr:    buf,
 	}
+	if inLoop {
+		h.gc.Alloc(size)
+	} else {
+		h.loop.Run(func() {
+			h.gc.Alloc(size)
+		})
+	}
 	runtime.SetFinalizer(res, func(b *buffer) {
 		b.handle.loop.Run(func() {
 			C.cudaFree(b.ptr)
+			h.gc.Free(b.size)
 		})
 	})
 	return res
@@ -116,7 +127,7 @@ func newBuffer(h *Handle, size int) (res *buffer, err error) {
 		var buf unsafe.Pointer
 		err = cudaError("cudaMalloc", C.cudaMalloc(&buf, C.size_t(size)))
 		if err == nil {
-			res = newBufferPtr(h, size, buf)
+			res = newBufferPtr(h, size, buf, true)
 		}
 	})
 	if err != nil {
