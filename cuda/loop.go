@@ -8,6 +8,7 @@ package cuda
 #include "cublas_v2.h"
 */
 import "C"
+
 import (
 	"runtime"
 	"sync"

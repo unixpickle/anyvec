@@ -31,6 +31,7 @@ const (
 // A Handle manages an internal CUDA context.
 type Handle struct {
 	gc      *gc
+	pool    *bufferPool
 	loop    *cudaLoop
 	kernels *mathKernels
 	rand    *randomizer
@@ -42,7 +43,7 @@ func NewHandle() (*Handle, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := &Handle{gc: newGC(), loop: getMainLoop()}
+	res := &Handle{gc: newGC(), pool: newBufferPool(), loop: getMainLoop()}
 	runtime.SetFinalizer(res, func(obj *Handle) {
 		obj.loop.Run(func() {
 			if obj.kernels != nil {
@@ -51,9 +52,23 @@ func NewHandle() (*Handle, error) {
 			if obj.rand != nil {
 				obj.rand.Destroy()
 			}
+			obj.pool.Destroy()
 		})
 	})
 	return res, nil
+}
+
+// SetPoolSize tells the Handle how much CUDA memory it
+// should cache, in bytes.
+//
+// The buffer pool is useful for applications that tend to
+// allocate vectors of the same length over and over.
+// For applications that allocate many different vector
+// sizes, the buffer pool will not help very much.
+//
+// The default pool size is 0.
+func (h *Handle) SetPoolSize(size int64) {
+	h.pool.SetCapacity(size)
 }
 
 func (h *Handle) runWithKernels(f func()) {
@@ -114,7 +129,7 @@ func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer 
 	}
 	runtime.SetFinalizer(res, func(b *buffer) {
 		b.handle.loop.Run(func() {
-			C.cudaFree(b.ptr)
+			h.pool.Free(b.ptr, b.size)
 			h.gc.Free(b.size)
 		})
 	})
@@ -125,7 +140,7 @@ func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer 
 func newBuffer(h *Handle, size int) (res *buffer, err error) {
 	h.loop.Run(func() {
 		var buf unsafe.Pointer
-		err = cudaError("cudaMalloc", C.cudaMalloc(&buf, C.size_t(size)))
+		buf, err = h.pool.Alloc(size)
 		if err == nil {
 			res = newBufferPtr(h, size, buf, true)
 		}

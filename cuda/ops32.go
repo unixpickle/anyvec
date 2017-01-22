@@ -285,9 +285,11 @@ func (o ops32) Compare(n int, alpha float32, v unsafe.Pointer, c compareType) {
 func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
 	var res unsafe.Pointer
 	o.h.runWithKernels(func() {
-		must(cudaError("cudaMalloc", C.cudaMalloc(&res, C.size_t(4*rows))))
+		var err error
+		res, err = o.h.pool.Alloc(4 * rows)
+		must(err)
 		if err := o.h.kernels.AddLogs32(rows, cols, res, src); err != nil {
-			C.cudaFree(res)
+			o.h.pool.Free(res, 4*rows)
 			panic(err)
 		}
 	})
