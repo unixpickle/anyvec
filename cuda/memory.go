@@ -29,7 +29,7 @@ type gc struct {
 func newGC() *gc {
 	frac := 2.0
 	if per := os.Getenv("GOGC"); per != "" {
-		if perVal, err := strconv.Atoi(per); err != nil {
+		if perVal, err := strconv.Atoi(per); err == nil {
 			frac = 1 + float64(perVal)/100.0
 		}
 	}
