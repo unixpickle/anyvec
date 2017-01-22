@@ -85,13 +85,13 @@ func (h *Handle) runWithRandAsync(f func()) {
 	h.loop.RunAsync(func() {
 		var err error
 		if h.kernels == nil {
-			h.kernels, err = newMathKernels()
+			h.kernels, err = newMathKernels(h.allocator)
 			if err != nil {
 				panic(err)
 			}
 		}
 		if h.rand == nil {
-			h.rand, err = newRandomizer()
+			h.rand, err = newRandomizer(h.allocator)
 			if err != nil {
 				panic(err)
 			}
@@ -104,7 +104,7 @@ func (h *Handle) runWithKernelsOpt(async bool, f func()) {
 	loopFunc := func() {
 		var err error
 		if h.kernels == nil {
-			h.kernels, err = newMathKernels()
+			h.kernels, err = newMathKernels(h.allocator)
 			if err != nil {
 				panic(err)
 			}

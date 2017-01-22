@@ -17,11 +17,12 @@ import (
 
 // A randomizer samples random numbers.
 type randomizer struct {
-	gen C.curandGenerator_t
+	allocator allocator
+	gen       C.curandGenerator_t
 }
 
 // newRandomizer creates a new randomizer.
-func newRandomizer() (*randomizer, error) {
+func newRandomizer(a allocator) (*randomizer, error) {
 	var gen C.curandGenerator_t
 	res := C.curandCreateGenerator(&gen, C.generatorType)
 	if err := curandError("curandCreateGenerator", res); err != nil {
@@ -33,7 +34,7 @@ func newRandomizer() (*randomizer, error) {
 		C.curandDestroyGenerator(gen)
 		return nil, err
 	}
-	return &randomizer{gen: gen}, nil
+	return &randomizer{allocator: a, gen: gen}, nil
 }
 
 // Uniform32 creates uniform random values.
@@ -53,12 +54,11 @@ func (r *randomizer) Norm32(n int, dest unsafe.Pointer) error {
 		return curandError("curandGenerateNormal", res)
 	}
 
-	var temp unsafe.Pointer
-	err := cudaError("cudaMalloc", C.cudaMalloc(&temp, C.size_t((n+1)*4)))
+	temp, err := r.allocator.Alloc((n + 1) * 4)
 	if err != nil {
 		return err
 	}
-	defer C.cudaFree(temp)
+	defer r.allocator.Free(temp)
 
 	res := C.curandGenerateNormal(r.gen, (*C.float)(temp), C.size_t(n+1), 0, 1)
 	if err := curandError("curandGenerateNormal", res); err != nil {

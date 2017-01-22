@@ -67,11 +67,12 @@ import (
 )
 
 type mathKernels struct {
-	module  C.CUmodule
-	kernels map[string]C.CUfunction
+	module    C.CUmodule
+	kernels   map[string]C.CUfunction
+	allocator allocator
 }
 
-func newMathKernels() (kernels *mathKernels, err error) {
+func newMathKernels(a allocator) (kernels *mathKernels, err error) {
 	ptx := unsafe.Pointer(C.CString(kernelPTX))
 	defer C.free(ptx)
 
@@ -99,8 +100,9 @@ func newMathKernels() (kernels *mathKernels, err error) {
 	}
 
 	return &mathKernels{
-		module:  module,
-		kernels: kernelMap,
+		module:    module,
+		kernels:   kernelMap,
+		allocator: a,
 	}, nil
 }
 
@@ -212,18 +214,17 @@ func (m *mathKernels) AddLogs32(rows, cols int, dst, src unsafe.Pointer) error {
 	for cols > threads {
 		destCols := (cols + threads - 1) / threads
 		destSize := destCols * rows * 4
-		var tempDest unsafe.Pointer
-		err := cudaError("cudaMalloc", C.cudaMalloc(&tempDest, C.size_t(destSize)))
+		tempDest, err := m.allocator.Alloc(destSize)
 		if err != nil {
 			return err
 		}
 		res := C.anyvec_cuda_call_addlogs(k, C.size_t(rows), C.size_t(cols),
 			tempDest, src, C.int(threads))
 		if freeSrc {
-			C.cudaFree(src)
+			m.allocator.Free(src)
 		}
 		if err := cuError("cuLaunchKernel", res); err != nil {
-			C.cudaFree(tempDest)
+			m.allocator.Free(tempDest)
 			return err
 		}
 		src = tempDest
@@ -234,7 +235,7 @@ func (m *mathKernels) AddLogs32(rows, cols int, dst, src unsafe.Pointer) error {
 	res := C.anyvec_cuda_call_addlogs(k, C.size_t(rows), C.size_t(cols),
 		dst, src, C.int(threads))
 	if freeSrc {
-		C.cudaFree(src)
+		m.allocator.Free(src)
 	}
 	return m.doneKernel(res)
 }

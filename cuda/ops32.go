@@ -176,9 +176,9 @@ func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 	}
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
-		var tempBuf unsafe.Pointer
-		must(cudaError("cudaMalloc", C.cudaMalloc(&tempBuf, C.size_t(n*4))))
-		defer C.cudaFree(tempBuf)
+		tempBuf, err := o.h.allocator.Alloc(n * 4)
+		must(err)
+		defer o.h.allocator.Free(tempBuf)
 		must(cuError("cuMemsetD32", C.anyvec_cuda_set1_32(C.size_t(n), tempBuf)))
 		var tempRes C.float
 		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(a), 1,
@@ -326,9 +326,9 @@ func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
 // LogSoftmax computes the log of the softmax.
 func (o ops32) LogSoftmax(rows, cols int, vecs *buffer) {
 	o.h.runWithKernelsAsync(func() {
-		var sums unsafe.Pointer
-		must(cudaError("cudaMalloc", C.cudaMalloc(&sums, C.size_t(4*rows))))
-		defer C.cudaFree(sums)
+		sums, err := o.h.allocator.Alloc(4 * rows)
+		must(err)
+		defer o.h.allocator.Free(sums)
 		must(o.h.kernels.AddLogs32(rows, cols, sums, vecs.ptr))
 		must(o.h.kernels.SubChunks32(rows, cols, vecs.ptr, sums))
 		runtime.KeepAlive(vecs)

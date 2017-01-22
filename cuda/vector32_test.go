@@ -11,6 +11,7 @@ func TestVector32(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer h.Close()
 	tester := anyvectest.Tester{
 		Creator: NewCreator32(h),
 	}
