@@ -44,7 +44,7 @@ type cudaLoop struct {
 // newCudaLoop creates a new cudaLoop and all of the
 // resources associated with it.
 func newCudaLoop() (*cudaLoop, error) {
-	ch := make(chan *cudaLoopMsg, 1)
+	ch := make(chan *cudaLoopMsg, 10)
 	res := &cudaLoop{ch: ch}
 	resChan := make(chan error, 1)
 	go func() {
