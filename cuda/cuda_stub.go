@@ -25,16 +25,7 @@ func NewHandle() (*Handle, error) {
 	return nil, errors.New("unimplemented")
 }
 
-// SetPoolSize tells the Handle how much CUDA memory it
-// should cache, in bytes.
-//
-// The buffer pool is useful for applications that tend to
-// allocate vectors of the same length over and over.
-// For applications that allocate many different vector
-// sizes, the buffer pool will not help very much.
-//
-// The default pool size is 0.
-func (h *Handle) SetPoolSize(size int64) {
+func (h *Handle) Close() {
 	panic("unavailable with nocuda tag")
 }
 

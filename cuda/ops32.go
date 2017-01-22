@@ -313,10 +313,10 @@ func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
 	var res unsafe.Pointer
 	o.h.runWithKernels(func() {
 		var err error
-		res, err = o.h.pool.Alloc(4 * rows)
+		res, err = o.h.allocator.Alloc(4 * rows)
 		must(err)
 		if err := o.h.kernels.AddLogs32(rows, cols, res, src); err != nil {
-			o.h.pool.Free(res, 4*rows)
+			o.h.allocator.Free(res)
 			panic(err)
 		}
 	})

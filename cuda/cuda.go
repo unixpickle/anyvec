@@ -30,11 +30,11 @@ const (
 
 // A Handle manages an internal CUDA context.
 type Handle struct {
-	gc      *gc
-	pool    *bufferPool
-	loop    *cudaLoop
-	kernels *mathKernels
-	rand    *randomizer
+	gc        *gc
+	allocator allocator
+	loop      *cudaLoop
+	kernels   *mathKernels
+	rand      *randomizer
 }
 
 // NewHandle attempts to get a new Handle.
@@ -43,32 +43,34 @@ func NewHandle() (*Handle, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := &Handle{gc: newGC(), pool: newBufferPool(), loop: getMainLoop()}
-	runtime.SetFinalizer(res, func(obj *Handle) {
-		obj.loop.Run(func() {
-			if obj.kernels != nil {
-				obj.kernels.Destroy()
-			}
-			if obj.rand != nil {
-				obj.rand.Destroy()
-			}
-			obj.pool.Destroy()
-		})
-	})
-	return res, nil
+	return &Handle{
+		gc:        newGC(),
+		allocator: directAllocator{},
+		loop:      getMainLoop(),
+	}, nil
 }
 
-// SetPoolSize tells the Handle how much CUDA memory it
-// should cache, in bytes.
+// Close releases all the handle's resources.
 //
-// The buffer pool is useful for applications that tend to
-// allocate vectors of the same length over and over.
-// For applications that allocate many different vector
-// sizes, the buffer pool will not help very much.
+// You should only call this when you are done using the
+// handle and any creators or vectors depending on it.
 //
-// The default pool size is 0.
-func (h *Handle) SetPoolSize(size int64) {
-	h.pool.SetCapacity(size)
+// You should never call close more than once.
+func (h *Handle) Close() {
+	// Make successive calls to Close() trigger a panic
+	// instead of something worse.
+	loop := h.loop
+	h.loop = nil
+
+	loop.Run(func() {
+		if h.kernels != nil {
+			h.kernels.Destroy()
+		}
+		if h.rand != nil {
+			h.rand.Destroy()
+		}
+		h.allocator.Destroy()
+	})
 }
 
 func (h *Handle) runWithKernels(f func()) {
@@ -142,7 +144,7 @@ func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer 
 	}
 	runtime.SetFinalizer(res, func(b *buffer) {
 		b.handle.loop.Run(func() {
-			h.pool.Free(b.ptr, b.size)
+			h.allocator.Free(b.ptr)
 			h.gc.Free(b.size)
 		})
 	})
@@ -153,7 +155,7 @@ func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer 
 func newBuffer(h *Handle, size int) (res *buffer, err error) {
 	h.loop.Run(func() {
 		var buf unsafe.Pointer
-		buf, err = h.pool.Alloc(size)
+		buf, err = h.allocator.Alloc(size)
 		if err == nil {
 			res = newBufferPtr(h, size, buf, true)
 		}
