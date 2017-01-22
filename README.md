@@ -63,6 +63,7 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 
 # TODO
 
+ * Clean up ops32 arguments
  * Create anyvec64 package
  * CUDA acceleration for
   * Max()

@@ -49,6 +49,8 @@ func (b *Bencher) BenchmarkGemmOneVec(bench *testing.B) {
 	for i := 0; i < bench.N; i++ {
 		prod.Product(false, false, float32(1), mat, vec, float32(0))
 	}
+	// Force lazy operations to finish.
+	prod.Data.Data()
 }
 
 func (b *Bencher) BenchmarkGemmMat(bench *testing.B) {
@@ -71,6 +73,8 @@ func (b *Bencher) BenchmarkGemmMat(bench *testing.B) {
 	for i := 0; i < bench.N; i++ {
 		prod.Product(false, false, float32(1), mat1, mat2, float32(0))
 	}
+	// Force lazy operations to finish.
+	prod.Data.Data()
 }
 
 func (b *Bencher) BenchmarkMul(bench *testing.B) {
@@ -84,6 +88,8 @@ func (b *Bencher) BenchmarkMul(bench *testing.B) {
 	for i := 0; i < bench.N; i++ {
 		v1.Mul(v2)
 	}
+	// Force lazy operations to finish.
+	v1.Data()
 }
 
 func (b *Bencher) BenchmarkDiv(bench *testing.B) {
@@ -101,6 +107,8 @@ func (b *Bencher) BenchmarkDiv(bench *testing.B) {
 	for i := 0; i < bench.N; i++ {
 		v1.Div(v2)
 	}
+	// Force lazy operations to finish.
+	v1.Data()
 }
 
 func (b *Bencher) BenchmarkAddScaler(bench *testing.B) {
@@ -120,6 +128,8 @@ func (b *Bencher) BenchmarkAddRepeated(bench *testing.B) {
 	for i := 0; i < bench.N; i++ {
 		anyvec.AddRepeated(v, v1)
 	}
+	// Force lazy operations to finish.
+	v.Data()
 }
 
 func (b *Bencher) BenchmarkExp(bench *testing.B) {
@@ -140,6 +150,8 @@ func (b *Bencher) BenchmarkExp(bench *testing.B) {
 		anyvec.Exp(v)
 		v.Scale(float32(-1))
 	}
+	// Force lazy operations to finish.
+	v.Data()
 }
 
 func (b *Bencher) BenchmarkTanh(bench *testing.B) {
@@ -178,6 +190,8 @@ func (b *Bencher) benchmarkIter(size int, bench *testing.B, f func(anyvec.Vector
 	for i := 0; i < bench.N; i++ {
 		f(v)
 	}
+	// Force lazy operations to finish.
+	v.Data()
 }
 
 func (b *Bencher) randomVector(size int) anyvec.Vector {

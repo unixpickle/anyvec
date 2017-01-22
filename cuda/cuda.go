@@ -72,20 +72,15 @@ func (h *Handle) SetPoolSize(size int64) {
 }
 
 func (h *Handle) runWithKernels(f func()) {
-	h.loop.Run(func() {
-		var err error
-		if h.kernels == nil {
-			h.kernels, err = newMathKernels()
-			if err != nil {
-				panic(err)
-			}
-		}
-		f()
-	})
+	h.runWithKernelsOpt(false, f)
 }
 
-func (h *Handle) runWithRand(f func()) {
-	h.loop.Run(func() {
+func (h *Handle) runWithKernelsAsync(f func()) {
+	h.runWithKernelsOpt(true, f)
+}
+
+func (h *Handle) runWithRandAsync(f func()) {
+	h.loop.RunAsync(func() {
 		var err error
 		if h.kernels == nil {
 			h.kernels, err = newMathKernels()
@@ -101,6 +96,24 @@ func (h *Handle) runWithRand(f func()) {
 		}
 		f()
 	})
+}
+
+func (h *Handle) runWithKernelsOpt(async bool, f func()) {
+	loopFunc := func() {
+		var err error
+		if h.kernels == nil {
+			h.kernels, err = newMathKernels()
+			if err != nil {
+				panic(err)
+			}
+		}
+		f()
+	}
+	if async {
+		h.loop.RunAsync(loopFunc)
+	} else {
+		h.loop.Run(loopFunc)
+	}
 }
 
 // A buffer is an on-device memory buffer.

@@ -158,13 +158,11 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 }
 
 func (v *vector32) Scale(s anyvec.Numeric) {
-	v.ops().Scal(v.Len(), s.(float32), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Scal(v.Len(), s.(float32), v.buffer)
 }
 
 func (v *vector32) AddScaler(s anyvec.Numeric) {
-	v.ops().AddScaler(v.Len(), s.(float32), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().AddScaler(v.Len(), s.(float32), v.buffer)
 }
 
 func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
@@ -180,9 +178,7 @@ func (v *vector32) Add(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.ops().Axpy(v.Len(), 1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1)
+	v.ops().Axpy(v.Len(), 1, v1.(*vector32).buffer, v.buffer)
 }
 
 func (v *vector32) Sub(v1 anyvec.Vector) {
@@ -190,9 +186,7 @@ func (v *vector32) Sub(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.ops().Axpy(v.Len(), -1, v1.(*vector32).buffer.ptr, v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1)
+	v.ops().Axpy(v.Len(), -1, v1.(*vector32).buffer, v.buffer)
 }
 
 func (v *vector32) Mul(v1 anyvec.Vector) {
@@ -200,9 +194,7 @@ func (v *vector32) Mul(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.ops().Mul(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1)
+	v.ops().Mul(v.Len(), v.buffer, v1.(*vector32).buffer)
 }
 
 func (v *vector32) Div(v1 anyvec.Vector) {
@@ -210,9 +202,7 @@ func (v *vector32) Div(v1 anyvec.Vector) {
 		panic("arguments cannot be equal")
 	}
 	v.assertMatch(v1)
-	v.ops().Div(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1)
+	v.ops().Div(v.Len(), v.buffer, v1.(*vector32).buffer)
 }
 
 func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a anyvec.Vector,
@@ -223,36 +213,28 @@ func (v *vector32) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, 
 	aBuf := a.(*vector32).buffer
 	bBuf := b.(*vector32).buffer
 	validateGemm(transA, transB, m, n, k, a.Len(), lda, b.Len(), ldb, v.Len(), ldc)
-	v.ops().Gemm(transA, transB, m, n, k, alpha.(float32), aBuf.ptr,
-		lda, bBuf.ptr, ldb, beta.(float32), v.buffer.ptr, ldc)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(aBuf)
-	runtime.KeepAlive(bBuf)
+	v.ops().Gemm(transA, transB, m, n, k, alpha.(float32), aBuf,
+		lda, bBuf, ldb, beta.(float32), v.buffer, ldc)
 }
 
 func (v *vector32) Exp() {
-	v.ops().Exp(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Exp(v.Len(), v.buffer)
 }
 
 func (v *vector32) Log() {
-	v.ops().Log(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Log(v.Len(), v.buffer)
 }
 
 func (v *vector32) Tanh() {
-	v.ops().Tanh(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Tanh(v.Len(), v.buffer)
 }
 
 func (v *vector32) Sin() {
-	v.ops().Sin(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Sin(v.Len(), v.buffer)
 }
 
 func (v *vector32) ClipPos() {
-	v.ops().ClipPos(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().ClipPos(v.Len(), v.buffer)
 }
 
 func (v *vector32) Sum() anyvec.Numeric {
@@ -269,9 +251,7 @@ func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
 	chunkSize := v.Len() / v1.Len()
 	numChunks := v1.Len()
 	v1Buf := v1.(*vector32).buffer
-	v.ops().MulChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1Buf)
+	v.ops().MulChunks(numChunks, chunkSize, v.buffer, v1Buf)
 }
 
 func (v *vector32) AddChunks(v1 anyvec.Vector) {
@@ -284,14 +264,11 @@ func (v *vector32) AddChunks(v1 anyvec.Vector) {
 	chunkSize := v.Len() / v1.Len()
 	numChunks := v1.Len()
 	v1Buf := v1.(*vector32).buffer
-	v.ops().AddChunks(numChunks, chunkSize, v.buffer.ptr, v1Buf.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1Buf)
+	v.ops().AddChunks(numChunks, chunkSize, v.buffer, v1Buf)
 }
 
 func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
-	v.ops().GenRand(v.Len(), v.buffer.ptr, p)
-	runtime.KeepAlive(v.buffer)
+	v.ops().GenRand(v.Len(), v.buffer, p)
 }
 
 func (v *vector32) AddRepeated(v1 anyvec.Vector) {
@@ -299,9 +276,7 @@ func (v *vector32) AddRepeated(v1 anyvec.Vector) {
 		panic("repeated vector cannot be empty")
 	}
 	v1Buf := v1.(*vector32).buffer
-	v.ops().AddRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1Buf)
+	v.ops().AddRepeated(v.Len(), v1.Len(), v.buffer, v1Buf)
 }
 
 func (v *vector32) ScaleRepeated(v1 anyvec.Vector) {
@@ -309,9 +284,7 @@ func (v *vector32) ScaleRepeated(v1 anyvec.Vector) {
 		panic("repeated vector cannot be empty")
 	}
 	v1Buf := v1.(*vector32).buffer
-	v.ops().ScaleRepeated(v.Len(), v1.Len(), v.buffer.ptr, v1Buf.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1Buf)
+	v.ops().ScaleRepeated(v.Len(), v1.Len(), v.buffer, v1Buf)
 }
 
 func (v *vector32) AbsSum() anyvec.Numeric {
@@ -367,13 +340,11 @@ func (v *vector32) LogSoftmax(chunkSize int) {
 	if v.Len() == 0 {
 		return
 	}
-	v.ops().LogSoftmax(v.Len()/chunkSize, chunkSize, v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().LogSoftmax(v.Len()/chunkSize, chunkSize, v.buffer)
 }
 
 func (v *vector32) Pow(n anyvec.Numeric) {
-	v.ops().Pow(v.Len(), n.(float32), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Pow(v.Len(), n.(float32), v.buffer)
 }
 
 func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Numeric {
@@ -383,8 +354,7 @@ func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Num
 }
 
 func (v *vector32) comparison(n anyvec.Numeric, c compareType) {
-	v.ops().Compare(v.Len(), n.(float32), v.buffer.ptr, c)
-	runtime.KeepAlive(v.buffer)
+	v.ops().Compare(v.Len(), n.(float32), v.buffer, c)
 }
 
 func (v *vector32) assertMatch(v1 anyvec.Vector) {

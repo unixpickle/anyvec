@@ -37,7 +37,8 @@ func getMainLoop() *cudaLoop {
 
 // A cudaLoop runs functions in a dedicated CUDA thread.
 type cudaLoop struct {
-	ch chan<- *cudaLoopMsg
+	lock sync.RWMutex
+	ch   chan<- *cudaLoopMsg
 }
 
 // newCudaLoop creates a new cudaLoop and all of the
@@ -73,23 +74,45 @@ func (c *cudaLoop) Close() {
 // Run evaluates the function on the CUDA thread and waits
 // for the function to complete.
 func (c *cudaLoop) Run(f func()) {
+	c.lock.Lock()
 	res := make(chan struct{}, 1)
 	c.ch <- &cudaLoopMsg{
 		doneChan: res,
 		f:        f,
 	}
 	<-res
+	c.lock.Unlock()
 }
 
 // RunCUBLAS is like Run, but the function is given access
 // to a cuBLAS handle.
 func (c *cudaLoop) RunCUBLAS(f func(h C.cublasHandle_t)) {
+	c.lock.Lock()
 	res := make(chan struct{}, 1)
 	c.ch <- &cudaLoopMsg{
 		doneChan: res,
 		cublasF:  f,
 	}
 	<-res
+	c.lock.Unlock()
+}
+
+// RunAsync is the async version of Run.
+func (c *cudaLoop) RunAsync(f func()) {
+	c.lock.RLock()
+	c.ch <- &cudaLoopMsg{
+		f: f,
+	}
+	c.lock.RUnlock()
+}
+
+// RunCUBLASAsync is the async version of RunCUBLAS.
+func (c *cudaLoop) RunCUBLASAsync(f func(h C.cublasHandle_t)) {
+	c.lock.RLock()
+	c.ch <- &cudaLoopMsg{
+		cublasF: f,
+	}
+	c.lock.RUnlock()
 }
 
 type cudaLoopMsg struct {
@@ -143,6 +166,8 @@ func cudaLoopMain(ch <-chan *cudaLoopMsg, s *cudaState) {
 		} else {
 			msg.cublasF(s.blas)
 		}
-		close(msg.doneChan)
+		if msg.doneChan != nil {
+			close(msg.doneChan)
+		}
 	}
 }
