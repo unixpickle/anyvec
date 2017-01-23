@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	minBuddySize  = 1 << 20
-	maxBuddyRoots = 3
-	buddyHeadroom = 1 << 25
+	minBuddySize      = 1 << 20
+	maxBuddyRoots     = 3
+	minBuddyAllocSize = 32
+	buddyHeadroom     = 1 << 25
 )
 
 type allocator interface {
@@ -86,6 +87,9 @@ func greatestTwoPower(amount C.size_t) C.size_t {
 func (b *buddyAllocator) Alloc(size int) (unsafe.Pointer, error) {
 	if b.destroyed {
 		panic("alloc from destroyed allocator")
+	}
+	if size < minBuddyAllocSize {
+		size = minBuddyAllocSize
 	}
 	for _, x := range b.nodes {
 		ptr, err := x.Alloc(uintptr(size))
