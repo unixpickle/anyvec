@@ -9,48 +9,48 @@ package cuda
 const CUjit_option * nullJitOptions = NULL;
 const void ** nullPtrPtr = NULL;
 
-void kernel_sizes(size_t n, unsigned int * block, unsigned int * grid) {
+void kernel_sizes(int n, unsigned int * block, unsigned int * grid) {
 	*block = 128;
 	if (n < *block) {
 		*block = (unsigned int)n;
 		*grid = 1;
 	} else {
-		*grid = (unsigned int)(n / (size_t)(*block));
+		*grid = (unsigned int)(n / (*block));
 		if (n%(*block) != 0) {
 			(*grid)++;
 		}
 	}
 }
 
-CUresult anyvec_cuda_call2(CUfunction f, size_t n, void * p1, void * p2) {
+CUresult anyvec_cuda_call2(CUfunction f, int n, void * p1, void * p2) {
 	void * args[] = {&p1, &p2, &n};
 	unsigned int blockSize, gridSize;
 	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call1(CUfunction f, size_t n, void * p1) {
+CUresult anyvec_cuda_call1(CUfunction f, int n, void * p1) {
 	void * args[] = {&p1, &n};
 	unsigned int blockSize, gridSize;
 	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call2_asym(CUfunction f, size_t n1, size_t n2, void * p1, void * p2) {
+CUresult anyvec_cuda_call2_asym(CUfunction f, int n1, int n2, void * p1, void * p2) {
 	void * args[] = {&p1, &p2, &n1, &n2};
 	unsigned int blockSize, gridSize;
 	kernel_sizes(n1, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call1_scaler(CUfunction f, size_t n, float scaler, void * p1) {
+CUresult anyvec_cuda_call1_scaler(CUfunction f, int n, float scaler, void * p1) {
 	void * args[] = {&scaler, &p1, &n};
 	unsigned int blockSize, gridSize;
 	kernel_sizes(n, &blockSize, &gridSize);
 	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
 }
 
-CUresult anyvec_cuda_call_addlogs(CUfunction f, size_t rows, size_t cols, void * dst,
+CUresult anyvec_cuda_call_addlogs(CUfunction f, int rows, int cols, void * dst,
 	void * src, int threadCount) {
 	void * args[] = {&dst, &src, &cols};
 	unsigned int gridX = (unsigned int)((cols + threadCount - 1) / threadCount);
@@ -223,7 +223,7 @@ func (m *mathKernels) AddLogs32(rows, cols int, dst, src unsafe.Pointer) error {
 		if err != nil {
 			return err
 		}
-		res := C.anyvec_cuda_call_addlogs(k, C.size_t(rows), C.size_t(cols),
+		res := C.anyvec_cuda_call_addlogs(k, C.int(rows), C.int(cols),
 			tempDest, src, C.int(threads))
 		if freeSrc {
 			m.allocator.Free(src)
@@ -237,7 +237,7 @@ func (m *mathKernels) AddLogs32(rows, cols int, dst, src unsafe.Pointer) error {
 		freeSrc = true
 	}
 
-	res := C.anyvec_cuda_call_addlogs(k, C.size_t(rows), C.size_t(cols),
+	res := C.anyvec_cuda_call_addlogs(k, C.int(rows), C.int(cols),
 		dst, src, C.int(threads))
 	if freeSrc {
 		m.allocator.Free(src)
@@ -252,22 +252,22 @@ func (m *mathKernels) PowScaler32(n int, p float32, v unsafe.Pointer) error {
 
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call1(k, C.size_t(n), v))
+	return m.doneKernel(C.anyvec_cuda_call1(k, C.int(n), v))
 }
 
 func (m *mathKernels) call1Scaler(name string, n int, s float32, v unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call1_scaler(k, C.size_t(n), C.float(s), v))
+	return m.doneKernel(C.anyvec_cuda_call1_scaler(k, C.int(n), C.float(s), v))
 }
 
 func (m *mathKernels) call2(name string, n int, v1, v2 unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call2(k, C.size_t(n), v1, v2))
+	return m.doneKernel(C.anyvec_cuda_call2(k, C.int(n), v1, v2))
 }
 
 func (m *mathKernels) call2Asym(name string, n1, n2 int, v1, v2 unsafe.Pointer) error {
 	k := m.kernels[name]
-	return m.doneKernel(C.anyvec_cuda_call2_asym(k, C.size_t(n1), C.size_t(n2), v1, v2))
+	return m.doneKernel(C.anyvec_cuda_call2_asym(k, C.int(n1), C.int(n2), v1, v2))
 }
 
 func (m *mathKernels) doneKernel(res C.CUresult) error {

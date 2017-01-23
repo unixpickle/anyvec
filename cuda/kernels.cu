@@ -1,62 +1,62 @@
 extern "C" __global__
-void divElements(float * x, float * y, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void divElements(float * x, float * y, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] /= y[tid];
 	}
 }
 
 extern "C" __global__
-void expElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void expElements(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = expf(x[tid]);
 	}
 }
 
 extern "C" __global__
-void logElements(float * x, size_t n) {
-  size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void logElements(float * x, int n) {
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = logf(x[tid]);
 	}
 }
 
 extern "C" __global__
-void tanhElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void tanhElements(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = tanhf(x[tid]);
 	}
 }
 
 extern "C" __global__
-void sinElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void sinElements(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = sinf(x[tid]);
 	}
 }
 
 extern "C" __global__
-void sigmoidElements(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void sigmoidElements(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = (1 + tanhf(x[tid] / 2)) / 2;
 	}
 }
 
 extern "C" __global__
-void clipPositive(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void clipPositive(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		x[tid] = fmaxf(0, x[tid]);
 	}
 }
 
 extern "C" __global__
-void shiftRandUniform(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void shiftRandUniform(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		if (x[tid] == 1.0f) {
 			x[tid] = 0;
@@ -65,8 +65,8 @@ void shiftRandUniform(float * x, size_t n) {
 }
 
 extern "C" __global__
-void uniformToBernoulli(float * x, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void uniformToBernoulli(float * x, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
 		if (x[tid] > 0.5) {
 			x[tid] = 1;
@@ -77,64 +77,64 @@ void uniformToBernoulli(float * x, size_t n) {
 }
 
 extern "C" __global__
-void addRepeated(float * dest, float * source, size_t destLen, size_t sourceLen) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void addRepeated(float * dest, float * source, int destLen, int sourceLen) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += source[tid % sourceLen];
 	}
 }
 
 extern "C" __global__
-void addRepeatedPow2(float * dest, float * source, size_t destLen, size_t srcMask) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void addRepeatedPow2(float * dest, float * source, int destLen, int srcMask) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += source[tid & srcMask];
 	}
 }
 
 extern "C" __global__
-void scaleRepeated(float * dest, float * source, size_t destLen, size_t sourceLen) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void scaleRepeated(float * dest, float * source, int destLen, int sourceLen) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] *= source[tid % sourceLen];
 	}
 }
 
 extern "C" __global__
-void scaleRepeatedPow2(float * dest, float * source, size_t destLen, size_t srcMask) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void scaleRepeatedPow2(float * dest, float * source, int destLen, int srcMask) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] *= source[tid & srcMask];
 	}
 }
 
 extern "C" __global__
-void addScaler(float s, float * dest, size_t destLen) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void addScaler(float s, float * dest, int destLen) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += s;
 	}
 }
 
 extern "C" __global__
-void addChunks(float * dest, float * source, size_t destLen, size_t chunkSize) {
-  size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void addChunks(float * dest, float * source, int destLen, int chunkSize) {
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] += source[tid / chunkSize];
 	}
 }
 
 extern "C" __global__
-void subChunks(float * dest, float * source, size_t destLen, size_t chunkSize) {
-  size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void subChunks(float * dest, float * source, int destLen, int chunkSize) {
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] -= source[tid / chunkSize];
 	}
 }
 
 extern "C" __global__
-void lessThan(float s, float * v, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void lessThan(float s, float * v, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
     if (v[tid] < s) {
       v[tid] = 1;
@@ -145,8 +145,8 @@ void lessThan(float s, float * v, size_t n) {
 }
 
 extern "C" __global__
-void greaterThan(float s, float * v, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void greaterThan(float s, float * v, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
     if (v[tid] > s) {
       v[tid] = 1;
@@ -157,8 +157,8 @@ void greaterThan(float s, float * v, size_t n) {
 }
 
 extern "C" __global__
-void equalTo(float s, float * v, size_t n) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void equalTo(float s, float * v, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {
     if (v[tid] == s) {
       v[tid] = 1;
@@ -175,16 +175,16 @@ float addLogPair(float x, float y) {
 }
 
 extern "C" __global__
-void addLogs(float * dst, float * src, size_t rowSize) {
+void addLogs(float * dst, float * src, int rowSize) {
   extern __shared__ float chunk[];
 
-  size_t rowIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  int rowIdx = blockIdx.x * blockDim.x + threadIdx.x;
   if (rowIdx < rowSize) {
     chunk[threadIdx.x] = src[rowIdx+rowSize*blockIdx.y];
   }
   __syncthreads();
 
-  for (size_t stride = (blockDim.x>>1); stride >= 1; stride >>= 1) {
+  for (int stride = (blockDim.x>>1); stride >= 1; stride >>= 1) {
     if (threadIdx.x < stride && rowIdx+stride < rowSize) {
       chunk[threadIdx.x] = addLogPair(chunk[threadIdx.x],
         chunk[threadIdx.x+stride]);
@@ -198,8 +198,8 @@ void addLogs(float * dst, float * src, size_t rowSize) {
 }
 
 extern "C" __global__
-void powScaler(float s, float * dest, size_t destLen) {
-	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+void powScaler(float s, float * dest, int destLen) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < destLen) {
 		dest[tid] = powf(dest[tid], s);
 	}

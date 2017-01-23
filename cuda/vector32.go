@@ -3,12 +3,15 @@
 package cuda
 
 import (
+	"fmt"
 	"math/rand"
 	"runtime"
 	"unsafe"
 
 	"github.com/unixpickle/anyvec"
 )
+
+const maxVectorLen = 2147483647
 
 // A Creator32 implements anyvec.Creator for float32
 // numerics.
@@ -38,6 +41,9 @@ func (c *Creator32) MakeNumericList(x []float64) anyvec.NumericList {
 
 // MakeVector creates a zero'd out anyvec.Vector.
 func (c *Creator32) MakeVector(size int) anyvec.Vector {
+	if size > maxVectorLen {
+		panic(fmt.Sprintf("vector size %d too long (max is %d)", size, maxVectorLen))
+	}
 	buf, err := newBuffer(c.handle, size*4)
 	if err != nil {
 		panic(err)
@@ -55,6 +61,9 @@ func (c *Creator32) MakeVector(size int) anyvec.Vector {
 // specified contents.
 func (c *Creator32) MakeVectorData(dObj anyvec.NumericList) anyvec.Vector {
 	d := dObj.([]float32)
+	if len(d) > maxVectorLen {
+		panic(fmt.Sprintf("vector size %d too long (max is %d)", len(d), maxVectorLen))
+	}
 	buf, err := newBuffer(c.handle, len(d)*4)
 	if err != nil {
 		panic(err)
@@ -70,9 +79,14 @@ func (c *Creator32) MakeVectorData(dObj anyvec.NumericList) anyvec.Vector {
 
 // Concat concatenates vectors.
 func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
+	var totalLen int
 	bufs := make([]*buffer, len(v))
 	for i, x := range v {
 		bufs[i] = x.(*vector32).buffer
+		totalLen += x.Len()
+	}
+	if totalLen > maxVectorLen {
+		panic(fmt.Sprintf("vector size %d too long (max is %d)", totalLen, maxVectorLen))
 	}
 	buf, err := newBufferConcat(c.handle, bufs)
 	if err != nil {
