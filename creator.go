@@ -24,4 +24,13 @@ type Creator interface {
 	// the original vectors, so that the original vectors can
 	// be modified without changing the new vector.
 	Concat(vs ...Vector) Vector
+
+	// MakeMapper creates a Mapper based on the lookup table.
+	//
+	// Values in the table correspond to input indices.
+	// Indices in the table correspond to output indices.
+	//
+	// No value in the table can be less than 0 or greater
+	// than inSize-1.
+	MakeMapper(inSize int, table []int) Mapper
 }

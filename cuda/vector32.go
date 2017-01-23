@@ -53,9 +53,7 @@ func (c *Creator32) MakeVector(size int) anyvec.Vector {
 		panic(fmt.Sprintf("vector size %d too long (max is %d)", size, maxVector32Len))
 	}
 	buf, err := newBuffer(c.handle, size*4)
-	if err != nil {
-		panic(err)
-	}
+	must(err)
 	if err := buf.Clear(); err != nil {
 		panic(err)
 	}
@@ -73,9 +71,7 @@ func (c *Creator32) MakeVectorData(dObj anyvec.NumericList) anyvec.Vector {
 		panic(fmt.Sprintf("vector size %d too long (max is %d)", len(d), maxVector32Len))
 	}
 	buf, err := newBuffer(c.handle, len(d)*4)
-	if err != nil {
-		panic(err)
-	}
+	must(err)
 	if err := buf.Set32(d); err != nil {
 		panic(err)
 	}
@@ -101,13 +97,18 @@ func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
 		panic(fmt.Sprintf("vector size %d too long (max is %d)", totalLen, maxVector32Len))
 	}
 	buf, err := newBufferConcat(c.handle, bufs)
-	if err != nil {
-		panic(err)
-	}
+	must(err)
 	return &vector32{
 		creator: c,
 		buffer:  buf,
 	}
+}
+
+// MakeMapper creates a mapper.
+func (c *Creator32) MakeMapper(inSize int, table []int) anyvec.Mapper {
+	m, err := newMapper32(c, inSize, table)
+	must(err)
+	return m
 }
 
 type vector32 struct {

@@ -249,6 +249,17 @@ func (b *buffer) Set(b1 *buffer) error {
 	return res
 }
 
+// SetInts copies 32-bit integers into the buffer.
+func (b *buffer) SetInts(table []int) error {
+	cints := make([]C.int, len(table))
+	for i, x := range table {
+		cints[i] = C.int(x)
+	}
+	res := b.hostToDevice(len(table)*4, unsafe.Pointer(&cints[0]))
+	runtime.KeepAlive(cints)
+	return res
+}
+
 // Set32 copies 32-bit floats into the buffer.
 func (b *buffer) Set32(src []float32) error {
 	res := b.hostToDevice(len(src)*4, unsafe.Pointer(&src[0]))

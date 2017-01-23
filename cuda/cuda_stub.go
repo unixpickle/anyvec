@@ -72,3 +72,8 @@ func (c *Creator32) MakeVectorData(dObj anyvec.NumericList) anyvec.Vector {
 func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
 	panic("unavailable with nocuda tag")
 }
+
+// MakeMapper creates a mapper.
+func (c *Creator32) MakeMapper(inSize int, table []int) anyvec.Mapper {
+	panic("unavailable with nocuda tag")
+}

@@ -26,6 +26,7 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Mul", t.TestMul)
 	test.Run("Div", t.TestDiv)
 	test.Run("Gemm", t.TestGemm)
+	test.Run("Mapper", t.TestMapper)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -463,4 +464,37 @@ func (t *Tester) TestGemm(test *testing.T) {
 	expected := bmats[2].Data
 
 	t.assertClose(test, actual, expected)
+}
+
+// TestMapper tests the Mapper API.
+func (t *Tester) TestMapper(test *testing.T) {
+	// Output count greater than input count
+	m := t.Creator.MakeMapper(3, []int{2, 0, 0, 1, 0})
+
+	inVec := t.vec([]float64{1.5, -7, 3})
+	outVec := t.Creator.MakeVector(5)
+	m.Map(inVec, outVec)
+	expected := []float64{3, 1.5, 1.5, -7, 1.5}
+	t.assertClose(test, outVec.Data(), expected)
+
+	inVec = t.vec([]float64{1, 2.5, 3.2, -5.2, 3.1})
+	outVec = t.vec([]float64{1, 2, 3})
+	m.MapTranspose(inVec, outVec)
+	expected = []float64{9.8, -3.2, 4}
+	t.assertClose(test, outVec.Data(), expected)
+
+	// Output count less than input count
+	m = t.Creator.MakeMapper(3, []int{1, 2})
+
+	inVec = t.vec([]float64{1.5, -7, 3})
+	outVec = t.Creator.MakeVector(2)
+	m.Map(inVec, outVec)
+	expected = []float64{-7, 3}
+	t.assertClose(test, outVec.Data(), expected)
+
+	inVec = t.vec([]float64{2, -3})
+	outVec = t.vec([]float64{-1, -4, -3})
+	m.MapTranspose(inVec, outVec)
+	expected = []float64{-1, -2, -6}
+	t.assertClose(test, outVec.Data(), expected)
 }

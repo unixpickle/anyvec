@@ -43,6 +43,14 @@ func (d DefaultCreator) Concat(vs ...anyvec.Vector) anyvec.Vector {
 	return res
 }
 
+// MakeMapper creates a new Mapper.
+func (d DefaultCreator) MakeMapper(inSize int, table []int) anyvec.Mapper {
+	return &mapper{
+		table:  table,
+		inSize: inSize,
+	}
+}
+
 type vector []float32
 
 func (v vector) Creator() anyvec.Creator {
@@ -124,4 +132,47 @@ func (v vector) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a a
 
 func (v vector) blasVec() blas32.Vector {
 	return blas32.Vector{Data: v, Inc: 1}
+}
+
+type mapper struct {
+	table  []int
+	inSize int
+}
+
+func (r *mapper) Creator() anyvec.Creator {
+	return DefaultCreator{}
+}
+
+func (r *mapper) InSize() int {
+	return r.inSize
+}
+
+func (r *mapper) OutSize() int {
+	return len(r.table)
+}
+
+func (r *mapper) Map(in, out anyvec.Vector) {
+	if in.Len() != r.inSize {
+		panic("bad input dimensions")
+	} else if out.Len() != len(r.table) {
+		panic("bad output dimensions")
+	}
+	inV := in.(vector)
+	outV := out.(vector)
+	for i, x := range r.table {
+		outV[i] = inV[x]
+	}
+}
+
+func (r *mapper) MapTranspose(in, out anyvec.Vector) {
+	if in.Len() != len(r.table) {
+		panic("bad input dimensions")
+	} else if out.Len() != r.inSize {
+		panic("bad output dimensions")
+	}
+	inV := in.(vector)
+	outV := out.(vector)
+	for i, x := range r.table {
+		outV[x] += inV[i]
+	}
 }

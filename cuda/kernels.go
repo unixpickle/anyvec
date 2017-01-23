@@ -58,6 +58,13 @@ CUresult anyvec_cuda_call_addlogs(CUfunction f, int rows, int cols, void * dst,
 	return cuLaunchKernel(f, gridX, (unsigned int)rows, 1, threadCount, 1, 1,
 		sharedSize, NULL, args, NULL);
 }
+
+CUresult anyvec_cuda_call_map(CUfunction f, int n, void * table, void * p1, void * p2) {
+	void * args[] = {&p1, &p2, &table, &n};
+	unsigned int blockSize, gridSize;
+	kernel_sizes(n, &blockSize, &gridSize);
+	return cuLaunchKernel(f, gridSize, 1, 1, blockSize, 1, 1, 0, NULL, args, NULL);
+}
 */
 import "C"
 
@@ -250,6 +257,22 @@ func (m *mathKernels) PowScaler32(n int, p float32, v unsafe.Pointer) error {
 	return m.call1Scaler("powScaler", n, p, v)
 }
 
+// MapForward32 performs forward mapping, like
+//
+//     dst[i] = src[table[i]]
+//
+func (m *mathKernels) MapForward32(tableSize int, table, dst, src unsafe.Pointer) error {
+	return m.callMap("mapForward", tableSize, table, dst, src)
+}
+
+// MapBackward32 performs backward mapping, like
+//
+//     dst[table[i]] += src[i]
+//
+func (m *mathKernels) MapBackward32(tableSize int, table, dst, src unsafe.Pointer) error {
+	return m.callMap("mapBackward", tableSize, table, dst, src)
+}
+
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
 	return m.doneKernel(C.anyvec_cuda_call1(k, C.int(n), v))
@@ -270,6 +293,11 @@ func (m *mathKernels) call2Asym(name string, n1, n2 int, v1, v2 unsafe.Pointer) 
 	return m.doneKernel(C.anyvec_cuda_call2_asym(k, C.int(n1), C.int(n2), v1, v2))
 }
 
+func (m *mathKernels) callMap(name string, tableSize int, table, dst, src unsafe.Pointer) error {
+	k := m.kernels[name]
+	return m.doneKernel(C.anyvec_cuda_call_map(k, C.int(tableSize), table, dst, src))
+}
+
 func (m *mathKernels) doneKernel(res C.CUresult) error {
 	if err := cuError("cuLaunchKernel", res); err != nil {
 		return err
@@ -285,4 +313,4 @@ var mathKernelNames = []string{"divElements", "expElements", "logElements", "tan
 	"sinElements", "sigmoidElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
 	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
-	"addLogs", "powScaler"}
+	"addLogs", "powScaler", "mapForward", "mapBackward"}

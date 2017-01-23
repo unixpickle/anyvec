@@ -45,6 +45,11 @@ func Concat(vs ...anyvec.Vector) anyvec.Vector {
 	return CurrentCreator().Concat(vs...)
 }
 
+// MakeMapper creates a Mapper using the current Creator.
+func MakeMapper(inSize int, table []int) anyvec.Mapper {
+	return CurrentCreator().MakeMapper(inSize, table)
+}
+
 // Use sets the current anyvec.Creator.
 // The creator must use float32 numerics.
 func Use(c anyvec.Creator) {

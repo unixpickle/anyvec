@@ -204,3 +204,19 @@ void powScaler(float s, float * dest, int destLen) {
 		dest[tid] = powf(dest[tid], s);
 	}
 }
+
+extern "C" __global__
+void mapForward(float * dst, float * src, int * table, int tableSize) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < tableSize) {
+		dst[tid] = src[table[tid]];
+	}
+}
+
+extern "C" __global__
+void mapBackward(float * dst, float * src, int * table, int tableSize) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < tableSize) {
+		atomicAdd(&dst[table[tid]], src[tid]);
+	}
+}

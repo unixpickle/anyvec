@@ -1454,5 +1454,87 @@ BB20_15:
 	ret;
 }
 
+	// .globl	mapForward
+.visible .entry mapForward(
+	.param .u64 mapForward_param_0,
+	.param .u64 mapForward_param_1,
+	.param .u64 mapForward_param_2,
+	.param .u32 mapForward_param_3
+)
+{
+	.reg .pred 	%p<2>;
+	.reg .f32 	%f<2>;
+	.reg .b32 	%r<7>;
+	.reg .b64 	%rd<12>;
+
+
+	ld.param.u64 	%rd1, [mapForward_param_0];
+	ld.param.u64 	%rd2, [mapForward_param_1];
+	ld.param.u64 	%rd3, [mapForward_param_2];
+	ld.param.u32 	%r2, [mapForward_param_3];
+	mov.u32 	%r3, %ctaid.x;
+	mov.u32 	%r4, %ntid.x;
+	mov.u32 	%r5, %tid.x;
+	mad.lo.s32 	%r1, %r4, %r3, %r5;
+	setp.ge.s32	%p1, %r1, %r2;
+	@%p1 bra 	BB21_2;
+
+	cvta.to.global.u64 	%rd4, %rd3;
+	mul.wide.s32 	%rd5, %r1, 4;
+	add.s64 	%rd6, %rd4, %rd5;
+	ld.global.u32 	%r6, [%rd6];
+	cvta.to.global.u64 	%rd7, %rd2;
+	mul.wide.s32 	%rd8, %r6, 4;
+	add.s64 	%rd9, %rd7, %rd8;
+	ld.global.f32 	%f1, [%rd9];
+	cvta.to.global.u64 	%rd10, %rd1;
+	add.s64 	%rd11, %rd10, %rd5;
+	st.global.f32 	[%rd11], %f1;
+
+BB21_2:
+	ret;
+}
+
+	// .globl	mapBackward
+.visible .entry mapBackward(
+	.param .u64 mapBackward_param_0,
+	.param .u64 mapBackward_param_1,
+	.param .u64 mapBackward_param_2,
+	.param .u32 mapBackward_param_3
+)
+{
+	.reg .pred 	%p<2>;
+	.reg .f32 	%f<3>;
+	.reg .b32 	%r<7>;
+	.reg .b64 	%rd<12>;
+
+
+	ld.param.u64 	%rd1, [mapBackward_param_0];
+	ld.param.u64 	%rd2, [mapBackward_param_1];
+	ld.param.u64 	%rd3, [mapBackward_param_2];
+	ld.param.u32 	%r2, [mapBackward_param_3];
+	mov.u32 	%r3, %ctaid.x;
+	mov.u32 	%r4, %ntid.x;
+	mov.u32 	%r5, %tid.x;
+	mad.lo.s32 	%r1, %r4, %r3, %r5;
+	setp.ge.s32	%p1, %r1, %r2;
+	@%p1 bra 	BB22_2;
+
+	cvta.to.global.u64 	%rd4, %rd3;
+	mul.wide.s32 	%rd5, %r1, 4;
+	add.s64 	%rd6, %rd4, %rd5;
+	ld.global.u32 	%r6, [%rd6];
+	cvta.to.global.u64 	%rd7, %rd1;
+	mul.wide.s32 	%rd8, %r6, 4;
+	add.s64 	%rd9, %rd7, %rd8;
+	cvta.to.global.u64 	%rd10, %rd2;
+	add.s64 	%rd11, %rd10, %rd5;
+	ld.global.f32 	%f1, [%rd11];
+	atom.global.add.f32 	%f2, [%rd9], %f1;
+
+BB22_2:
+	ret;
+}
+
 
 `
