@@ -53,7 +53,7 @@ CUresult anyvec_cuda_call1_scaler(CUfunction f, int n, float scaler, void * p1) 
 CUresult anyvec_cuda_call_addlogs(CUfunction f, int rows, int cols, void * dst,
 	void * src, int threadCount) {
 	void * args[] = {&dst, &src, &cols};
-	unsigned int gridX = (unsigned int)((cols + threadCount - 1) / threadCount);
+	unsigned int gridX = ((unsigned int)cols + threadCount - 1) / (unsigned int)(threadCount);
 	unsigned int sharedSize = 4 * threadCount;
 	return cuLaunchKernel(f, gridX, (unsigned int)rows, 1, threadCount, 1, 1,
 		sharedSize, NULL, args, NULL);
