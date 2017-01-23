@@ -47,12 +47,14 @@ func (o ops32) Scal(n int, s float32, x *buffer) {
 
 // Dot takes the dot product of two device vectors.
 // The vectors both contain n elements.
-func (o ops32) Dot(n int, x, y unsafe.Pointer) float32 {
+func (o ops32) Dot(n int, x, y *buffer) float32 {
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		var tempRes C.float
-		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(x), 1,
-			(*C.float)(y), 1, &tempRes))
+		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(x.ptr), 1,
+			(*C.float)(y.ptr), 1, &tempRes))
+		runtime.KeepAlive(x)
+		runtime.KeepAlive(y)
 		res = float32(tempRes)
 	})
 	return res
@@ -90,11 +92,12 @@ func (o ops32) Gemm(transA, transB bool, m, n, k int, alpha float32, a *buffer,
 
 // Asum computes the 1-norm of the vector.
 // The vector contains n elements.
-func (o ops32) Asum(n int, v unsafe.Pointer) float32 {
+func (o ops32) Asum(n int, v *buffer) float32 {
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		var tempRes C.float
-		mustBLAS("Sasum", C.cublasSasum(blas, C.int(n), (*C.float)(v), 1, &tempRes))
+		mustBLAS("Sasum", C.cublasSasum(blas, C.int(n), (*C.float)(v.ptr), 1, &tempRes))
+		runtime.KeepAlive(v)
 		res = float32(tempRes)
 	})
 	return res
@@ -103,18 +106,19 @@ func (o ops32) Asum(n int, v unsafe.Pointer) float32 {
 // Amax computes the absolute value of the element with
 // the largest absolute value in the vector.
 // The vector contains n elements.
-func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
+func (o ops32) Amax(n int, v *buffer) float32 {
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		var resIdx C.int
-		mustBLAS("Isamax", C.cublasIsamax(blas, C.int(n), (*C.float)(v), 1, &resIdx))
+		mustBLAS("Isamax", C.cublasIsamax(blas, C.int(n), (*C.float)(v.ptr), 1, &resIdx))
 		var tempRes C.float
 
 		// Isamax uses 1-based indexing for Fortran compatibility.
-		offPtr := unsafe.Pointer(uintptr(v) + 4*uintptr(resIdx-1))
+		offPtr := unsafe.Pointer(uintptr(v.ptr) + 4*uintptr(resIdx-1))
 
 		must(cudaError("cudaMemcpy", C.cudaMemcpy(unsafe.Pointer(&tempRes), offPtr,
 			4, C.cudaMemcpyDeviceToHost)))
+		runtime.KeepAlive(v)
 		res = float32(math.Abs(float64(tempRes)))
 	})
 	return res
@@ -122,11 +126,12 @@ func (o ops32) Amax(n int, v unsafe.Pointer) float32 {
 
 // Nrm2 computes the Euclidean norm.
 // The vector contains n elements.
-func (o ops32) Nrm2(n int, v unsafe.Pointer) float32 {
+func (o ops32) Nrm2(n int, v *buffer) float32 {
 	var res float32
 	o.h.loop.RunCUBLAS(func(blas C.cublasHandle_t) {
 		var tempRes C.float
-		mustBLAS("Snrm2", C.cublasSnrm2(blas, C.int(n), (*C.float)(v), 1, &tempRes))
+		mustBLAS("Snrm2", C.cublasSnrm2(blas, C.int(n), (*C.float)(v.ptr), 1, &tempRes))
+		runtime.KeepAlive(v)
 		res = float32(tempRes)
 	})
 	return res
@@ -170,7 +175,7 @@ func (o ops32) AddChunks(chunkCount, chunkSize int, vec, scales *buffer) {
 
 // Sum computes the sum of the components in the vector.
 // The vector contains n elements.
-func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
+func (o ops32) Sum(n int, a *buffer) float32 {
 	if n == 0 {
 		return 0
 	}
@@ -181,8 +186,9 @@ func (o ops32) Sum(n int, a unsafe.Pointer) float32 {
 		defer o.h.allocator.Free(tempBuf)
 		must(cuError("cuMemsetD32", C.anyvec_cuda_set1_32(C.size_t(n), tempBuf)))
 		var tempRes C.float
-		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(a), 1,
+		mustBLAS("Sdot", C.cublasSdot(blas, C.int(n), (*C.float)(a.ptr), 1,
 			(*C.float)(tempBuf), 1, &tempRes))
+		runtime.KeepAlive(a)
 		res = float32(tempRes)
 	})
 	return res
@@ -309,16 +315,17 @@ func (o ops32) Compare(n int, alpha float32, v *buffer, c compareType) {
 }
 
 // AddLogs performs addition in the log domain.
-func (o ops32) AddLogs(rows, cols int, src unsafe.Pointer) unsafe.Pointer {
+func (o ops32) AddLogs(rows, cols int, src *buffer) unsafe.Pointer {
 	var res unsafe.Pointer
 	o.h.runWithKernels(func() {
 		var err error
 		res, err = o.h.allocator.Alloc(4 * rows)
 		must(err)
-		if err := o.h.kernels.AddLogs32(rows, cols, res, src); err != nil {
+		if err := o.h.kernels.AddLogs32(rows, cols, res, src.ptr); err != nil {
 			o.h.allocator.Free(res)
 			panic(err)
 		}
+		runtime.KeepAlive(src)
 	})
 	return res
 }

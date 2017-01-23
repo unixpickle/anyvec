@@ -167,9 +167,7 @@ func (v *vector32) AddScaler(s anyvec.Numeric) {
 
 func (v *vector32) Dot(v1 anyvec.Vector) anyvec.Numeric {
 	v.assertMatch(v1)
-	res := v.ops().Dot(v.Len(), v.buffer.ptr, v1.(*vector32).buffer.ptr)
-	runtime.KeepAlive(v.buffer)
-	runtime.KeepAlive(v1)
+	res := v.ops().Dot(v.Len(), v.buffer, v1.(*vector32).buffer)
 	return res
 }
 
@@ -322,8 +320,7 @@ func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
 	}
 
 	rows := v.Len() / chunkSize
-	newPtr := v.ops().AddLogs(rows, chunkSize, v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+	newPtr := v.ops().AddLogs(rows, chunkSize, v.buffer)
 
 	return &vector32{
 		creator: v.creator,
@@ -347,9 +344,8 @@ func (v *vector32) Pow(n anyvec.Numeric) {
 	v.ops().Pow(v.Len(), n.(float32), v.buffer)
 }
 
-func (v *vector32) aggregate(f func(n int, v unsafe.Pointer) float32) anyvec.Numeric {
-	res := f(v.Len(), v.buffer.ptr)
-	runtime.KeepAlive(v.buffer)
+func (v *vector32) aggregate(f func(n int, v *buffer) float32) anyvec.Numeric {
+	res := f(v.Len(), v.buffer)
 	return res
 }
 

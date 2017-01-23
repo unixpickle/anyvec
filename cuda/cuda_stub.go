@@ -22,7 +22,13 @@ type Handle struct {
 
 // NewHandle attempts to get a new Handle.
 func NewHandle() (*Handle, error) {
-	return nil, errors.New("unimplemented")
+	return nil, errors.New("unavailable with nocuda tag")
+}
+
+// NewHandleNoMem creates a new handle without allocating
+// most of the GPU memory.
+func NewHandleNoMem() (*Handle, error) {
+	return nil, errors.New("unavailable with nocuda tag")
 }
 
 func (h *Handle) Close() {
