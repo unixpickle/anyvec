@@ -65,8 +65,7 @@ func newBuddyAllocator() (*buddyAllocator, error) {
 			free /= 2
 			continue
 		}
-		startPtr := uintptr(buddyMem)
-		node := newBuddyNode(startPtr, startPtr+uintptr(amount))
+		node := newBuddyNode(buddyMem, unsafe.Pointer(uintptr(buddyMem)+uintptr(amount)))
 		res.nodes = append(res.nodes, node)
 		free -= amount
 	}
@@ -107,10 +106,9 @@ func (b *buddyAllocator) Free(ptr unsafe.Pointer) {
 		return
 	}
 
-	ptrNum := uintptr(ptr)
 	for _, x := range b.nodes {
-		if x.start <= ptrNum && x.end > ptrNum {
-			x.Free(ptrNum)
+		if uintptr(x.start) <= uintptr(ptr) && uintptr(x.end) > uintptr(ptr) {
+			x.Free(ptr)
 			return
 		}
 	}
@@ -130,8 +128,8 @@ func (b *buddyAllocator) Destroy() {
 
 // buddyNode is a node in a buddy allocator tree.
 type buddyNode struct {
-	start uintptr
-	end   uintptr
+	start unsafe.Pointer
+	end   unsafe.Pointer
 
 	// biggestFree is the biggest free chunk of memory within
 	// this node.
@@ -142,20 +140,20 @@ type buddyNode struct {
 	right *buddyNode
 }
 
-func newBuddyNode(start, end uintptr) *buddyNode {
+func newBuddyNode(start, end unsafe.Pointer) *buddyNode {
 	return &buddyNode{
 		start:       start,
 		end:         end,
-		biggestFree: end - start,
+		biggestFree: uintptr(end) - uintptr(start),
 	}
 }
 
-func (b *buddyNode) Alloc(size uintptr) (uintptr, error) {
+func (b *buddyNode) Alloc(size uintptr) (unsafe.Pointer, error) {
 	if size == 0 {
 		panic("zero allocs not allowed")
 	}
 	if size > b.biggestFree {
-		return 0, errors.New("allocator node is full")
+		return nil, errors.New("allocator node is full")
 	}
 
 	if size > b.size()/2 {
@@ -184,7 +182,7 @@ func (b *buddyNode) Alloc(size uintptr) (uintptr, error) {
 	panic("impossible situation")
 }
 
-func (b *buddyNode) Free(p uintptr) {
+func (b *buddyNode) Free(p unsafe.Pointer) {
 	if b.left == nil && b.right == nil {
 		if p != b.start {
 			panic("freed invalid address")
@@ -192,7 +190,7 @@ func (b *buddyNode) Free(p uintptr) {
 		b.biggestFree = b.size()
 		return
 	}
-	if p < b.right.start {
+	if uintptr(p) < uintptr(b.right.start) {
 		b.left.Free(p)
 	} else {
 		b.right.Free(p)
@@ -213,11 +211,11 @@ func (b *buddyNode) split() {
 	halfSize := b.size() / 2
 	b.left = &buddyNode{
 		start:       b.start,
-		end:         b.start + halfSize,
+		end:         unsafe.Pointer(uintptr(b.start) + halfSize),
 		biggestFree: halfSize,
 	}
 	b.right = &buddyNode{
-		start:       b.start + halfSize,
+		start:       unsafe.Pointer(uintptr(b.start) + halfSize),
 		end:         b.end,
 		biggestFree: halfSize,
 	}
@@ -235,5 +233,5 @@ func (b *buddyNode) updateBiggestFree() {
 }
 
 func (b *buddyNode) size() uintptr {
-	return b.end - b.start
+	return uintptr(b.end) - uintptr(b.start)
 }
