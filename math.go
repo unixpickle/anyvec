@@ -75,6 +75,27 @@ func Log(v Vector) {
 	}
 }
 
+// A Sigmoider can compute the logistic sigmoid of its
+// components.
+type Sigmoider interface {
+	Sigmoid()
+}
+
+// Sigmoid takes the component-wise logistic sigmoid.
+// If the vector does not implement Sigmoider, a default
+// implementation based on Tanh is used.
+func Sigmoid(v Vector) {
+	if s, ok := v.(Sigmoider); ok {
+		s.Sigmoid()
+	} else {
+		half := v.Creator().MakeNumeric(0.5)
+		v.Scale(half)
+		Tanh(v)
+		v.AddScaler(v.Creator().MakeNumeric(1))
+		v.Scale(half)
+	}
+}
+
 // A PosClipper can clip its values using max(0, x).
 type PosClipper interface {
 	ClipPos()

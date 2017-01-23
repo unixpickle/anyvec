@@ -231,6 +231,10 @@ func (v *vector32) Sin() {
 	v.ops().Sin(v.Len(), v.buffer)
 }
 
+func (v *vector32) Sigmoid() {
+	v.ops().Sigmoid(v.Len(), v.buffer)
+}
+
 func (v *vector32) ClipPos() {
 	v.ops().ClipPos(v.Len(), v.buffer)
 }

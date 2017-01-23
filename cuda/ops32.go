@@ -242,6 +242,16 @@ func (o ops32) Sin(n int, a *buffer) {
 	})
 }
 
+// Sigmoid computes the logistic sigmoid of the vector
+// components.
+// The vector contains n elements.
+func (o ops32) Sigmoid(n int, a *buffer) {
+	o.h.runWithKernelsAsync(func() {
+		must(o.h.kernels.Sigmoid32(n, a.ptr))
+		runtime.KeepAlive(a)
+	})
+}
+
 // ClipPos takes MAX(0, x) for every component x.
 // The vector contains n elements.
 func (o ops32) ClipPos(n int, a *buffer) {

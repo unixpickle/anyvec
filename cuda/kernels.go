@@ -135,6 +135,11 @@ func (m *mathKernels) Sin32(n int, v unsafe.Pointer) error {
 	return m.call1("sinElements", n, v)
 }
 
+// Sigmoid32 performs element-wise sigmoid.
+func (m *mathKernels) Sigmoid32(n int, v unsafe.Pointer) error {
+	return m.call1("sigmoidElements", n, v)
+}
+
 // ClipPos32 performs element-wise max(0, x).
 func (m *mathKernels) ClipPos32(n int, v unsafe.Pointer) error {
 	return m.call1("clipPositive", n, v)
@@ -277,7 +282,7 @@ func (m *mathKernels) sync() error {
 }
 
 var mathKernelNames = []string{"divElements", "expElements", "logElements", "tanhElements",
-	"sinElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
+	"sinElements", "sigmoidElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
 	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
 	"addLogs", "powScaler"}

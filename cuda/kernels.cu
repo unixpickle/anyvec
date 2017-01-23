@@ -39,6 +39,14 @@ void sinElements(float * x, size_t n) {
 }
 
 extern "C" __global__
+void sigmoidElements(float * x, size_t n) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		x[tid] = (1 + tanhf(x[tid] / 2)) / 2;
+	}
+}
+
+extern "C" __global__
 void clipPositive(float * x, size_t n) {
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {

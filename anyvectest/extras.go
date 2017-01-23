@@ -15,6 +15,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("Exp", t.TestExp)
 	test.Run("Log", t.TestLog)
 	test.Run("Sin", t.TestSin)
+	test.Run("Sigmoid", t.TestSigmoid)
 	test.Run("Tanh", t.TestTanh)
 	test.Run("ClipPos", t.TestClipPos)
 	test.Run("Pow", t.TestPow)
@@ -52,6 +53,13 @@ func (t *Tester) TestSin(test *testing.T) {
 	t.testOp(test, func(x float64) float64 {
 		return math.Sin(x)
 	}, anyvec.Sin)
+}
+
+// TestSin tests logistic sigmoid.
+func (t *Tester) TestSigmoid(test *testing.T) {
+	t.testOp(test, func(x float64) float64 {
+		return 1 / (1 + math.Exp(-x))
+	}, anyvec.Sigmoid)
 }
 
 // TestTanh tests tanh.
