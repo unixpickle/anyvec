@@ -11,7 +11,15 @@ import (
 	"github.com/unixpickle/anyvec"
 )
 
-const maxVectorLen = 2147483647
+var maxVector32Len = 2147483647
+
+func init() {
+	// On 32-bit systems, we only allocate up to 2GB for a
+	// vector, since the size must fit in an int.
+	if ^uint(0) == 0xffffffff {
+		maxVector32Len /= 4
+	}
+}
 
 // A Creator32 implements anyvec.Creator for float32
 // numerics.
@@ -41,8 +49,8 @@ func (c *Creator32) MakeNumericList(x []float64) anyvec.NumericList {
 
 // MakeVector creates a zero'd out anyvec.Vector.
 func (c *Creator32) MakeVector(size int) anyvec.Vector {
-	if size > maxVectorLen {
-		panic(fmt.Sprintf("vector size %d too long (max is %d)", size, maxVectorLen))
+	if size > maxVector32Len {
+		panic(fmt.Sprintf("vector size %d too long (max is %d)", size, maxVector32Len))
 	}
 	buf, err := newBuffer(c.handle, size*4)
 	if err != nil {
@@ -61,8 +69,8 @@ func (c *Creator32) MakeVector(size int) anyvec.Vector {
 // specified contents.
 func (c *Creator32) MakeVectorData(dObj anyvec.NumericList) anyvec.Vector {
 	d := dObj.([]float32)
-	if len(d) > maxVectorLen {
-		panic(fmt.Sprintf("vector size %d too long (max is %d)", len(d), maxVectorLen))
+	if len(d) > maxVector32Len {
+		panic(fmt.Sprintf("vector size %d too long (max is %d)", len(d), maxVector32Len))
 	}
 	buf, err := newBuffer(c.handle, len(d)*4)
 	if err != nil {
@@ -85,8 +93,8 @@ func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
 		bufs[i] = x.(*vector32).buffer
 		totalLen += x.Len()
 	}
-	if totalLen > maxVectorLen {
-		panic(fmt.Sprintf("vector size %d too long (max is %d)", totalLen, maxVectorLen))
+	if totalLen > maxVector32Len {
+		panic(fmt.Sprintf("vector size %d too long (max is %d)", totalLen, maxVector32Len))
 	}
 	buf, err := newBufferConcat(c.handle, bufs)
 	if err != nil {
