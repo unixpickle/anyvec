@@ -77,7 +77,7 @@ func newBuddyAllocator() (*buddyAllocator, error) {
 
 func greatestTwoPower(amount C.size_t) C.size_t {
 	res := C.size_t(1)
-	for res*2 < amount {
+	for res*2 < amount && res*2 > res {
 		res *= 2
 	}
 	return res
