@@ -1,5 +1,7 @@
 package anyvec
 
+import "fmt"
+
 // A Mapper generates output vectors from input vectors
 // by permuting, repeating, and possibly dropping input
 // components.
@@ -38,4 +40,91 @@ type Mapper interface {
 	// To circumvent this, you can manually scale the output
 	// vector by a factor of 0 before calling MapTranspose.
 	MapTranspose(in, out Vector)
+}
+
+// A MaxMapper can generate a Mapper that maps the maximum
+// element of each of its rows to one element of a target.
+// In other words, each element of the mapper's output
+// corresponds to a different row in the MaxMapper, and
+// specifically maps from the maximum element in that row.
+type MaxMapper interface {
+	MapMax(cols int) Mapper
+}
+
+// MapMax treats v like a matrix and creates a Mapper that
+// maps each row to the maximum element of that row.
+// If the vector does not implement MaxMapper, a default
+// implementation is used which supports float32 and
+// float64.
+//
+// The cols argument must divide the length of v.
+func MapMax(v Vector, cols int) Mapper {
+	if m, ok := v.(MaxMapper); ok {
+		return m.MapMax(cols)
+	} else {
+		var mapping []int
+		switch data := v.Data().(type) {
+		case []float32:
+			mapping = mapMax32(data, cols)
+		case []float64:
+			mapping = mapMax64(data, cols)
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
+		return v.Creator().MakeMapper(v.Len(), mapping)
+	}
+}
+
+func mapMax32(data []float32, cols int) []int {
+	if len(data)%cols != 0 {
+		panic("column count must divide vector size")
+	}
+	res := make([]int, len(data)/cols)
+	for rowIdx := range res {
+		row := data[cols*rowIdx : cols*(rowIdx+1)]
+		res[rowIdx] = maxIndex32(row) + cols*rowIdx
+	}
+	return res
+}
+
+func mapMax64(data []float64, cols int) []int {
+	if len(data)%cols != 0 {
+		panic("column count must divide vector size")
+	}
+	res := make([]int, len(data)/cols)
+	for rowIdx := range res {
+		row := data[cols*rowIdx : cols*(rowIdx+1)]
+		res[rowIdx] = maxIndex64(row) + cols*rowIdx
+	}
+	return res
+}
+
+func maxIndex32(data []float32) int {
+	if len(data) == 0 {
+		return 0
+	}
+	maxVal := data[0]
+	maxIdx := 0
+	for i, x := range data {
+		if x > maxVal {
+			maxIdx = i
+			maxVal = x
+		}
+	}
+	return maxIdx
+}
+
+func maxIndex64(data []float64) int {
+	if len(data) == 0 {
+		return 0
+	}
+	maxVal := data[0]
+	maxIdx := 0
+	for i, x := range data {
+		if x > maxVal {
+			maxIdx = i
+			maxVal = x
+		}
+	}
+	return maxIdx
 }

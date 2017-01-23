@@ -36,6 +36,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("TestAddLogs", t.TestAddLogs)
 	test.Run("TestSumRows", t.TestSumRows)
 	test.Run("TestSumCols", t.TestSumCols)
+	test.Run("TestMapMax", t.TestMapMax)
 }
 
 // TestExp tests exponentiation.
@@ -396,4 +397,36 @@ func (t *Tester) TestSumCols(test *testing.T) {
 	expected := []float64{0.584278061775247, -2.727387916779400, 1.823295535269045,
 		2.365565944031672}
 	t.assertClose(test, actual, expected)
+}
+
+// TestMapMax tests the MaxMapper interface.
+func (t *Tester) TestMapMax(test *testing.T) {
+	v := t.vec([]float64{
+		0.305985279638971, 1.058956965872622, -0.780664183736345,
+		-2.213119641375825, 0.511557156875536, -1.025825432279111,
+		-0.193978187968917, 0.769710039307595, 1.247563683930367,
+		1.165449702401210, 0.699426864914262, 0.500689376716200,
+	})
+	mapper := anyvec.MapMax(v, 3)
+	mapMe := t.vec([]float64{
+		-1, 2, 3,
+		4, 5, 6,
+		7, 8, 9,
+		10, 11, 12,
+	})
+	actual := t.Creator.MakeVector(4)
+	mapper.Map(mapMe, actual)
+	expected := []float64{2, 5, 9, 10}
+	t.assertClose(test, actual.Data(), expected)
+
+	mapper = anyvec.MapMax(v, 4)
+	mapMe = t.vec([]float64{
+		-1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 10, 11, 12,
+	})
+	actual = t.Creator.MakeVector(3)
+	mapper.Map(mapMe, actual)
+	expected = []float64{2, 8, 9}
+	t.assertClose(test, actual.Data(), expected)
 }
