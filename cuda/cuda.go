@@ -50,23 +50,20 @@ func NewHandle() (*Handle, error) {
 	}, nil
 }
 
-// Close releases all the handle's resources.
+// Close releases resources that the handle was holding.
 //
 // You should only call this when you are done using the
 // handle and any creators or vectors depending on it.
 //
-// You should never call close more than once.
+// You should never call Close more than once.
 func (h *Handle) Close() {
-	// Make successive calls to Close() trigger a panic
-	// instead of something worse.
-	loop := h.loop
-	h.loop = nil
-
-	loop.Run(func() {
+	h.loop.Run(func() {
 		if h.kernels != nil {
+			h.kernels = nil
 			h.kernels.Destroy()
 		}
 		if h.rand != nil {
+			h.rand = nil
 			h.rand.Destroy()
 		}
 		h.allocator.Destroy()

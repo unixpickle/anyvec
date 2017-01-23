@@ -34,6 +34,30 @@ func (d directAllocator) Free(ptr unsafe.Pointer) {
 func (d directAllocator) Destroy() {
 }
 
+// A buddyAllocator allocates memory using the buddy
+// allocation algorithm.
+type buddyAllocator struct {
+	destroyed bool
+	nodes     []*buddyNode
+}
+
+func (b *buddyAllocator) Free(ptr unsafe.Pointer) {
+	// Can happen if the handle is closed before a buffer is
+	// garbage collected.
+	if b.destroyed {
+		return
+	}
+}
+
+func (b *buddyAllocator) Destroy() {
+	if b.destroyed {
+		panic("buddy allocator already destroyed")
+	}
+	b.destroyed = true
+	for _, x := range b.nodes {
+	}
+}
+
 // buddyNode is a node in a buddy allocator tree.
 type buddyNode struct {
 	start uintptr
