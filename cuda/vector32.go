@@ -91,7 +91,11 @@ func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
 	bufs := make([]*buffer, len(v))
 	for i, x := range v {
 		bufs[i] = x.(*vector32).buffer
+		oldLen := totalLen
 		totalLen += x.Len()
+		if oldLen > totalLen {
+			panic("vector size overflow")
+		}
 	}
 	if totalLen > maxVector32Len {
 		panic(fmt.Sprintf("vector size %d too long (max is %d)", totalLen, maxVector32Len))
