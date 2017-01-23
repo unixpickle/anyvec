@@ -38,7 +38,35 @@ type Handle struct {
 }
 
 // NewHandle attempts to get a new Handle.
+//
+// This will attempt to allocate a lot of the available
+// CUDA memory.
+// To avoid such behavior, use NewHandleNoMem.
 func NewHandle() (*Handle, error) {
+	err := createMainLoop()
+	if err != nil {
+		return nil, err
+	}
+	var a allocator
+	getMainLoop().Run(func() {
+		a, err = newBuddyAllocator()
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &Handle{
+		gc:        newGC(),
+		allocator: a,
+		loop:      getMainLoop(),
+	}, nil
+}
+
+// NewHandleNoMem creates a Handle, but it does not seize
+// CUDA memory.
+//
+// The resulting Handle will allocate and free memory
+// dynamically, which could hinder performance.
+func NewHandleNoMem() (*Handle, error) {
 	err := createMainLoop()
 	if err != nil {
 		return nil, err
@@ -59,12 +87,12 @@ func NewHandle() (*Handle, error) {
 func (h *Handle) Close() {
 	h.loop.Run(func() {
 		if h.kernels != nil {
-			h.kernels = nil
 			h.kernels.Destroy()
+			h.kernels = nil
 		}
 		if h.rand != nil {
-			h.rand = nil
 			h.rand.Destroy()
+			h.rand = nil
 		}
 		h.allocator.Destroy()
 	})

@@ -13,6 +13,12 @@ import (
 	"unsafe"
 )
 
+const (
+	minBuddySize  = 1 << 20
+	maxBuddyRoots = 3
+	buddyHeadroom = 1 << 25
+)
+
 type allocator interface {
 	Alloc(size int) (unsafe.Pointer, error)
 	Free(ptr unsafe.Pointer)
@@ -41,12 +47,71 @@ type buddyAllocator struct {
 	nodes     []*buddyNode
 }
 
+func newBuddyAllocator() (*buddyAllocator, error) {
+	var free, total C.size_t
+	err := cudaError("cudaGetMemInfo", C.cudaMemGetInfo(&free, &total))
+	if err != nil {
+		return nil, err
+	}
+	free -= buddyHeadroom
+
+	res := &buddyAllocator{}
+	for len(res.nodes) < maxBuddyRoots && free >= minBuddySize {
+		amount := greatestTwoPower(free)
+		var buddyMem unsafe.Pointer
+		err = cudaError("cudaMalloc", C.cudaMalloc(&buddyMem, amount))
+		if err != nil {
+			free /= 2
+			continue
+		}
+		startPtr := uintptr(buddyMem)
+		node := newBuddyNode(startPtr, startPtr+uintptr(amount))
+		res.nodes = append(res.nodes, node)
+		free -= amount
+	}
+	if len(res.nodes) == 0 {
+		return nil, errors.New("failed to allocate buddy nodes")
+	}
+	return res, nil
+}
+
+func greatestTwoPower(amount C.size_t) C.size_t {
+	res := C.size_t(1)
+	for res*2 < amount {
+		res *= 2
+	}
+	return res
+}
+
+func (b *buddyAllocator) Alloc(size int) (unsafe.Pointer, error) {
+	if b.destroyed {
+		panic("alloc from destroyed allocator")
+	}
+	for _, x := range b.nodes {
+		ptr, err := x.Alloc(uintptr(size))
+		if err == nil {
+			return unsafe.Pointer(ptr), nil
+		}
+	}
+	return nil, errors.New("no free memory nodes")
+}
+
 func (b *buddyAllocator) Free(ptr unsafe.Pointer) {
 	// Can happen if the handle is closed before a buffer is
 	// garbage collected.
 	if b.destroyed {
 		return
 	}
+
+	ptrNum := uintptr(ptr)
+	for _, x := range b.nodes {
+		if x.start <= ptrNum && x.end > ptrNum {
+			x.Free(ptrNum)
+			return
+		}
+	}
+
+	panic("invalid pointer was freed")
 }
 
 func (b *buddyAllocator) Destroy() {
@@ -55,6 +120,7 @@ func (b *buddyAllocator) Destroy() {
 	}
 	b.destroyed = true
 	for _, x := range b.nodes {
+		C.cudaFree(unsafe.Pointer(x.start))
 	}
 }
 
