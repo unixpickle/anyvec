@@ -27,6 +27,9 @@ func (b *Bencher) BenchmarkAll(bench *testing.B) {
 	bench.Run("NormDist", b.BenchmarkNormDist)
 	bench.Run("LogSoftmax", b.BenchmarkLogSoftmax)
 	bench.Run("AddLogs", b.BenchmarkAddLogs)
+	bench.Run("Map", b.BenchmarkMap)
+	bench.Run("MapTranspose", b.BenchmarkMapTranspose)
+	bench.Run("MapMax", b.BenchmarkMapMax)
 }
 
 func (b *Bencher) BenchmarkGemmOneVec(bench *testing.B) {
@@ -180,6 +183,40 @@ func (b *Bencher) BenchmarkAddLogs(bench *testing.B) {
 	})
 }
 
+func (b *Bencher) BenchmarkMap(bench *testing.B) {
+	in, out, m := b.mapperTestData()
+
+	// Initialize kernels.
+	m.Map(in, out)
+
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		m.Map(in, out)
+	}
+	// Trigger lazy evaluations.
+	out.Data()
+}
+
+func (b *Bencher) BenchmarkMapTranspose(bench *testing.B) {
+	in, out, m := b.mapperTestData()
+
+	// Initialize kernels.
+	m.MapTranspose(out, in)
+
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		m.MapTranspose(out, in)
+	}
+	// Trigger lazy evaluations.
+	out.Data()
+}
+
+func (b *Bencher) BenchmarkMapMax(bench *testing.B) {
+	b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
+		anyvec.MapMax(v, 4)
+	})
+}
+
 func (b *Bencher) benchmarkIter(size int, bench *testing.B, f func(anyvec.Vector)) {
 	v := b.randomVector(size)
 
@@ -200,4 +237,15 @@ func (b *Bencher) randomVector(size int) anyvec.Vector {
 		d[i] = rand.NormFloat64()
 	}
 	return b.Creator.MakeVectorData(b.Creator.MakeNumericList(d))
+}
+
+func (b *Bencher) mapperTestData() (in, out anyvec.Vector, m anyvec.Mapper) {
+	in = b.randomVector(4096)
+	out = b.randomVector(4096 * 2)
+	mapping := make([]int, out.Len())
+	for i := range mapping {
+		mapping[i] = rand.Intn(in.Len())
+	}
+	m = b.Creator.MakeMapper(in.Len(), mapping)
+	return
 }
