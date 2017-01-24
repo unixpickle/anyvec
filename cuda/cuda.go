@@ -168,7 +168,7 @@ func newBufferPtr(h *Handle, size int, buf unsafe.Pointer, inLoop bool) *buffer 
 		})
 	}
 	runtime.SetFinalizer(res, func(b *buffer) {
-		b.handle.loop.Run(func() {
+		b.handle.loop.RunAsync(func() {
 			h.allocator.Free(b.ptr)
 			h.gc.Free(b.size)
 		})
