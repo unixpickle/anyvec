@@ -1,7 +1,7 @@
 .PHONY: clean
 
 kernel_code.go: kernels.cu
-	nvcc --ptx kernels.cu
+	nvcc --gpu-architecture=compute_30 --gpu-code=compute_30 --ptx kernels.cu
 	echo '//+build !nocuda' >kernel_code.go
 	echo '' >>kernel_code.go
 	echo 'package cuda' >>kernel_code.go
