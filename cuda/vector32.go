@@ -375,6 +375,28 @@ func (v *vector32) Pow(n anyvec.Numeric) {
 	v.ops().Pow(v.Len(), n.(float32), v.buffer)
 }
 
+func (v *vector32) MapMax(cols int) anyvec.Mapper {
+	if v.Len()%cols != 0 {
+		panic("column count must divide vector size")
+	}
+	if v.Len() == 0 || cols == 0 {
+		m, err := newMapper32(v.creator, 0, []int{})
+		must(err)
+		return m
+	}
+
+	rows := v.Len() / cols
+	newPtr := v.ops().MapMax(rows, cols, v.buffer)
+	buf := newBufferPtr(v.creator.handle, rows*4, newPtr, false)
+
+	return &mapper32{
+		c:       v.creator,
+		table:   buf,
+		inSize:  v.Len(),
+		outSize: rows,
+	}
+}
+
 func (v *vector32) aggregate(f func(n int, v *buffer) float32) anyvec.Numeric {
 	res := f(v.Len(), v.buffer)
 	return res

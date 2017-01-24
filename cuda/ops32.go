@@ -359,3 +359,22 @@ func (o ops32) Pow(n int, p float32, v *buffer) {
 		runtime.KeepAlive(v)
 	})
 }
+
+// MapMax creates a map for the maximum entry in each row.
+func (o ops32) MapMax(rows, cols int, src *buffer) unsafe.Pointer {
+	var res unsafe.Pointer
+	o.h.runWithKernels(func() {
+		var err error
+		res, err = o.h.allocator.Alloc(rows * 4)
+		if err != nil {
+			panic(err)
+		}
+		err = o.h.kernels.MapMax32(rows, cols, res, src.ptr)
+		runtime.KeepAlive(src)
+		if err != nil {
+			o.h.allocator.Free(res)
+			panic(err)
+		}
+	})
+	return res
+}

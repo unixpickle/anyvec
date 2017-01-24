@@ -273,6 +273,12 @@ func (m *mathKernels) MapBackward32(tableSize int, table, dst, src unsafe.Pointe
 	return m.callMap("mapBackward", tableSize, table, dst, src)
 }
 
+// MapMax32 assigns entries to a map based on the maximum
+// columns in each row.
+func (m *mathKernels) MapMax32(rows, cols int, table, v unsafe.Pointer) error {
+	return m.call2Asym("mapMax", rows, cols, table, v)
+}
+
 func (m *mathKernels) call1(name string, n int, v unsafe.Pointer) error {
 	k := m.kernels[name]
 	return m.doneKernel(C.anyvec_cuda_call1(k, C.int(n), v))
@@ -313,4 +319,4 @@ var mathKernelNames = []string{"divElements", "expElements", "logElements", "tan
 	"sinElements", "sigmoidElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
 	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
-	"addLogs", "powScaler", "mapForward", "mapBackward"}
+	"addLogs", "powScaler", "mapForward", "mapBackward", "mapMax"}

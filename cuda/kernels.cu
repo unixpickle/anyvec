@@ -220,3 +220,21 @@ void mapBackward(float * dst, float * src, int * table, int tableSize) {
 		atomicAdd(&dst[table[tid]], src[tid]);
 	}
 }
+
+extern "C" __global__
+void mapMax(int * table, float * data, int rows, int cols) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < rows) {
+		int base = tid * cols;
+		float * row = &data[base];
+		int maxIdx = 0;
+		float maxVal = row[0];
+		for (int i = 1; i < cols; ++i) {
+			if (row[i] > maxVal) {
+				maxVal = row[i];
+				maxIdx = i;
+			}
+		}
+		table[tid] = maxIdx + base;
+	}
+}

@@ -1536,5 +1536,67 @@ BB22_2:
 	ret;
 }
 
+	// .globl	mapMax
+.visible .entry mapMax(
+	.param .u64 mapMax_param_0,
+	.param .u64 mapMax_param_1,
+	.param .u32 mapMax_param_2,
+	.param .u32 mapMax_param_3
+)
+{
+	.reg .pred 	%p<5>;
+	.reg .f32 	%f<6>;
+	.reg .b32 	%r<21>;
+	.reg .b64 	%rd<15>;
+
+
+	ld.param.u64 	%rd4, [mapMax_param_0];
+	ld.param.u64 	%rd5, [mapMax_param_1];
+	ld.param.u32 	%r12, [mapMax_param_2];
+	ld.param.u32 	%r11, [mapMax_param_3];
+	mov.u32 	%r1, %ntid.x;
+	mov.u32 	%r2, %ctaid.x;
+	mov.u32 	%r3, %tid.x;
+	mad.lo.s32 	%r4, %r1, %r2, %r3;
+	setp.ge.s32	%p1, %r4, %r12;
+	@%p1 bra 	BB23_5;
+
+	mul.lo.s32 	%r5, %r4, %r11;
+	mov.u32 	%r20, 0;
+	setp.lt.s32	%p2, %r11, 2;
+	@%p2 bra 	BB23_4;
+
+	cvta.to.global.u64 	%rd6, %rd5;
+	mul.wide.s32 	%rd7, %r5, 4;
+	add.s64 	%rd8, %rd6, %rd7;
+	ld.global.f32 	%f5, [%rd8];
+	mul.lo.s32 	%r17, %r11, %r4;
+	mul.wide.s32 	%rd9, %r17, 4;
+	add.s64 	%rd10, %rd9, %rd6;
+	add.s64 	%rd14, %rd10, 4;
+	mov.u32 	%r20, 0;
+	mov.u32 	%r19, 1;
+
+BB23_3:
+	ld.global.f32 	%f4, [%rd14];
+	setp.gt.f32	%p3, %f4, %f5;
+	selp.b32	%r20, %r19, %r20, %p3;
+	selp.f32	%f5, %f4, %f5, %p3;
+	add.s64 	%rd14, %rd14, 4;
+	add.s32 	%r19, %r19, 1;
+	setp.lt.s32	%p4, %r19, %r11;
+	@%p4 bra 	BB23_3;
+
+BB23_4:
+	cvta.to.global.u64 	%rd11, %rd4;
+	mul.wide.s32 	%rd12, %r4, 4;
+	add.s64 	%rd13, %rd11, %rd12;
+	add.s32 	%r18, %r20, %r5;
+	st.global.u32 	[%rd13], %r18;
+
+BB23_5:
+	ret;
+}
+
 
 `
