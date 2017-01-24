@@ -351,11 +351,11 @@ func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
 	}
 
 	rows := v.Len() / chunkSize
-	newPtr := v.ops().AddLogs(rows, chunkSize, v.buffer)
+	buf := v.ops().AddLogs(rows, chunkSize, v.buffer)
 
 	return &vector32{
 		creator: v.creator,
-		buffer:  newBufferPtr(v.creator.handle, rows*4, newPtr, false),
+		buffer:  buf,
 	}
 }
 
@@ -386,8 +386,7 @@ func (v *vector32) MapMax(cols int) anyvec.Mapper {
 	}
 
 	rows := v.Len() / cols
-	newPtr := v.ops().MapMax(rows, cols, v.buffer)
-	buf := newBufferPtr(v.creator.handle, rows*4, newPtr, false)
+	buf := v.ops().MapMax(rows, cols, v.buffer)
 
 	return &mapper32{
 		c:       v.creator,

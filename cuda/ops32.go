@@ -325,17 +325,17 @@ func (o ops32) Compare(n int, alpha float32, v *buffer, c compareType) {
 }
 
 // AddLogs performs addition in the log domain.
-func (o ops32) AddLogs(rows, cols int, src *buffer) unsafe.Pointer {
-	var res unsafe.Pointer
+func (o ops32) AddLogs(rows, cols int, src *buffer) *buffer {
+	var res *buffer
 	o.h.runWithKernels(func() {
-		var err error
-		res, err = o.h.allocator.Alloc(4 * rows)
+		resPtr, err := o.h.allocator.Alloc(4 * rows)
 		must(err)
-		if err := o.h.kernels.AddLogs32(rows, cols, res, src.ptr); err != nil {
-			o.h.allocator.Free(res)
+		if err := o.h.kernels.AddLogs32(rows, cols, resPtr, src.ptr); err != nil {
+			o.h.allocator.Free(resPtr)
 			panic(err)
 		}
 		runtime.KeepAlive(src)
+		res = newBufferPtr(o.h, 4*rows, resPtr, true)
 	})
 	return res
 }
@@ -361,20 +361,20 @@ func (o ops32) Pow(n int, p float32, v *buffer) {
 }
 
 // MapMax creates a map for the maximum entry in each row.
-func (o ops32) MapMax(rows, cols int, src *buffer) unsafe.Pointer {
-	var res unsafe.Pointer
+func (o ops32) MapMax(rows, cols int, src *buffer) *buffer {
+	var res *buffer
 	o.h.runWithKernels(func() {
-		var err error
-		res, err = o.h.allocator.Alloc(rows * 4)
+		table, err := o.h.allocator.Alloc(rows * 4)
 		if err != nil {
 			panic(err)
 		}
-		err = o.h.kernels.MapMax32(rows, cols, res, src.ptr)
+		err = o.h.kernels.MapMax32(rows, cols, table, src.ptr)
 		runtime.KeepAlive(src)
 		if err != nil {
-			o.h.allocator.Free(res)
+			o.h.allocator.Free(table)
 			panic(err)
 		}
+		res = newBufferPtr(o.h, rows*4, table, true)
 	})
 	return res
 }
