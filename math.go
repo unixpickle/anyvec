@@ -41,6 +41,24 @@ func Sin(v Vector) {
 	}
 }
 
+// A Coser can compute its cosine from radians.
+type Coser interface {
+	Cosine()
+}
+
+// Cos computes the in-place cosine of the vector.
+// The arguments are in radians.
+// If the vector does not implement Coser, a default
+// implementation is used which depends on Sin().
+func Cos(v Vector) {
+	if c, ok := v.(Coser); ok {
+		c.Cosine()
+	} else {
+		v.AddScaler(v.Creator().MakeNumeric(0.5 * math.Pi))
+		Sin(v)
+	}
+}
+
 // An Exper can exponentiate its entries in base e.
 type Exper interface {
 	Exp()
