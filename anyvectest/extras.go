@@ -15,6 +15,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("Exp", t.TestExp)
 	test.Run("Log", t.TestLog)
 	test.Run("Sin", t.TestSin)
+	test.Run("Cos", t.TestCos)
 	test.Run("Sigmoid", t.TestSigmoid)
 	test.Run("Tanh", t.TestTanh)
 	test.Run("ClipPos", t.TestClipPos)
@@ -51,9 +52,12 @@ func (t *Tester) TestLog(test *testing.T) {
 
 // TestSin tests sine.
 func (t *Tester) TestSin(test *testing.T) {
-	t.testOp(test, func(x float64) float64 {
-		return math.Sin(x)
-	}, anyvec.Sin)
+	t.testOp(test, math.Sin, anyvec.Sin)
+}
+
+// TestCos tests cosine.
+func (t *Tester) TestCos(test *testing.T) {
+	t.testOp(test, math.Cos, anyvec.Cos)
 }
 
 // TestSin tests logistic sigmoid.
@@ -65,9 +69,7 @@ func (t *Tester) TestSigmoid(test *testing.T) {
 
 // TestTanh tests tanh.
 func (t *Tester) TestTanh(test *testing.T) {
-	t.testOp(test, func(x float64) float64 {
-		return math.Tanh(x)
-	}, anyvec.Tanh)
+	t.testOp(test, math.Tanh, anyvec.Tanh)
 }
 
 // TestClipPos tests positive clipping.
