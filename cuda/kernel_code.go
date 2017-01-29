@@ -1099,7 +1099,7 @@ BB18_4:
 	ld.param.u64 	%rd3, [addLogs_param_1];
 	ld.param.u32 	%r8, [addLogs_param_2];
 	mov.u32 	%r1, %ntid.x;
-	mov.u32 	%r2, %ctaid.x;
+	mov.u32 	%r2, %ctaid.y;
 	mov.u32 	%r3, %tid.x;
 	mad.lo.s32 	%r4, %r1, %r2, %r3;
 	mul.wide.u32 	%rd4, %r3, 4;
@@ -1109,7 +1109,7 @@ BB18_4:
 	@%p1 bra 	BB19_2;
 
 	cvta.to.global.u64 	%rd6, %rd3;
-	mov.u32 	%r9, %ctaid.y;
+	mov.u32 	%r9, %ctaid.x;
 	mad.lo.s32 	%r10, %r9, %r8, %r4;
 	mul.wide.u32 	%rd7, %r10, 4;
 	add.s64 	%rd8, %rd6, %rd7;
@@ -1230,8 +1230,8 @@ BB19_8:
 
 	cvta.to.global.u64 	%rd12, %rd2;
 	ld.shared.f32 	%f66, [chunk];
-	mov.u32 	%r17, %nctaid.x;
-	mov.u32 	%r18, %ctaid.y;
+	mov.u32 	%r17, %nctaid.y;
+	mov.u32 	%r18, %ctaid.x;
 	mad.lo.s32 	%r19, %r17, %r18, %r2;
 	mul.wide.u32 	%rd13, %r19, 4;
 	add.s64 	%rd14, %rd12, %rd13;

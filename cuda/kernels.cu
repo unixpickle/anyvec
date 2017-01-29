@@ -178,9 +178,9 @@ extern "C" __global__
 void addLogs(float * dst, float * src, int rowSize) {
   extern __shared__ float chunk[];
 
-  int rowIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  int rowIdx = blockIdx.y * blockDim.x + threadIdx.x;
   if (rowIdx < rowSize) {
-    chunk[threadIdx.x] = src[rowIdx+rowSize*blockIdx.y];
+    chunk[threadIdx.x] = src[rowIdx+rowSize*blockIdx.x];
   }
   __syncthreads();
 
@@ -193,7 +193,7 @@ void addLogs(float * dst, float * src, int rowSize) {
   }
 
   if (threadIdx.x == 0) {
-    dst[blockIdx.x + blockIdx.y*gridDim.x] = chunk[0];
+    dst[blockIdx.y + blockIdx.x*gridDim.y] = chunk[0];
   }
 }
 

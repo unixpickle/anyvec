@@ -371,6 +371,19 @@ func (t *Tester) TestAddLogs(test *testing.T) {
 		v = t.vec(data)
 		sum = anyvec.AddLogs(v, 300)
 		t.assertClose(test, sum.Data(), expected)
+
+		data := make([]float64, 65537*2)
+		expected := make([]float64, len(data)/2)
+		for i := range data {
+			data[i] = rand.NormFloat64()
+			expected[i/2] += math.Exp(data[i])
+		}
+		for i, x := range expected {
+			expected[i] = math.Log(x)
+		}
+		v = t.vec(data)
+		sum = anyvec.AddLogs(v, 2)
+		t.assertClose(test, sum.Data(), expected)
 	}
 }
 
