@@ -81,6 +81,10 @@ func (v vector) Slice(start, end int) anyvec.Vector {
 	return append(vector{}, v[start:end]...)
 }
 
+func (v vector) SetSlice(start int, v1 anyvec.Vector) {
+	copy(v[start:], v1.(vector))
+}
+
 func (v vector) Scale(s anyvec.Numeric) {
 	blas32.Scal(len(v), s.(float32), v.blasVec())
 }

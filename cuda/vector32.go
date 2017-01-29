@@ -141,8 +141,10 @@ func (v *vector32) SetData(d anyvec.NumericList) {
 func (v *vector32) Set(v1 anyvec.Vector) {
 	if v == v1 {
 		panic("arguments cannot be equal")
+	} else if v.Len() != v1.Len() {
+		panic("vector lengths must match")
 	}
-	v.buffer.Set(v1.(*vector32).buffer)
+	v.buffer.Set(0, v1.(*vector32).buffer)
 }
 
 func (v *vector32) Copy() anyvec.Vector {
@@ -150,7 +152,7 @@ func (v *vector32) Copy() anyvec.Vector {
 	if err != nil {
 		panic(err)
 	}
-	if err := newBuff.Set(v.buffer); err != nil {
+	if err := newBuff.Set(0, v.buffer); err != nil {
 		panic(err)
 	}
 	return &vector32{
@@ -173,7 +175,7 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 	if err != nil {
 		panic(err)
 	}
-	buf.Set(&buffer{
+	buf.Set(0, &buffer{
 		size: (end - start) * 4,
 		ptr:  unsafe.Pointer(uintptr(v.buffer.ptr) + uintptr(4*start)),
 	})
@@ -182,6 +184,15 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 		creator: v.creator,
 		buffer:  buf,
 	}
+}
+
+func (v *vector32) SetSlice(start int, v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	} else if v1.Len()+start > v.Len() {
+		panic("assignment out of bounds")
+	}
+	v.buffer.Set(start*4, v1.(*vector32).buffer)
 }
 
 func (v *vector32) Scale(s anyvec.Numeric) {

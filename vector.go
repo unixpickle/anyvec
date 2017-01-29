@@ -50,6 +50,16 @@ type Vector interface {
 	// unlike how slices work in Go.
 	Slice(start, end int) Vector
 
+	// SetSlice replaces a subset of the vector with the
+	// contents of another vector.
+	// The new data must overwrite existing data, meaning
+	// that the start index may not be out of bounds, and
+	// the start index plus v.Len() must also be within
+	// bounds.
+	//
+	// The receiver should not equal v.
+	SetSlice(start int, v Vector)
+
 	// Scale scales the vector by a constant.
 	Scale(s Numeric)
 

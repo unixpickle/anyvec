@@ -17,6 +17,7 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Copy", t.TestCopy)
 	test.Run("Set", t.TestSet)
 	test.Run("Slice", t.TestSlice)
+	test.Run("SetSlice", t.TestSetSlice)
 	test.Run("Concat", t.TestConcat)
 	test.Run("Scale", t.TestScale)
 	test.Run("AddScaler", t.TestAddScaler)
@@ -281,6 +282,34 @@ func (t *Tester) TestSlice(test *testing.T) {
 
 		t.assertClose(test, vec2.Data().([]float64), actual)
 	}
+}
+
+// TestSetSlice tests slice overwriting.
+func (t *Tester) TestSetSlice(test *testing.T) {
+	vec1 := t.randomVecLen(1024)
+	vec2 := t.randomVecLen(65)
+	origV1 := vec1.Data()
+	origV2 := vec2.Data()
+	vec1.SetSlice(129, vec2)
+
+	var expectedData anyvec.NumericList
+	if t.is32Bit() {
+		data1 := append([]float32{}, origV1.([]float32)...)
+		data2 := origV2.([]float32)
+		copy(data1[129:], data2)
+		expectedData = data1
+	} else {
+		data1 := append([]float64{}, origV1.([]float64)...)
+		data2 := origV2.([]float64)
+		copy(data1[129:], data2)
+		expectedData = data1
+	}
+
+	t.assertClose(test, expectedData, vec1.Data())
+	t.assertClose(test, origV2, vec2.Data())
+	vec1.SetData(origV1)
+	t.assertClose(test, origV2, vec2.Data())
+	t.assertClose(test, origV1, vec1.Data())
 }
 
 // TestConcat tests vector concatenation.

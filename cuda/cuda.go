@@ -235,13 +235,14 @@ func (b *buffer) Clear() error {
 }
 
 // Set copies the contents of a buffer into b.
-func (b *buffer) Set(b1 *buffer) error {
-	if b1.size != b.size {
-		return errors.New("buffer sizes do not match")
+func (b *buffer) Set(offInDest int, b1 *buffer) error {
+	if b1.size+offInDest > b.size {
+		return errors.New("vector copy out of bounds")
 	}
 	var res error
 	b.handle.loop.Run(func() {
-		res = cudaError("cudaMemcpy", C.cudaMemcpy(b.ptr, b1.ptr, C.size_t(b.size),
+		offPtr := unsafe.Pointer(uintptr(b.ptr) + uintptr(offInDest))
+		res = cudaError("cudaMemcpy", C.cudaMemcpy(offPtr, b1.ptr, C.size_t(b1.size),
 			C.cudaMemcpyDeviceToDevice))
 	})
 	runtime.KeepAlive(b1)
