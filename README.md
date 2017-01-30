@@ -1,4 +1,4 @@
-# anyvec
+# anyvec [![GoDoc](https://godoc.org/github.com/unixpickle/anyvec?status.svg)](https://godoc.org/github.com/unixpickle/anyvec)
 
 **anyvec** lets you use any implementation of vector arithmetic that you want. You might use it for GPU acceleration, distributed matrix multiplication, or precision-agnostic arithmetic.
 
