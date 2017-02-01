@@ -36,6 +36,15 @@ func validateGemm(tA, tB bool, m, n, k, aLen, lda, bLen, ldb, cLen, ldc int) {
 	if k < 0 {
 		panic("blas: k < 0")
 	}
+	if lda < 0 {
+		panic("blas: lda < 0")
+	}
+	if ldb < 0 {
+		panic("blas: ldb < 0")
+	}
+	if ldc < 0 {
+		panic("blas: ldc < 0")
+	}
 	var rowA, colA, rowB, colB int
 	if !tA {
 		rowA, colA = m, k

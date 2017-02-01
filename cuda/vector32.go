@@ -52,6 +52,9 @@ func (c *Creator32) MakeVector(size int) anyvec.Vector {
 	if size > maxVector32Len {
 		panic(fmt.Sprintf("vector size %d too long (max is %d)", size, maxVector32Len))
 	}
+	if size < 0 {
+		panic("vector size cannot be negative")
+	}
 	buf, err := newBuffer(c.handle, size*4)
 	must(err)
 	if err := buf.Clear(); err != nil {
@@ -106,6 +109,9 @@ func (c *Creator32) Concat(v ...anyvec.Vector) anyvec.Vector {
 
 // MakeMapper creates a mapper.
 func (c *Creator32) MakeMapper(inSize int, table []int) anyvec.Mapper {
+	if inSize < 0 {
+		panic("input size cannot be negative")
+	}
 	m, err := newMapper32(c, inSize, table)
 	must(err)
 	return m
@@ -352,7 +358,9 @@ func (v *vector32) EqualTo(n anyvec.Numeric) {
 }
 
 func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
-	if chunkSize == 0 {
+	if chunkSize < 0 {
+		panic("chunk size cannot be negative")
+	} else if chunkSize == 0 {
 		chunkSize = v.Len()
 	} else if v.Len()%chunkSize != 0 {
 		panic("chunk size must divide vector size")
@@ -371,7 +379,9 @@ func (v *vector32) AddLogs(chunkSize int) anyvec.Vector {
 }
 
 func (v *vector32) LogSoftmax(chunkSize int) {
-	if chunkSize == 0 {
+	if chunkSize < 0 {
+		panic("chunk size cannot be negative")
+	} else if chunkSize == 0 {
 		chunkSize = v.Len()
 	} else if v.Len()%chunkSize != 0 {
 		panic("chunk size must divide vector size")
@@ -387,7 +397,9 @@ func (v *vector32) Pow(n anyvec.Numeric) {
 }
 
 func (v *vector32) MapMax(cols int) anyvec.Mapper {
-	if v.Len()%cols != 0 {
+	if cols < 0 {
+		panic("column count cannot be negative")
+	} else if v.Len()%cols != 0 {
 		panic("column count must divide vector size")
 	}
 	if v.Len() == 0 || cols == 0 {
