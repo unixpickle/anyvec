@@ -52,10 +52,14 @@ type Vector interface {
 
 	// SetSlice replaces a subset of the vector with the
 	// contents of another vector.
-	// The new data must overwrite existing data, meaning
-	// that the start index may not be out of bounds, and
-	// the start index plus v.Len() must also be within
-	// bounds.
+	//
+	// The start index specifies where in the receiver the
+	// data should be put.
+	// It cannot be greater than receiver.Len() - v.Len(),
+	// but it may be any value below that.
+	// If the start index is negative, then the beginning of
+	// v is ignored and only the tail of v is copied into the
+	// receiver.
 	//
 	// The receiver should not equal v.
 	SetSlice(start int, v Vector)

@@ -82,7 +82,13 @@ func (v vector) Slice(start, end int) anyvec.Vector {
 }
 
 func (v vector) SetSlice(start int, v1 anyvec.Vector) {
-	copy(v[start:], v1.(vector))
+	if start < 0 {
+		if -start < v1.Len() {
+			copy(v, v1.(vector)[-start:])
+		}
+	} else {
+		copy(v[start:], v1.(vector))
+	}
 }
 
 func (v vector) Scale(s anyvec.Numeric) {

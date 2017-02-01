@@ -239,10 +239,22 @@ func (b *buffer) Set(offInDest int, b1 *buffer) error {
 	if b1.size+offInDest > b.size {
 		return errors.New("vector copy out of bounds")
 	}
+	if offInDest <= -b1.size {
+		return nil
+	}
 	var res error
 	b.handle.loop.Run(func() {
-		offPtr := unsafe.Pointer(uintptr(b.ptr) + uintptr(offInDest))
-		res = cudaError("cudaMemcpy", C.cudaMemcpy(offPtr, b1.ptr, C.size_t(b1.size),
+		var bOffPtr, b1OffPtr unsafe.Pointer
+		totalSize := b1.size
+		if offInDest < 0 {
+			totalSize += offInDest
+			b1OffPtr = unsafe.Pointer(uintptr(b1.ptr) + uintptr(-offInDest))
+			bOffPtr = b.ptr
+		} else {
+			b1OffPtr = b1.ptr
+			bOffPtr = unsafe.Pointer(uintptr(b.ptr) + uintptr(offInDest))
+		}
+		res = cudaError("cudaMemcpy", C.cudaMemcpy(bOffPtr, b1OffPtr, C.size_t(totalSize),
 			C.cudaMemcpyDeviceToDevice))
 	})
 	runtime.KeepAlive(b1)

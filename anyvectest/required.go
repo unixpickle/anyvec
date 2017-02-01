@@ -310,6 +310,27 @@ func (t *Tester) TestSetSlice(test *testing.T) {
 	vec1.SetData(origV1)
 	t.assertClose(test, origV2, vec2.Data())
 	t.assertClose(test, origV1, vec1.Data())
+
+	vec1.SetSlice(-1000, vec2)
+	t.assertClose(test, origV2, vec2.Data())
+	t.assertClose(test, origV1, vec1.Data())
+
+	vec1.SetSlice(-60, vec2)
+
+	if t.is32Bit() {
+		data1 := append([]float32{}, origV1.([]float32)...)
+		data2 := origV2.([]float32)
+		copy(data1, data2[60:])
+		expectedData = data1
+	} else {
+		data1 := append([]float64{}, origV1.([]float64)...)
+		data2 := origV2.([]float64)
+		copy(data1, data2[60:])
+		expectedData = data1
+	}
+
+	t.assertClose(test, expectedData, vec1.Data())
+	t.assertClose(test, origV2, vec2.Data())
 }
 
 // TestConcat tests vector concatenation.
