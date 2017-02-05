@@ -13,10 +13,8 @@
 First, you must have [Go](https://golang.org/doc/install) installed and configured. Once you do, you can download **anyvec** and its dependencies as follows:
 
 ```
-$ go get -u -tags nocuda github.com/unixpickle/anyvec/...
+$ go get -u -d github.com/unixpickle/anyvec/...
 ```
-
-Note the `-tags nocuda` arguments. This does not mean that you will not be able to use CUDA. However, it prevents `go get` from attempting to compile CUDA-dependent code.
 
 # Using CUDA
 

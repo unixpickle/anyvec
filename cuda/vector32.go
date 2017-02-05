@@ -1,5 +1,3 @@
-//+build !nocuda
-
 package cuda
 
 import (
