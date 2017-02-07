@@ -163,6 +163,49 @@ func Pow(v Vector, n Numeric) {
 	}
 }
 
+// A ElemMaxer can update its elements according to
+//
+//     v[i] = max(v[i], v1[i])
+//
+// Essentially, it can set each component to the max of
+// that component and the corresponding component of a
+// second vector.
+type ElemMaxer interface {
+	ElemMax(v1 Vector)
+}
+
+// ElemMax takes the per-component maximum between v and
+// v1 and stores the result in v.
+// If the vector does not implement ElemMaxer, a default
+// implementation is used which supports float32 and
+// float64 values.
+func ElemMax(v, v1 Vector) {
+	if e, ok := v.(ElemMaxer); ok {
+		e.ElemMax(v1)
+	} else {
+		switch data := v.Data().(type) {
+		case []float64:
+			v1Data := v1.Data().([]float64)
+			for i, x := range v1Data {
+				if data[i] < x {
+					data[i] = x
+				}
+			}
+			v.SetData(data)
+		case []float32:
+			v1Data := v1.Data().([]float32)
+			for i, x := range v1Data {
+				if data[i] < x {
+					data[i] = x
+				}
+			}
+			v.SetData(data)
+		default:
+			panic(fmt.Sprintf("unsupported type: %T", data))
+		}
+	}
+}
+
 // A LogAdder computes a sum of numbers which are stored
 // in the log domain.
 // It is equivalent to the pseudo-code:

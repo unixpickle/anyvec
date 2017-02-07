@@ -7,6 +7,14 @@ void divElements(float * x, float * y, int n) {
 }
 
 extern "C" __global__
+void elemMax(float * dst, float * src, int n) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n) {
+		dst[tid] = max(dst[tid], src[tid]);
+	}
+}
+
+extern "C" __global__
 void expElements(float * x, int n) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n) {

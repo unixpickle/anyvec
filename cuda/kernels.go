@@ -123,6 +123,11 @@ func (m *mathKernels) Div32(n int, num, denom unsafe.Pointer) error {
 	return m.call2("divElements", n, num, denom)
 }
 
+// ElemMax32 performs element-wise max().
+func (m *mathKernels) ElemMax32(n int, v1, v2 unsafe.Pointer) error {
+	return m.call2("elemMax", n, v1, v2)
+}
+
 // Exp32 performs element-wise exponentiation.
 func (m *mathKernels) Exp32(n int, v unsafe.Pointer) error {
 	return m.call1("expElements", n, v)
@@ -320,4 +325,4 @@ var mathKernelNames = []string{"divElements", "expElements", "logElements", "tan
 	"sinElements", "sigmoidElements", "clipPositive", "shiftRandUniform", "uniformToBernoulli",
 	"addRepeated", "addRepeatedPow2", "scaleRepeated", "scaleRepeatedPow2",
 	"addScaler", "addChunks", "subChunks", "lessThan", "greaterThan", "equalTo",
-	"addLogs", "powScaler", "mapForward", "mapBackward", "mapMax"}
+	"addLogs", "powScaler", "mapForward", "mapBackward", "mapMax", "elemMax"}

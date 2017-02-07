@@ -203,6 +203,17 @@ func (o ops32) Div(n int, a, b *buffer) {
 	})
 }
 
+// ElemMax sets the elements of a to be the component-wise
+// maximum between a and b.
+// The vectors both contain n elements.
+func (o ops32) ElemMax(n int, a, b *buffer) {
+	o.h.runWithKernelsAsync(func() {
+		must(o.h.kernels.ElemMax32(n, a.ptr, b.ptr))
+		runtime.KeepAlive(a)
+		runtime.KeepAlive(b)
+	})
+}
+
 // Exp exponentiates the vector components.
 // The vector contains n elements.
 func (o ops32) Exp(n int, a *buffer) {

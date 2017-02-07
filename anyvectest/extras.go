@@ -26,6 +26,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("AbsMax", t.TestAbsMax)
 	test.Run("AbsSum", t.TestAbsSum)
 	test.Run("Norm", t.TestNorm)
+	test.Run("ElemMax", t.TestElemMax)
 	test.Run("LogSoftmax", t.TestLogSoftmax)
 	test.Run("AddChunks", t.TestAddChunks)
 	test.Run("ScaleChunks", t.TestScaleChunks)
@@ -191,6 +192,18 @@ func (t *Tester) TestAbsMax(test *testing.T) {
 		}
 		return max
 	}, anyvec.AbsMax)
+}
+
+// TestElemMax tests the ElemMaxer interface.
+func (t *Tester) TestElemMax(test *testing.T) {
+	inData1 := []float64{1, -2, 3, -4, 5, 6, 3, 1.5}
+	inData2 := []float64{-1, -1, 3.5, -5, -6, 6, 2.5, 2}
+	v1 := t.vec(inData1)
+	v2 := t.vec(inData2)
+	anyvec.ElemMax(v1, v2)
+
+	expected := []float64{1, -1, 3.5, -4, 5, 6, 3, 2}
+	t.assertClose(test, v1.Data(), expected)
 }
 
 // TestLogSoftmax tests log-domain softmaxing.
