@@ -28,6 +28,7 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Div", t.TestDiv)
 	test.Run("Gemm", t.TestGemm)
 	test.Run("Mapper", t.TestMapper)
+	test.Run("Empty", t.TestEmpty)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -547,4 +548,20 @@ func (t *Tester) TestMapper(test *testing.T) {
 	m.MapTranspose(inVec, outVec)
 	expected = []float64{-1, -2, -6}
 	t.assertClose(test, outVec.Data(), expected)
+}
+
+// TestEmpty tests vector operations with zero-length
+// vectors.
+func (t *Tester) TestEmpty(test *testing.T) {
+	v1 := t.Creator.MakeVector(0)
+	v2 := t.Creator.MakeVector(10).Slice(3, 3)
+	v1.Add(v2)
+	v1.Mul(v2)
+	if v1.Len() != 0 {
+		test.Errorf("incorrect vector length")
+	}
+	if v1.Slice(0, 0).Len() != 0 {
+		test.Errorf("incorrect vector length")
+	}
+	v1.SetSlice(0, v2)
 }
