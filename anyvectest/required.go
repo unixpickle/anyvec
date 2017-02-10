@@ -554,7 +554,7 @@ func (t *Tester) TestMapper(test *testing.T) {
 // vectors.
 func (t *Tester) TestEmpty(test *testing.T) {
 	v1 := t.Creator.MakeVector(0)
-	v2 := t.Creator.MakeVector(10).Slice(3, 3)
+	v2 := t.Creator.MakeVector(10).Slice(10, 10)
 	v1.Add(v2)
 	v1.Mul(v2)
 	if v1.Len() != 0 {
