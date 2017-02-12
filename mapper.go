@@ -28,6 +28,8 @@ type Mapper interface {
 	OutSize() int
 
 	// Map applies the mapping to produce a new vector.
+	//
+	// The input and output vectors cannot be equal.
 	Map(in, out Vector)
 
 	// MapTranspose applies the transpose of the mapping.
@@ -39,6 +41,8 @@ type Mapper interface {
 	// rather than the output vector being overwritten.
 	// To circumvent this, you can manually scale the output
 	// vector by a factor of 0 before calling MapTranspose.
+	//
+	// The input and output vectors cannot be equal.
 	MapTranspose(in, out Vector)
 }
 

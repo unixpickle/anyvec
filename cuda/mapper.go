@@ -62,6 +62,9 @@ func (m *mapper32) Map(in, out anyvec.Vector) {
 	if out.Len() != m.outSize {
 		panic("incorrect output size")
 	}
+	if in == out {
+		panic("input cannot equal output")
+	}
 	inBuf := in.(*vector32).buffer
 	outBuf := out.(*vector32).buffer
 	m.c.handle.runWithKernelsAsync(func() {
@@ -78,6 +81,9 @@ func (m *mapper32) MapTranspose(in, out anyvec.Vector) {
 	}
 	if out.Len() != m.inSize {
 		panic("incorrect output size")
+	}
+	if in == out {
+		panic("input cannot equal output")
 	}
 	inBuf := in.(*vector32).buffer
 	outBuf := out.(*vector32).buffer

@@ -288,8 +288,7 @@ func (v *vector32) Sum() anyvec.Numeric {
 func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
 	if v == v1 {
 		panic("arguments cannot be equal")
-	}
-	if v.Len()%v1.Len() != 0 {
+	} else if v.Len()%v1.Len() != 0 {
 		panic("number of scalers must divide vector size")
 	}
 	chunkSize := v.Len() / v1.Len()
@@ -301,8 +300,7 @@ func (v *vector32) ScaleChunks(v1 anyvec.Vector) {
 func (v *vector32) AddChunks(v1 anyvec.Vector) {
 	if v == v1 {
 		panic("arguments cannot be equal")
-	}
-	if v.Len()%v1.Len() != 0 {
+	} else if v.Len()%v1.Len() != 0 {
 		panic("number of scalers must divide vector size")
 	}
 	chunkSize := v.Len() / v1.Len()
@@ -316,7 +314,9 @@ func (v *vector32) Rand(p anyvec.ProbDist, r *rand.Rand) {
 }
 
 func (v *vector32) AddRepeated(v1 anyvec.Vector) {
-	if v1.Len() == 0 {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	} else if v1.Len() == 0 {
 		panic("repeated vector cannot be empty")
 	}
 	v1Buf := v1.(*vector32).buffer
@@ -324,7 +324,9 @@ func (v *vector32) AddRepeated(v1 anyvec.Vector) {
 }
 
 func (v *vector32) ScaleRepeated(v1 anyvec.Vector) {
-	if v1.Len() == 0 {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	} else if v1.Len() == 0 {
 		panic("repeated vector cannot be empty")
 	}
 	v1Buf := v1.(*vector32).buffer
