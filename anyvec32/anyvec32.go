@@ -19,8 +19,8 @@ func MakeNumeric(x float64) anyvec.Numeric {
 
 // MakeNumericList creates a list of numerics using the
 // current creator.
-func MakeNumericList(x []float64) anyvec.NumericList {
-	return CurrentCreator().MakeNumericList(x)
+func MakeNumericList(x []float64) []float32 {
+	return CurrentCreator().MakeNumericList(x).([]float32)
 }
 
 // MakeVector creates a vector using the current creator.
