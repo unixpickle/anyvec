@@ -26,21 +26,23 @@ func (d DefaultCreator) MakeNumericList(x []float64) anyvec.NumericList {
 
 // MakeVector creates a zero vector.
 func (d DefaultCreator) MakeVector(size int) anyvec.Vector {
-	return make(vector, size)
+	res := make(vector, size)
+	return &res
 }
 
 // MakeVectorData creates a copy of the data.
 func (d DefaultCreator) MakeVectorData(data anyvec.NumericList) anyvec.Vector {
-	return append(vector{}, data.([]float32)...)
+	res := append(vector{}, data.([]float32)...)
+	return &res
 }
 
 // Concat concatenates vectors.
 func (d DefaultCreator) Concat(vs ...anyvec.Vector) anyvec.Vector {
 	var res vector
 	for _, v := range vs {
-		res = append(res, v.(vector)...)
+		res = append(res, *v.(*vector)...)
 	}
-	return res
+	return &res
 }
 
 // MakeMapper creates a new Mapper.
@@ -53,81 +55,104 @@ func (d DefaultCreator) MakeMapper(inSize int, table []int) anyvec.Mapper {
 
 type vector []float32
 
-func (v vector) Creator() anyvec.Creator {
+func (v *vector) Creator() anyvec.Creator {
 	return DefaultCreator{}
 }
 
-func (v vector) Len() int {
-	return len(v)
+func (v *vector) Len() int {
+	return len(*v)
 }
 
-func (v vector) Data() anyvec.NumericList {
-	return append([]float32{}, v...)
+func (v *vector) Data() anyvec.NumericList {
+	return append([]float32{}, *v...)
 }
 
-func (v vector) SetData(v1 anyvec.NumericList) {
-	copy(v, v1.([]float32))
+func (v *vector) SetData(v1 anyvec.NumericList) {
+	copy(*v, v1.([]float32))
 }
 
-func (v vector) Set(v1 anyvec.Vector) {
-	copy(v, v1.(vector))
+func (v *vector) Set(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
+	copy(*v, *v1.(*vector))
 }
 
-func (v vector) Copy() anyvec.Vector {
-	return append(vector{}, v...)
+func (v *vector) Copy() anyvec.Vector {
+	res := append(vector{}, *v...)
+	return &res
 }
 
-func (v vector) Slice(start, end int) anyvec.Vector {
-	return append(vector{}, v[start:end]...)
+func (v *vector) Slice(start, end int) anyvec.Vector {
+	res := append(vector{}, (*v)[start:end]...)
+	return &res
 }
 
-func (v vector) SetSlice(start int, v1 anyvec.Vector) {
+func (v *vector) SetSlice(start int, v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
 	if start < 0 {
 		if -start < v1.Len() {
-			copy(v, v1.(vector)[-start:])
+			copy(*v, (*v1.(*vector))[-start:])
 		}
 	} else {
-		copy(v[start:], v1.(vector))
+		copy((*v)[start:], *v1.(*vector))
 	}
 }
 
-func (v vector) Scale(s anyvec.Numeric) {
-	blas32.Scal(len(v), s.(float32), v.blasVec())
+func (v *vector) Scale(s anyvec.Numeric) {
+	blas32.Scal(len(*v), s.(float32), v.blasVec())
 }
 
-func (v vector) AddScaler(s anyvec.Numeric) {
+func (v *vector) AddScaler(s anyvec.Numeric) {
 	sNum := s.(float32)
-	for i := range v {
-		v[i] += sNum
+	for i := range *v {
+		(*v)[i] += sNum
 	}
 }
 
-func (v vector) Dot(v1 anyvec.Vector) anyvec.Numeric {
-	return blas32.Dot(len(v), v.blasVec(), v1.(vector).blasVec())
+func (v *vector) Dot(v1 anyvec.Vector) anyvec.Numeric {
+	return blas32.Dot(len(*v), v.blasVec(), v1.(*vector).blasVec())
 }
 
-func (v vector) Add(v1 anyvec.Vector) {
-	blas32.Axpy(len(v), 1, v1.(vector).blasVec(), v.blasVec())
+func (v *vector) Add(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
+	blas32.Axpy(len(*v), 1, v1.(*vector).blasVec(), v.blasVec())
 }
 
-func (v vector) Sub(v1 anyvec.Vector) {
-	blas32.Axpy(len(v), -1, v1.(vector).blasVec(), v.blasVec())
+func (v *vector) Sub(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
+	blas32.Axpy(len(*v), -1, v1.(*vector).blasVec(), v.blasVec())
 }
 
-func (v vector) Mul(v1 anyvec.Vector) {
-	for i, x := range v1.(vector) {
-		v[i] *= x
+func (v *vector) Mul(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
+	for i, x := range *v1.(*vector) {
+		(*v)[i] *= x
 	}
 }
 
-func (v vector) Div(v1 anyvec.Vector) {
-	for i, x := range v1.(vector) {
-		v[i] /= x
+func (v *vector) Div(v1 anyvec.Vector) {
+	if v == v1 {
+		panic("arguments cannot be equal")
+	}
+	for i, x := range *v1.(*vector) {
+		(*v)[i] /= x
 	}
 }
 
-func (v vector) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a anyvec.Vector,
+func (v *vector) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a anyvec.Vector,
 	lda int, b anyvec.Vector, ldb int, beta anyvec.Numeric, ldc int) {
+	if v == a || v == b {
+		panic("output cannot equal inputs")
+	}
 	tA := blas.NoTrans
 	tB := blas.NoTrans
 	if transA {
@@ -136,12 +161,12 @@ func (v vector) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a a
 	if transB {
 		tB = blas.Trans
 	}
-	blas32.Implementation().Sgemm(tA, tB, m, n, k, alpha.(float32), a.(vector), lda, b.(vector),
-		ldb, beta.(float32), v, ldc)
+	blas32.Implementation().Sgemm(tA, tB, m, n, k, alpha.(float32), *a.(*vector), lda,
+		*b.(*vector), ldb, beta.(float32), *v, ldc)
 }
 
-func (v vector) blasVec() blas32.Vector {
-	return blas32.Vector{Data: v, Inc: 1}
+func (v *vector) blasVec() blas32.Vector {
+	return blas32.Vector{Data: *v, Inc: 1}
 }
 
 type mapper struct {
@@ -162,27 +187,31 @@ func (r *mapper) OutSize() int {
 }
 
 func (r *mapper) Map(in, out anyvec.Vector) {
-	if in.Len() != r.inSize {
+	if in == out {
+		panic("arguments cannot be equal")
+	} else if in.Len() != r.inSize {
 		panic("bad input dimensions")
 	} else if out.Len() != len(r.table) {
 		panic("bad output dimensions")
 	}
-	inV := in.(vector)
-	outV := out.(vector)
+	inV := in.(*vector)
+	outV := out.(*vector)
 	for i, x := range r.table {
-		outV[i] = inV[x]
+		(*outV)[i] = (*inV)[x]
 	}
 }
 
 func (r *mapper) MapTranspose(in, out anyvec.Vector) {
-	if in.Len() != len(r.table) {
+	if in == out {
+		panic("arguments cannot be equal")
+	} else if in.Len() != len(r.table) {
 		panic("bad input dimensions")
 	} else if out.Len() != r.inSize {
 		panic("bad output dimensions")
 	}
-	inV := in.(vector)
-	outV := out.(vector)
+	inV := in.(*vector)
+	outV := out.(*vector)
 	for i, x := range r.table {
-		outV[x] += inV[i]
+		(*outV)[x] += (*inV)[i]
 	}
 }
