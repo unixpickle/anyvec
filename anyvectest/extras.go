@@ -39,6 +39,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("TestSumRows", t.TestSumRows)
 	test.Run("TestSumCols", t.TestSumCols)
 	test.Run("TestMapMax", t.TestMapMax)
+	test.Run("TestTranspose", t.TestTranspose)
 }
 
 // TestExp tests exponentiation.
@@ -457,4 +458,25 @@ func (t *Tester) TestMapMax(test *testing.T) {
 	mapper.Map(mapMe, actual)
 	expected = []float64{2, 8, 9}
 	t.assertClose(test, actual.Data(), expected)
+}
+
+// TestTranspose tests the Transposer interface.
+func (t *Tester) TestTranspose(test *testing.T) {
+	v := t.vec([]float64{
+		0.305985279638971, 1.058956965872622, -0.780664183736345,
+		-2.213119641375825, 0.511557156875536, -1.025825432279111,
+		-0.193978187968917, 0.769710039307595, 1.247563683930367,
+		1.165449702401210, 0.699426864914262, 0.500689376716200,
+	})
+	in := &anyvec.Matrix{Data: v, Rows: 4, Cols: 3}
+	out := &anyvec.Matrix{Data: t.Creator.MakeVector(3 * 4), Rows: 3, Cols: 4}
+	out.Transpose(in)
+
+	expected := []float64{
+		0.305985279638971, -2.213119641375825, -0.193978187968917, 1.165449702401210,
+		1.058956965872622, 0.511557156875536, 0.769710039307595, 0.699426864914262,
+		-0.780664183736345, -1.025825432279111, 1.247563683930367, 0.500689376716200,
+	}
+
+	t.assertClose(test, out.Data.Data(), expected)
 }
