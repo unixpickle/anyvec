@@ -8,6 +8,7 @@ import (
 
 	"github.com/unixpickle/anyvec"
 	"github.com/unixpickle/anyvec/anyvec32"
+	"github.com/unixpickle/anyvec/anyvec64"
 	"github.com/unixpickle/serializer"
 )
 
@@ -32,6 +33,8 @@ func DeserializeS(d []byte) (*S, error) {
 	switch data := data.(type) {
 	case serializer.Float32Slice:
 		return &S{Vector: anyvec32.MakeVectorData([]float32(data))}, nil
+	case serializer.Float64Slice:
+		return &S{Vector: anyvec64.MakeVectorData([]float64(data))}, nil
 	default:
 		return nil, fmt.Errorf("unsupported numeric type: %T", data)
 	}
@@ -50,6 +53,8 @@ func (s *S) Serialize() ([]byte, error) {
 	switch data := s.Vector.Data().(type) {
 	case []float32:
 		return serializer.SerializeWithType(serializer.Float32Slice(data))
+	case []float64:
+		return serializer.SerializeWithType(serializer.Float64Slice(data))
 	default:
 		return nil, fmt.Errorf("unsupported numeric type: %T", data)
 	}
