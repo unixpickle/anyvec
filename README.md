@@ -18,40 +18,7 @@ $ go get -u -d github.com/unixpickle/anyvec/...
 
 # Using CUDA
 
-If you plan on using the CUDA package, you have to tell the compiler about your CUDA installation. You can do this by setting the appropriate environment variables. On OS X, this might look like:
-
-```
-$ export CUDA_PATH="/Developer/NVIDIA/CUDA-8.0"
-$ export DYLD_LIBRARY_PATH="$CUDA_PATH/lib":$DYLD_LIBRARY_PATH
-$ export CPATH="$CUDA_PATH/include/"
-$ export CGO_LDFLAGS="/usr/local/cuda/lib/libcuda.dylib $CUDA_PATH/lib/libcudart.dylib $CUDA_PATH/lib/libcublas.dylib $CUDA_PATH/lib/libcurand.dylib"
-```
-
-On Linux, the environment setup might be more like this:
-
-```
-$ export CUDA_PATH=/usr/local/cuda
-$ export CPATH="$CUDA_PATH/include/"
-$ export CGO_LDFLAGS="$CUDA_PATH/lib64/libcublas.so $CUDA_PATH/lib64/libcudart.so $CUDA_PATH/lib64/stubs/libcuda.so $CUDA_PATH/lib64/libcurand.so"
-$ export LD_LIBRARY_PATH=$CUDA_PATH/lib64/
-```
-
-Once you have this setup, you can enable the CUDA library in `anyvec32` as follows:
-
-```go
-import (
-	"github.com/unixpickle/anyvec/anyvec32"
-	"github.com/unixpickle/anyvec/cuda"
-)
-
-func init() {
-	handle, err := cuda.NewHandle()
-	if err != nil {
-		panic(err)
-	}
-	anyvec32.Use(cuda.NewCreator32(handle))
-}
-```
+If you plan on using CUDA, you should not use the cuda subpackage in this repository. That sub-package is deprecated and will eventually be removed. Instead, use [cudavec](https://github.com/unixpickle/cudavec).
 
 # Why not BLAS?
 
