@@ -193,8 +193,6 @@ func (v *vector32) Slice(start, end int) anyvec.Vector {
 func (v *vector32) SetSlice(start int, v1 anyvec.Vector) {
 	if v == v1 {
 		panic("arguments cannot be equal")
-	} else if v1.Len()+start > v.Len() {
-		panic("assignment out of bounds")
 	}
 	v.buffer.Set(start*4, v1.(*vector32).buffer)
 }

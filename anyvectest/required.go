@@ -306,15 +306,15 @@ func (t *Tester) TestSetSlice(test *testing.T) {
 		expectedData = data1
 	}
 
-	t.assertClose(test, expectedData, vec1.Data())
-	t.assertClose(test, origV2, vec2.Data())
+	t.assertClose(test, vec1.Data(), expectedData)
+	t.assertClose(test, vec2.Data(), origV2)
 	vec1.SetData(origV1)
-	t.assertClose(test, origV2, vec2.Data())
-	t.assertClose(test, origV1, vec1.Data())
+	t.assertClose(test, vec2.Data(), origV2)
+	t.assertClose(test, vec1.Data(), origV1)
 
 	vec1.SetSlice(-1000, vec2)
-	t.assertClose(test, origV2, vec2.Data())
-	t.assertClose(test, origV1, vec1.Data())
+	t.assertClose(test, vec2.Data(), origV2)
+	t.assertClose(test, vec1.Data(), origV1)
 
 	vec1.SetSlice(-60, vec2)
 
@@ -330,8 +330,41 @@ func (t *Tester) TestSetSlice(test *testing.T) {
 		expectedData = data1
 	}
 
-	t.assertClose(test, expectedData, vec1.Data())
-	t.assertClose(test, origV2, vec2.Data())
+	t.assertClose(test, vec1.Data(), expectedData)
+	t.assertClose(test, vec2.Data(), origV2)
+
+	vec2 = vec1
+	vec1 = t.randomVecLen(15)
+
+	if t.is32Bit() {
+		data1 := vec1.Data().([]float32)
+		data2 := vec2.Data().([]float32)
+		copy(data1, data2[5:])
+		expectedData = data1
+	} else {
+		data1 := vec1.Data().([]float64)
+		data2 := vec2.Data().([]float64)
+		copy(data1, data2[5:])
+		expectedData = data1
+	}
+
+	vec1.SetSlice(-5, vec2)
+	t.assertClose(test, vec1.Data(), expectedData)
+
+	if t.is32Bit() {
+		data1 := vec1.Data().([]float32)
+		data2 := vec2.Data().([]float32)
+		copy(data1[5:], data2)
+		expectedData = data1
+	} else {
+		data1 := vec1.Data().([]float64)
+		data2 := vec2.Data().([]float64)
+		copy(data1[5:], data2)
+		expectedData = data1
+	}
+
+	vec1.SetSlice(5, vec2)
+	t.assertClose(test, vec1.Data(), expectedData)
 }
 
 // TestConcat tests vector concatenation.

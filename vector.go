@@ -55,8 +55,9 @@ type Vector interface {
 	//
 	// The start index specifies where in the receiver the
 	// data should be put.
-	// It cannot be greater than receiver.Len() - v.Len(),
-	// but it may be any value below that.
+	// It can take on any value, although some values will
+	// result in a no-op.
+	//
 	// If the start index is negative, then the beginning of
 	// v is ignored and only the tail of v is copied into the
 	// receiver.

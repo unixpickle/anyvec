@@ -13,7 +13,6 @@ cublasSideMode_t sideModeLeft = CUBLAS_SIDE_LEFT;
 import "C"
 
 import (
-	"errors"
 	"runtime"
 	"unsafe"
 )
@@ -234,16 +233,21 @@ func (b *buffer) Clear() error {
 
 // Set copies the contents of a buffer into b.
 func (b *buffer) Set(offInDest int, b1 *buffer) error {
-	if b1.size+offInDest > b.size {
-		return errors.New("vector copy out of bounds")
-	}
 	if offInDest <= -b1.size {
 		return nil
 	}
+
+	b1Size := b1.size
+	if offInDest > b.size {
+		return nil
+	} else if b1Size+offInDest > b.size {
+		b1Size = b.size - offInDest
+	}
+
 	var res error
 	b.handle.loop.Run(func() {
 		var bOffPtr, b1OffPtr unsafe.Pointer
-		totalSize := b1.size
+		totalSize := b1Size
 		if offInDest < 0 {
 			totalSize += offInDest
 			b1OffPtr = unsafe.Pointer(uintptr(b1.ptr) + uintptr(-offInDest))
