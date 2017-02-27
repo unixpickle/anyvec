@@ -195,8 +195,8 @@ func SumRows(v Vector, cols int) Vector {
 		oneVec.AddScaler(v.Creator().MakeNumeric(1))
 		oneMat := &Matrix{
 			Data: oneVec,
-			Rows: rows,
-			Cols: 1,
+			Rows: 1,
+			Cols: rows,
 		}
 		vMat := &Matrix{
 			Data: v,
@@ -205,10 +205,10 @@ func SumRows(v Vector, cols int) Vector {
 		}
 		outMat := &Matrix{
 			Data: v.Creator().MakeVector(cols),
-			Rows: cols,
-			Cols: 1,
+			Rows: 1,
+			Cols: cols,
 		}
-		outMat.Product(true, false, v.Creator().MakeNumeric(1), vMat, oneMat,
+		outMat.Product(false, false, v.Creator().MakeNumeric(1), oneMat, vMat,
 			v.Creator().MakeNumeric(0))
 		return outMat.Data
 	}
