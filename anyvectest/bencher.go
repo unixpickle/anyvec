@@ -21,6 +21,7 @@ func (b *Bencher) BenchmarkAll(bench *testing.B) {
 	bench.Run("Div", b.BenchmarkDiv)
 	bench.Run("AddScaler", b.BenchmarkAddScaler)
 	bench.Run("AddRepeated", b.BenchmarkAddRepeated)
+	bench.Run("SumRows", b.BenchmarkSumRows)
 	bench.Run("Exp", b.BenchmarkExp)
 	bench.Run("Tanh", b.BenchmarkTanh)
 	bench.Run("ClipPos", b.BenchmarkClipPos)
@@ -130,6 +131,20 @@ func (b *Bencher) BenchmarkAddRepeated(bench *testing.B) {
 	bench.ResetTimer()
 	for i := 0; i < bench.N; i++ {
 		anyvec.AddRepeated(v, v1)
+	}
+	// Force lazy operations to finish.
+	v.Data()
+}
+
+func (b *Bencher) BenchmarkSumRows(bench *testing.B) {
+	v := b.randomVector(256 * 128)
+
+	// Initialize kernels.
+	anyvec.SumRows(v, 256)
+
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		anyvec.SumRows(v, 256)
 	}
 	// Force lazy operations to finish.
 	v.Data()
