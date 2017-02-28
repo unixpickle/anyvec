@@ -128,16 +128,7 @@ func AddRepeated(v, scalers Vector) {
 	if r, ok := v.(RepeatedAdder); ok {
 		r.AddRepeated(scalers)
 	} else {
-		if scalers.Len() == 0 {
-			panic("repeated vector cannot be empty")
-		}
-		var joinMe []Vector
-		var joinLen int
-		for joinLen < v.Len() {
-			joinLen += scalers.Len()
-			joinMe = append(joinMe, scalers)
-		}
-		v.Add(v.Creator().Concat(joinMe...).Slice(0, v.Len()))
+		applyRepeatedOp(v, scalers, false)
 	}
 }
 
@@ -160,16 +151,25 @@ func ScaleRepeated(v, scalers Vector) {
 	if r, ok := v.(RepeatedScaler); ok {
 		r.ScaleRepeated(scalers)
 	} else {
-		if scalers.Len() == 0 {
-			panic("repeated vector cannot be empty")
-		}
-		var joinMe []Vector
-		var joinLen int
-		for joinLen < v.Len() {
-			joinLen += scalers.Len()
-			joinMe = append(joinMe, scalers)
-		}
-		v.Mul(v.Creator().Concat(joinMe...).Slice(0, v.Len()))
+		applyRepeatedOp(v, scalers, true)
+	}
+}
+
+func applyRepeatedOp(v, scalers Vector, scale bool) {
+	if scalers.Len() == 0 {
+		panic("repeated vector cannot be empty")
+	}
+	var joinMe []Vector
+	var joinLen int
+	for joinLen < v.Len() {
+		joinLen += scalers.Len()
+		joinMe = append(joinMe, scalers)
+	}
+	repeated := v.Creator().Concat(joinMe...).Slice(0, v.Len())
+	if scale {
+		v.Mul(repeated)
+	} else {
+		v.Add(repeated)
 	}
 }
 
