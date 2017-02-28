@@ -85,6 +85,9 @@ func Transpose(v, out Vector, inRows int) {
 //
 // Specifically, a Gemver implements the BLAS gemv API
 // with itself as the destination vector.
+//
+// In general, the receiver (y) cannot be equal to either
+// of the two operands (x or a).
 type Gemver interface {
 	Gemv(trans bool, m, n int, alpha Numeric, a Vector, lda int,
 		x Vector, incx int, beta Numeric, incy int)
@@ -133,6 +136,9 @@ func Gemv(trans bool, m, n int, alpha Numeric, a Vector, lda int,
 // matrix-matrix product.
 //
 // Specifically, a Gemmer implements the BLAS gemm API.
+//
+// In general, the receiver (c) cannot be equal to either
+// of the two operands (a or b).
 type Gemmer interface {
 	Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int,
 		b Vector, ldb int, beta Numeric, ldc int)

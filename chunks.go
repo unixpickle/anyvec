@@ -182,7 +182,7 @@ type RowSummer interface {
 
 // SumRows sums the rows of a row-major matrix.
 // If the vector does not implement RowSummer, a default
-// implementation is used.
+// implementation is used which depends on Gemv.
 func SumRows(v Vector, cols int) Vector {
 	if r, ok := v.(RowSummer); ok {
 		return r.SumRows(cols)
@@ -191,26 +191,13 @@ func SumRows(v Vector, cols int) Vector {
 			panic("number of columns must divide vector size")
 		}
 		rows := v.Len() / cols
+		one := v.Creator().MakeNumeric(1)
+		zero := v.Creator().MakeNumeric(0)
 		oneVec := v.Creator().MakeVector(rows)
-		oneVec.AddScaler(v.Creator().MakeNumeric(1))
-		oneMat := &Matrix{
-			Data: oneVec,
-			Rows: 1,
-			Cols: rows,
-		}
-		vMat := &Matrix{
-			Data: v,
-			Rows: rows,
-			Cols: cols,
-		}
-		outMat := &Matrix{
-			Data: v.Creator().MakeVector(cols),
-			Rows: 1,
-			Cols: cols,
-		}
-		outMat.Product(false, false, v.Creator().MakeNumeric(1), oneMat, vMat,
-			v.Creator().MakeNumeric(0))
-		return outMat.Data
+		oneVec.AddScaler(one)
+		out := v.Creator().MakeVector(cols)
+		Gemv(true, rows, cols, one, v, cols, oneVec, 1, zero, out, 1)
+		return out
 	}
 }
 
@@ -222,7 +209,7 @@ type ColSummer interface {
 
 // SumCols sums the columns of a row-major matrix.
 // If the vector does not implement ColSummer, a default
-// implementation is used.
+// implementation is used which depends on Gemv.
 func SumCols(v Vector, rows int) Vector {
 	if c, ok := v.(ColSummer); ok {
 		return c.SumCols(rows)
@@ -231,25 +218,12 @@ func SumCols(v Vector, rows int) Vector {
 			panic("number of rows must divide vector size")
 		}
 		cols := v.Len() / rows
+		one := v.Creator().MakeNumeric(1)
+		zero := v.Creator().MakeNumeric(0)
 		oneVec := v.Creator().MakeVector(cols)
-		oneVec.AddScaler(v.Creator().MakeNumeric(1))
-		oneMat := &Matrix{
-			Data: oneVec,
-			Rows: cols,
-			Cols: 1,
-		}
-		vMat := &Matrix{
-			Data: v,
-			Rows: rows,
-			Cols: cols,
-		}
-		outMat := &Matrix{
-			Data: v.Creator().MakeVector(rows),
-			Rows: rows,
-			Cols: 1,
-		}
-		outMat.Product(false, false, v.Creator().MakeNumeric(1), vMat, oneMat,
-			v.Creator().MakeNumeric(0))
-		return outMat.Data
+		oneVec.AddScaler(one)
+		out := v.Creator().MakeVector(rows)
+		Gemv(false, rows, cols, one, v, cols, oneVec, 1, zero, out, 1)
+		return out
 	}
 }
