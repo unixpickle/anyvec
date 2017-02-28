@@ -1,5 +1,13 @@
 package anyvec
 
+import (
+	"fmt"
+
+	"github.com/gonum/blas"
+	"github.com/gonum/blas/blas32"
+	"github.com/gonum/blas/blas64"
+)
+
 // Matrix is a helper for performing matrix operations.
 type Matrix struct {
 	Data Vector
@@ -70,5 +78,55 @@ func Transpose(v, out Vector, inRows int) {
 		}
 		m := v.Creator().MakeMapper(inRows*cols, mapping)
 		m.Map(v, out)
+	}
+}
+
+// A Gemver is a vector which can set itself to a
+// matrix-vector product.
+//
+// Specifically, a Gemver implements the BLAS gemv API
+// with itself as the destination vector.
+type Gemver interface {
+	Gemv(trans bool, m, n int, alpha Numeric, matA Vector, lda int,
+		x Vector, incx int, beta Numeric, incy int)
+}
+
+// Gemv computes a matrix-vector product and adds it to a
+// scaler multiple of y.
+//
+// If y does not implement Gemver, a default
+// implementation is used which supports float32 and
+// float64 numeric types.
+func Gemv(trans bool, m, n int, alpha Numeric, matA Vector, lda int,
+	x Vector, incx int, beta Numeric, y Vector, incy int) {
+	if g, ok := y.(Gemver); ok {
+		g.Gemv(trans, m, n, alpha, matA, lda, x, incx, beta, incy)
+		return
+	}
+
+	tA := blas.NoTrans
+	if trans {
+		tA = blas.Trans
+	}
+
+	switch yData := y.Data().(type) {
+	case []float32:
+		blas32.Implementation().Sgemv(tA, m, n,
+			alpha.(float32),
+			matA.Data().([]float32), lda,
+			x.Data().([]float32), incx,
+			beta.(float32),
+			yData, incy)
+		y.SetData(yData)
+	case []float64:
+		blas64.Implementation().Dgemv(tA, m, n,
+			alpha.(float64),
+			matA.Data().([]float64), lda,
+			x.Data().([]float64), incx,
+			beta.(float64),
+			yData, incy)
+		y.SetData(yData)
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", yData))
 	}
 }

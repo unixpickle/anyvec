@@ -40,6 +40,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("TestSumCols", t.TestSumCols)
 	test.Run("TestMapMax", t.TestMapMax)
 	test.Run("TestTranspose", t.TestTranspose)
+	test.Run("TestGemv", t.TestGemv)
 }
 
 // TestExp tests exponentiation.
@@ -479,4 +480,29 @@ func (t *Tester) TestTranspose(test *testing.T) {
 	}
 
 	t.assertClose(test, out.Data.Data(), expected)
+}
+
+// TestGemv tests the Gemver interface.
+func (t *Tester) TestGemv(test *testing.T) {
+	v := t.vec([]float64{
+		0.305985279638971, 1.058956965872622, -0.780664183736345,
+		-2.213119641375825, 0.511557156875536, -1.025825432279111,
+		-0.193978187968917, 0.769710039307595, 1.247563683930367,
+		1.165449702401210, 0.699426864914262, 0.500689376716200,
+	})
+	v1 := t.vec([]float64{
+		3.5, 7, 2.7,
+	})
+	product := t.vec([]float64{1, 7, 3, 5, -1, 3, 2, 9})
+
+	anyvec.Gemv(false, 4, 2, t.num(1), v, 3, v1, 2, t.num(0.5), product, 2)
+
+	expected := []float64{
+		4.430132286592478, 7,
+		-4.864714421251440, 5,
+		0.899293448239297, 3,
+		6.967526493672743, 9,
+	}
+
+	t.assertClose(test, product.Data(), expected)
 }
