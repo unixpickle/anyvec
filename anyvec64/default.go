@@ -34,7 +34,11 @@ func (d DefaultCreator) MakeVectorData(data anyvec.NumericList) anyvec.Vector {
 
 // Concat concatenates vectors.
 func (d DefaultCreator) Concat(vs ...anyvec.Vector) anyvec.Vector {
-	var res vector
+	cap := 0
+	for _, v := range vs {
+		cap += v.Len()
+	}
+	res := make(vector, 0, cap)
 	for _, v := range vs {
 		res = append(res, *v.(*vector)...)
 	}

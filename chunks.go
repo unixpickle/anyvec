@@ -159,7 +159,7 @@ func applyRepeatedOp(v, scalers Vector, scale bool) {
 	if scalers.Len() == 0 {
 		panic("repeated vector cannot be empty")
 	}
-	var joinMe []Vector
+	joinMe := make([]Vector, 0, v.Len()/scalers.Len()+1)
 	var joinLen int
 	for joinLen < v.Len() {
 		joinLen += scalers.Len()
