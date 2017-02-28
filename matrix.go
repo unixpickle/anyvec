@@ -26,8 +26,7 @@ func (m *Matrix) Product(transA, transB bool, alpha Numeric, a, b *Matrix, beta 
 	if transB {
 		n = b.Rows
 	}
-	m.Data.Gemm(transA, transB, x, n, k, alpha, a.Data, a.Cols, b.Data, b.Cols, beta,
-		m.Cols)
+	Gemm(transA, transB, x, n, k, alpha, a.Data, a.Cols, b.Data, b.Cols, beta, m.Data, m.Cols)
 }
 
 // Transpose stores the transpose of src in m.
@@ -87,20 +86,19 @@ func Transpose(v, out Vector, inRows int) {
 // Specifically, a Gemver implements the BLAS gemv API
 // with itself as the destination vector.
 type Gemver interface {
-	Gemv(trans bool, m, n int, alpha Numeric, matA Vector, lda int,
+	Gemv(trans bool, m, n int, alpha Numeric, a Vector, lda int,
 		x Vector, incx int, beta Numeric, incy int)
 }
 
-// Gemv computes a matrix-vector product and adds it to a
-// scaler multiple of y.
+// Gemv computes a matrix-vector product.
 //
 // If y does not implement Gemver, a default
 // implementation is used which supports float32 and
 // float64 numeric types.
-func Gemv(trans bool, m, n int, alpha Numeric, matA Vector, lda int,
+func Gemv(trans bool, m, n int, alpha Numeric, a Vector, lda int,
 	x Vector, incx int, beta Numeric, y Vector, incy int) {
 	if g, ok := y.(Gemver); ok {
-		g.Gemv(trans, m, n, alpha, matA, lda, x, incx, beta, incy)
+		g.Gemv(trans, m, n, alpha, a, lda, x, incx, beta, incy)
 		return
 	}
 
@@ -113,7 +111,7 @@ func Gemv(trans bool, m, n int, alpha Numeric, matA Vector, lda int,
 	case []float32:
 		blas32.Implementation().Sgemv(tA, m, n,
 			alpha.(float32),
-			matA.Data().([]float32), lda,
+			a.Data().([]float32), lda,
 			x.Data().([]float32), incx,
 			beta.(float32),
 			yData, incy)
@@ -121,12 +119,63 @@ func Gemv(trans bool, m, n int, alpha Numeric, matA Vector, lda int,
 	case []float64:
 		blas64.Implementation().Dgemv(tA, m, n,
 			alpha.(float64),
-			matA.Data().([]float64), lda,
+			a.Data().([]float64), lda,
 			x.Data().([]float64), incx,
 			beta.(float64),
 			yData, incy)
 		y.SetData(yData)
 	default:
 		panic(fmt.Sprintf("unsupported type: %T", yData))
+	}
+}
+
+// A Gemmer is a vector capable of setting itself to a
+// matrix-matrix product.
+//
+// Specifically, a Gemmer implements the BLAS gemm API.
+type Gemmer interface {
+	Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int,
+		b Vector, ldb int, beta Numeric, ldc int)
+}
+
+// Gemm computes a matrix-matrix product.
+//
+// If c does not implement Gemmer, a default
+// implementation is used which supports float32 and
+// float64 numeric types.
+func Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int,
+	b Vector, ldb int, beta Numeric, c Vector, ldc int) {
+	if g, ok := c.(Gemmer); ok {
+		g.Gemm(transA, transB, m, n, k, alpha, a, lda, b, ldb, beta, ldc)
+		return
+	}
+
+	tA, tB := blas.NoTrans, blas.NoTrans
+	if transA {
+		tA = blas.Trans
+	}
+	if transB {
+		tB = blas.Trans
+	}
+
+	switch cData := c.Data().(type) {
+	case []float32:
+		blas32.Implementation().Sgemm(tA, tB, m, n, k,
+			alpha.(float32),
+			a.Data().([]float32), lda,
+			b.Data().([]float32), ldb,
+			beta.(float32),
+			cData, ldc)
+		c.SetData(cData)
+	case []float64:
+		blas64.Implementation().Dgemm(tA, tB, m, n, k,
+			alpha.(float64),
+			a.Data().([]float64), lda,
+			b.Data().([]float64), ldb,
+			beta.(float64),
+			cData, ldc)
+		c.SetData(cData)
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", cData))
 	}
 }

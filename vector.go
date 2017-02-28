@@ -91,16 +91,4 @@ type Vector interface {
 	// components of v and stores the result in the receiver.
 	// The receiver must not be equal to v.
 	Div(v Vector)
-
-	// Gemm performs a matrix multiplication and stores the
-	// result in the receiver.
-	//
-	// The method signature matches the BLAS standard, where
-	// the output matrix c is the receiver.
-	//
-	// Row-major order is used.
-	//
-	// The receiver must not be equal to a or b.
-	Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int, b Vector,
-		ldb int, beta Numeric, ldc int)
 }
