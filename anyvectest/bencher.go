@@ -17,6 +17,7 @@ type Bencher struct {
 func (b *Bencher) BenchmarkAll(bench *testing.B) {
 	bench.Run("GemmOneVec", b.BenchmarkGemmOneVec)
 	bench.Run("GemmMat", b.BenchmarkGemmMat)
+	bench.Run("GemmBatch", b.BenchmarkGemmBatch)
 	bench.Run("Mul", b.BenchmarkMul)
 	bench.Run("Div", b.BenchmarkDiv)
 	bench.Run("AddScaler", b.BenchmarkAddScaler)
@@ -72,6 +73,34 @@ func (b *Bencher) BenchmarkGemmMat(bench *testing.B) {
 		Data: b.Creator.MakeVector(300 * 300),
 		Rows: 300,
 		Cols: 300,
+	}
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		prod.Product(false, false, float32(1), mat1, mat2, float32(0))
+	}
+	// Force lazy operations to finish.
+	prod.Data.Data()
+}
+
+func (b *Bencher) BenchmarkGemmBatch(bench *testing.B) {
+	const batchSize = 8
+	mat1 := &anyvec.MatrixBatch{
+		Data: b.randomVector(128 * 256 * batchSize),
+		Rows: 256,
+		Cols: 128,
+		Num:  batchSize,
+	}
+	mat2 := &anyvec.MatrixBatch{
+		Data: b.randomVector(128 * 4 * batchSize),
+		Rows: 128,
+		Cols: 4,
+		Num:  batchSize,
+	}
+	prod := &anyvec.MatrixBatch{
+		Data: b.Creator.MakeVector(256 * 4 * batchSize),
+		Rows: 256,
+		Cols: 4,
+		Num:  batchSize,
 	}
 	bench.ResetTimer()
 	for i := 0; i < bench.N; i++ {
