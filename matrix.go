@@ -19,6 +19,18 @@ type Matrix struct {
 // If transA is set, then a is transposed.
 // If transB is set, then b is transposed.
 func (m *Matrix) Product(transA, transB bool, alpha Numeric, a, b *Matrix, beta Numeric) {
+	opARows, opACols := a.Rows, a.Cols
+	opBRows, opBCols := b.Rows, b.Cols
+	if transA {
+		opARows, opACols = opACols, opARows
+	}
+	if transB {
+		opBRows, opBCols = opBCols, opBRows
+	}
+	if opARows != m.Rows || opBCols != m.Cols || opACols != opBRows {
+		panic("matrix dimension mismatch")
+	}
+
 	x, n, k := a.Rows, m.Cols, a.Cols
 	if transA {
 		x, k = k, x

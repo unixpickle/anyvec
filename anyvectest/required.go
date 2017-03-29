@@ -522,9 +522,9 @@ func (t *Tester) TestGemm(test *testing.T) {
 		Cols: 17,
 	}
 	mat2 := &anyvec.Matrix{
-		Data: t.randomVecLen(30 * 5),
+		Data: t.randomVecLen(17 * 5),
 		Rows: 5,
-		Cols: 30,
+		Cols: 17,
 	}
 	mat3 := &anyvec.Matrix{
 		Data: t.randomVecLen(30 * 5),
