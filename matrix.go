@@ -217,6 +217,14 @@ func (m *MatrixBatch) Product(transA, transB bool, alpha Numeric, a, b *MatrixBa
 		panic("batch size mismatch")
 	}
 
+	if m.Num == 1 {
+		mat1 := &Matrix{Data: m.Data, Rows: m.Rows, Cols: m.Cols}
+		mat2 := &Matrix{Data: a.Data, Rows: a.Rows, Cols: a.Cols}
+		mat3 := &Matrix{Data: b.Data, Rows: b.Rows, Cols: b.Cols}
+		mat1.Product(transA, transB, alpha, mat2, mat3, beta)
+		return
+	}
+
 	opARows, opACols := a.Rows, a.Cols
 	opBRows, opBCols := b.Rows, b.Cols
 	if transA {
