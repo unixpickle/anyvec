@@ -197,3 +197,97 @@ func Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int,
 		panic(fmt.Sprintf("unsupported type: %T", cData))
 	}
 }
+
+// MatrixBatch is a helper for batches of matrices.
+//
+// Each matrix is row-major, and the matrices are packed
+// one after another.
+type MatrixBatch struct {
+	Data Vector
+	Num  int
+	Rows int
+	Cols int
+}
+
+// Product performs batch matrix multiplication.
+// This is a batched version of Matrix.Product().
+func (m *MatrixBatch) Product(transA, transB bool, alpha Numeric, a, b *MatrixBatch,
+	beta Numeric) {
+	if m.Num != a.Num || a.Num != b.Num {
+		panic("batch size mismatch")
+	}
+
+	opARows, opACols := a.Rows, a.Cols
+	opBRows, opBCols := b.Rows, b.Cols
+	if transA {
+		opARows, opACols = opACols, opARows
+	}
+	if transB {
+		opBRows, opBCols = opBCols, opBRows
+	}
+	if opARows != m.Rows || opBCols != m.Cols || opACols != opBRows {
+		panic("matrix dimension mismatch")
+	}
+
+	x, n, k := a.Rows, m.Cols, a.Cols
+	if transA {
+		x, k = k, x
+	}
+	if transB {
+		n = b.Rows
+	}
+	BatchedGemm(transA, transB, m.Num, x, n, k, alpha, a.Data, b.Data, beta, m.Data)
+}
+
+// BatchedGemmer is a vector capable of performing batched
+// matrix multiplications.
+//
+// This is similar to a Gemmer, but with batching and
+// without support for custom leading dimensions.
+type BatchedGemmer interface {
+	BatchedGemm(transA, transB bool, num, m, n, k int, alpha Numeric,
+		a, b Vector, beta Numeric)
+}
+
+// BatchedGemm performs batched matrix multiplication.
+//
+// If c does not implement BatchedGemmer, a default
+// implementation is used which relies on Gemm.
+func BatchedGemm(transA, transB bool, num, m, n, k int, alpha Numeric,
+	a, b Vector, beta Numeric, c Vector) {
+	if bg, ok := c.(BatchedGemmer); ok {
+		bg.BatchedGemm(transA, transB, num, m, n, k, alpha, a, b, beta)
+		return
+	}
+
+	aBatch := splitBatch(a, num)
+	bBatch := splitBatch(b, num)
+	cBatch := splitBatch(c, num)
+
+	var offset int
+	for i, subC := range cBatch {
+		lda, ldb := k, n
+		if transA {
+			lda = m
+		}
+		if transB {
+			ldb = k
+		}
+		Gemm(transA, transB, m, n, k, alpha, aBatch[i], lda, bBatch[i], ldb, beta, subC, n)
+		c.SetSlice(offset, subC)
+		offset += subC.Len()
+	}
+}
+
+func splitBatch(vec Vector, n int) []Vector {
+	if vec.Len()%n != 0 {
+		panic("vector length not divisible by batch size")
+	}
+	var res []Vector
+	chunkSize := vec.Len() / n
+	for i := 0; i < n; i++ {
+		chunk := vec.Slice(chunkSize*i, chunkSize*(i+1))
+		res = append(res, chunk)
+	}
+	return res
+}

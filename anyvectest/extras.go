@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/gonum/blas"
+	"github.com/gonum/blas/blas64"
 	"github.com/unixpickle/anyvec"
 	"github.com/unixpickle/approb"
 )
@@ -34,13 +36,14 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("AddRepeated", t.TestAddRepeated)
 	test.Run("ScaleRepeated", t.TestScaleRepeated)
 	test.Run("Comparisons", t.TestComparisons)
-	test.Run("TestComplement", t.TestComplement)
-	test.Run("TestAddLogs", t.TestAddLogs)
-	test.Run("TestSumRows", t.TestSumRows)
-	test.Run("TestSumCols", t.TestSumCols)
-	test.Run("TestMapMax", t.TestMapMax)
-	test.Run("TestTranspose", t.TestTranspose)
-	test.Run("TestGemv", t.TestGemv)
+	test.Run("Complement", t.TestComplement)
+	test.Run("AddLogs", t.TestAddLogs)
+	test.Run("SumRows", t.TestSumRows)
+	test.Run("SumCols", t.TestSumCols)
+	test.Run("MapMax", t.TestMapMax)
+	test.Run("Transpose", t.TestTranspose)
+	test.Run("Gemv", t.TestGemv)
+	test.Run("BatchedGemm", t.TestBatchedGemm)
 }
 
 // TestExp tests exponentiation.
@@ -505,4 +508,50 @@ func (t *Tester) TestGemv(test *testing.T) {
 	}
 
 	t.assertClose(test, product.Data(), expected)
+}
+
+// TestBatchedGemm tests the BatchedGemmer interface.
+func (t *Tester) TestBatchedGemm(test *testing.T) {
+	const batchSize = 7
+
+	mat1 := &anyvec.MatrixBatch{
+		Data: t.randomVecLen(30 * 17 * batchSize),
+		Rows: 30,
+		Cols: 17,
+		Num:  batchSize,
+	}
+	mat2 := &anyvec.MatrixBatch{
+		Data: t.randomVecLen(17 * 5 * batchSize),
+		Rows: 5,
+		Cols: 17,
+		Num:  batchSize,
+	}
+	mat3 := &anyvec.MatrixBatch{
+		Data: t.randomVecLen(30 * 5 * batchSize),
+		Rows: 30,
+		Cols: 5,
+		Num:  batchSize,
+	}
+
+	var expected []float64
+
+	for j := 0; j < batchSize; j++ {
+		var bmats [3]blas64.General
+		for i, x := range []*anyvec.MatrixBatch{mat1, mat2, mat3} {
+			list := t.unlist(x.Data.Data())
+			chunkSize := len(list) / batchSize
+			bmats[i] = blas64.General{
+				Data:   list[chunkSize*j : chunkSize*(j+1)],
+				Rows:   x.Rows,
+				Cols:   x.Cols,
+				Stride: x.Cols,
+			}
+		}
+		blas64.Gemm(blas.NoTrans, blas.Trans, 2.5, bmats[0], bmats[1], -0.7, bmats[2])
+		expected = append(expected, bmats[2].Data...)
+	}
+
+	mat3.Product(false, true, t.num(2.5), mat1, mat2, t.num(-0.7))
+	actual := mat3.Data.Data()
+	t.assertClose(test, actual, expected)
 }
