@@ -305,12 +305,13 @@ func (t *Tester) TestOverlaps(test *testing.T) {
 	actual := []bool{
 		slice1.Overlaps(slice1),
 		slice1.Overlaps(slice2),
+		slice2.Overlaps(slice1),
 		slice1.Overlaps(slice3),
 		slice1.Overlaps(slice4),
 		slice3.Overlaps(slice4),
 		slice2.Overlaps(v),
 	}
-	expected := []bool{true, true, false, false, true, true}
+	expected := []bool{true, true, true, false, false, true, true}
 	for i, x := range expected {
 		a := actual[i]
 		if a != x {
