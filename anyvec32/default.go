@@ -26,14 +26,14 @@ func (d DefaultCreator) MakeNumericList(x []float64) anyvec.NumericList {
 
 // MakeVector creates a zero vector.
 func (d DefaultCreator) MakeVector(size int) anyvec.Vector {
-	res := make(vector, size)
-	return &res
+	res := make([]float32, size)
+	return &vector{backing: &res, start: 0, slice: res}
 }
 
 // MakeVectorData creates a copy of the data.
 func (d DefaultCreator) MakeVectorData(data anyvec.NumericList) anyvec.Vector {
-	res := append(vector{}, data.([]float32)...)
-	return &res
+	res := append([]float32{}, data.([]float32)...)
+	return &vector{backing: &res, start: 0, slice: res}
 }
 
 // Concat concatenates vectors.
@@ -42,11 +42,11 @@ func (d DefaultCreator) Concat(vs ...anyvec.Vector) anyvec.Vector {
 	for _, v := range vs {
 		cap += v.Len()
 	}
-	res := make(vector, 0, cap)
+	res := make([]float32, 0, cap)
 	for _, v := range vs {
-		res = append(res, *v.(*vector)...)
+		res = append(res, v.(*vector).slice...)
 	}
-	return &res
+	return &vector{backing: &res, start: 0, slice: res}
 }
 
 // MakeMapper creates a new Mapper.
@@ -57,105 +57,107 @@ func (d DefaultCreator) MakeMapper(inSize int, table []int) anyvec.Mapper {
 	}
 }
 
-type vector []float32
+type vector struct {
+	// Information used to check for overlap.
+	backing *[]float32
+	start   int
+
+	slice []float32
+}
 
 func (v *vector) Creator() anyvec.Creator {
 	return DefaultCreator{}
 }
 
 func (v *vector) Len() int {
-	return len(*v)
+	return len(v.slice)
+}
+
+func (v *vector) Overlaps(v1 anyvec.Vector) bool {
+	v1Vec := v1.(*vector)
+	return v1Vec.backing == v.backing &&
+		v.start < v1Vec.start+len(v1Vec.slice) &&
+		v1Vec.start < v.start+len(v.slice)
 }
 
 func (v *vector) Data() anyvec.NumericList {
-	return append([]float32{}, *v...)
+	return append([]float32{}, v.slice...)
 }
 
 func (v *vector) SetData(v1 anyvec.NumericList) {
-	copy(*v, v1.([]float32))
+	copy(v.slice, v1.([]float32))
 }
 
 func (v *vector) Set(v1 anyvec.Vector) {
-	if v == v1 {
-		panic("arguments cannot be equal")
+	if v.Overlaps(v1) {
+		panic("invalid overlap")
 	}
-	copy(*v, *v1.(*vector))
+	copy(v.slice, v1.(*vector).slice)
 }
 
 func (v *vector) Copy() anyvec.Vector {
-	res := append(vector{}, *v...)
-	return &res
+	return v.Creator().Concat(v)
 }
 
 func (v *vector) Slice(start, end int) anyvec.Vector {
-	res := append(vector{}, (*v)[start:end]...)
-	return &res
-}
-
-func (v *vector) SetSlice(start int, v1 anyvec.Vector) {
-	if v == v1 {
-		panic("arguments cannot be equal")
-	}
-	if start < 0 {
-		if -start < v1.Len() {
-			copy(*v, (*v1.(*vector))[-start:])
-		}
-	} else {
-		copy((*v)[start:], *v1.(*vector))
+	return &vector{
+		backing: v.backing,
+		start:   v.start + start,
+		slice:   v.slice[start:end],
 	}
 }
 
 func (v *vector) Scale(s anyvec.Numeric) {
-	blas32.Scal(len(*v), s.(float32), v.blasVec())
+	blas32.Scal(len(v.slice), s.(float32), v.blasVec())
 }
 
 func (v *vector) AddScaler(s anyvec.Numeric) {
 	sNum := s.(float32)
-	for i := range *v {
-		(*v)[i] += sNum
+	for i := range v.slice {
+		v.slice[i] += sNum
 	}
 }
 
 func (v *vector) Dot(v1 anyvec.Vector) anyvec.Numeric {
-	return blas32.Dot(len(*v), v.blasVec(), v1.(*vector).blasVec())
+	return blas32.Dot(v.Len(), v.blasVec(), v1.(*vector).blasVec())
 }
 
 func (v *vector) Add(v1 anyvec.Vector) {
-	if v == v1 {
-		panic("arguments cannot be equal")
+	if v.Overlaps(v1) {
+		panic("invalid overlap")
 	}
-	blas32.Axpy(len(*v), 1, v1.(*vector).blasVec(), v.blasVec())
+	blas32.Axpy(v.Len(), 1, v1.(*vector).blasVec(), v.blasVec())
 }
 
 func (v *vector) Sub(v1 anyvec.Vector) {
-	if v == v1 {
-		panic("arguments cannot be equal")
+	if v.Overlaps(v1) {
+		panic("invalid overlap")
 	}
-	blas32.Axpy(len(*v), -1, v1.(*vector).blasVec(), v.blasVec())
+	blas32.Axpy(v.Len(), -1, v1.(*vector).blasVec(), v.blasVec())
 }
 
 func (v *vector) Mul(v1 anyvec.Vector) {
-	if v == v1 {
-		panic("arguments cannot be equal")
+	if v.Overlaps(v1) {
+		panic("invalid overlap")
 	}
-	for i, x := range *v1.(*vector) {
-		(*v)[i] *= x
+	for i, x := range v1.(*vector).slice {
+		v.slice[i] *= x
 	}
 }
 
 func (v *vector) Div(v1 anyvec.Vector) {
-	if v == v1 {
-		panic("arguments cannot be equal")
+	if v.Overlaps(v1) {
+		panic("invalid overlap")
 	}
-	for i, x := range *v1.(*vector) {
-		(*v)[i] /= x
+	for i, x := range v1.(*vector).slice {
+		v.slice[i] /= x
 	}
 }
 
 func (v *vector) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a anyvec.Vector,
 	lda int, b anyvec.Vector, ldb int, beta anyvec.Numeric, ldc int) {
-	if v == a || v == b {
-		panic("output cannot equal inputs")
+	if v.Overlaps(a) || v.Overlaps(b) {
+		panic("invalid overlap")
 	}
 	tA := blas.NoTrans
 	tB := blas.NoTrans
@@ -165,12 +167,12 @@ func (v *vector) Gemm(transA, transB bool, m, n, k int, alpha anyvec.Numeric, a 
 	if transB {
 		tB = blas.Trans
 	}
-	blas32.Implementation().Sgemm(tA, tB, m, n, k, alpha.(float32), *a.(*vector), lda,
-		*b.(*vector), ldb, beta.(float32), *v, ldc)
+	blas32.Implementation().Sgemm(tA, tB, m, n, k, alpha.(float32), a.(*vector).slice,
+		lda, b.(*vector).slice, ldb, beta.(float32), v.slice, ldc)
 }
 
 func (v *vector) blasVec() blas32.Vector {
-	return blas32.Vector{Data: *v, Inc: 1}
+	return blas32.Vector{Data: v.slice, Inc: 1}
 }
 
 type mapper struct {
@@ -191,8 +193,8 @@ func (r *mapper) OutSize() int {
 }
 
 func (r *mapper) Map(in, out anyvec.Vector) {
-	if in == out {
-		panic("arguments cannot be equal")
+	if in.Overlaps(out) {
+		panic("invalid overlap")
 	} else if in.Len() != r.inSize {
 		panic("bad input dimensions")
 	} else if out.Len() != len(r.table) {
@@ -201,13 +203,13 @@ func (r *mapper) Map(in, out anyvec.Vector) {
 	inV := in.(*vector)
 	outV := out.(*vector)
 	for i, x := range r.table {
-		(*outV)[i] = (*inV)[x]
+		outV.slice[i] = inV.slice[x]
 	}
 }
 
 func (r *mapper) MapTranspose(in, out anyvec.Vector) {
-	if in == out {
-		panic("arguments cannot be equal")
+	if in.Overlaps(out) {
+		panic("invalid overlap")
 	} else if in.Len() != len(r.table) {
 		panic("bad input dimensions")
 	} else if out.Len() != r.inSize {
@@ -216,6 +218,6 @@ func (r *mapper) MapTranspose(in, out anyvec.Vector) {
 	inV := in.(*vector)
 	outV := out.(*vector)
 	for i, x := range r.table {
-		(*outV)[x] += (*inV)[i]
+		outV.slice[x] += inV.slice[i]
 	}
 }

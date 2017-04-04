@@ -17,7 +17,7 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Copy", t.TestCopy)
 	test.Run("Set", t.TestSet)
 	test.Run("Slice", t.TestSlice)
-	test.Run("SetSlice", t.TestSetSlice)
+	test.Run("Overlaps", t.TestOverlaps)
 	test.Run("Concat", t.TestConcat)
 	test.Run("Scale", t.TestScale)
 	test.Run("AddScaler", t.TestAddScaler)
@@ -253,7 +253,7 @@ func (t *Tester) TestSlice(test *testing.T) {
 		}
 
 		vec1 := t.Creator.MakeVectorData(origVec)
-		vec2 := vec1.Slice(5, 20)
+		vec2 := vec1.Slice(5, 20).Copy()
 
 		actual := vec2.Data().([]float32)
 		expected := origVec[5:20]
@@ -264,6 +264,11 @@ func (t *Tester) TestSlice(test *testing.T) {
 		vec1.SetData(origVec)
 
 		t.assertClose(test, vec2.Data().([]float32), actual)
+
+		subVec := vec1.Slice(5, 6)
+		subVec.SetData([]float32{15})
+		origVec[5] = 15
+		t.assertClose(test, vec1.Data(), origVec)
 	} else {
 		origVec := make([]float64, 513)
 		for i := range origVec {
@@ -271,7 +276,7 @@ func (t *Tester) TestSlice(test *testing.T) {
 		}
 
 		vec1 := t.Creator.MakeVectorData(origVec)
-		vec2 := vec1.Slice(5, 20)
+		vec2 := vec1.Slice(5, 20).Copy()
 
 		actual := vec2.Data().([]float64)
 		expected := origVec[5:20]
@@ -282,89 +287,36 @@ func (t *Tester) TestSlice(test *testing.T) {
 		vec1.SetData(origVec)
 
 		t.assertClose(test, vec2.Data().([]float64), actual)
+
+		subVec := vec1.Slice(5, 6)
+		subVec.SetData([]float64{15})
+		origVec[5] = 15
+		t.assertClose(test, vec1.Data(), origVec)
 	}
 }
 
-// TestSetSlice tests slice overwriting.
-func (t *Tester) TestSetSlice(test *testing.T) {
-	vec1 := t.randomVecLen(1024)
-	vec2 := t.randomVecLen(65)
-	origV1 := vec1.Data()
-	origV2 := vec2.Data()
-	vec1.SetSlice(129, vec2)
-
-	var expectedData anyvec.NumericList
-	if t.is32Bit() {
-		data1 := append([]float32{}, origV1.([]float32)...)
-		data2 := origV2.([]float32)
-		copy(data1[129:], data2)
-		expectedData = data1
-	} else {
-		data1 := append([]float64{}, origV1.([]float64)...)
-		data2 := origV2.([]float64)
-		copy(data1[129:], data2)
-		expectedData = data1
+// TestOverlaps tests vector overlap detection.
+func (t *Tester) TestOverlaps(test *testing.T) {
+	v := t.randomVecLen(512)
+	slice1 := v.Slice(0, 10)
+	slice2 := v.Slice(5, 15)
+	slice3 := v.Slice(10, 20)
+	slice4 := v.Slice(15, 25)
+	actual := []bool{
+		slice1.Overlaps(slice1),
+		slice1.Overlaps(slice2),
+		slice1.Overlaps(slice3),
+		slice1.Overlaps(slice4),
+		slice3.Overlaps(slice4),
+		slice2.Overlaps(v),
 	}
-
-	t.assertClose(test, vec1.Data(), expectedData)
-	t.assertClose(test, vec2.Data(), origV2)
-	vec1.SetData(origV1)
-	t.assertClose(test, vec2.Data(), origV2)
-	t.assertClose(test, vec1.Data(), origV1)
-
-	vec1.SetSlice(-1000, vec2)
-	t.assertClose(test, vec2.Data(), origV2)
-	t.assertClose(test, vec1.Data(), origV1)
-
-	vec1.SetSlice(-60, vec2)
-
-	if t.is32Bit() {
-		data1 := append([]float32{}, origV1.([]float32)...)
-		data2 := origV2.([]float32)
-		copy(data1, data2[60:])
-		expectedData = data1
-	} else {
-		data1 := append([]float64{}, origV1.([]float64)...)
-		data2 := origV2.([]float64)
-		copy(data1, data2[60:])
-		expectedData = data1
+	expected := []bool{true, true, false, false, true, true}
+	for i, x := range expected {
+		a := actual[i]
+		if a != x {
+			test.Errorf("test %d: expected %v but got %v", i, x, a)
+		}
 	}
-
-	t.assertClose(test, vec1.Data(), expectedData)
-	t.assertClose(test, vec2.Data(), origV2)
-
-	vec2 = vec1
-	vec1 = t.randomVecLen(15)
-
-	if t.is32Bit() {
-		data1 := vec1.Data().([]float32)
-		data2 := vec2.Data().([]float32)
-		copy(data1, data2[5:])
-		expectedData = data1
-	} else {
-		data1 := vec1.Data().([]float64)
-		data2 := vec2.Data().([]float64)
-		copy(data1, data2[5:])
-		expectedData = data1
-	}
-
-	vec1.SetSlice(-5, vec2)
-	t.assertClose(test, vec1.Data(), expectedData)
-
-	if t.is32Bit() {
-		data1 := vec1.Data().([]float32)
-		data2 := vec2.Data().([]float32)
-		copy(data1[5:], data2)
-		expectedData = data1
-	} else {
-		data1 := vec1.Data().([]float64)
-		data2 := vec2.Data().([]float64)
-		copy(data1[5:], data2)
-		expectedData = data1
-	}
-
-	vec1.SetSlice(5, vec2)
-	t.assertClose(test, vec1.Data(), expectedData)
 }
 
 // TestConcat tests vector concatenation.
@@ -596,5 +548,5 @@ func (t *Tester) TestEmpty(test *testing.T) {
 	if v1.Slice(0, 0).Len() != 0 {
 		test.Errorf("incorrect vector length")
 	}
-	v1.SetSlice(0, v2)
+	v1.Set(v2)
 }

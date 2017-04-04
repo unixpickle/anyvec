@@ -23,6 +23,10 @@ type Vector interface {
 	// Len returns the number of vector components.
 	Len() int
 
+	// Overlaps checks if the receiver has an overlapping
+	// backing buffer with v.
+	Overlaps(v Vector) bool
+
 	// Data returns a copy of the vector's contents.
 	Data() NumericList
 
@@ -32,7 +36,7 @@ type Vector interface {
 	SetData(v NumericList)
 
 	// Set copies the contents of v into the receiver.
-	// The receiver must not be equal to v.
+	// The receiver must not overlap with v.
 	Set(v Vector)
 
 	// Copy creates a copy of the vector.
@@ -49,10 +53,6 @@ type Vector interface {
 	//
 	// The result is backed by the same buffer.
 	Slice(start, end int) Vector
-
-	// Overlaps checks if the receiver has an overlapping
-	// backing buffer with v.
-	Overlaps(v Vector) bool
 
 	// Scale scales the vector by a constant.
 	Scale(s Numeric)
