@@ -21,7 +21,7 @@ type ChunkAdder interface {
 // If the vector does not implement ChunkAdder, a default
 // implementation is used which supports float32 and
 // float64 values.
-// v and scalers must not be equal.
+// v and scalers must not overlap.
 func AddChunks(v, scalers Vector) {
 	if c, ok := v.(ChunkAdder); ok {
 		c.AddChunks(scalers)
@@ -74,7 +74,7 @@ type ChunkScaler interface {
 // If the vector does not implement ChunkScaler, a default
 // implementation is used which supports float32 and
 // float64 values.
-// v and scalers must not be equal.
+// v and scalers must not overlap.
 func ScaleChunks(v, scalers Vector) {
 	if c, ok := v.(ChunkScaler); ok {
 		c.ScaleChunks(scalers)
@@ -123,7 +123,7 @@ type RepeatedAdder interface {
 // AddRepeated adds the repeated form of scalers to v.
 // If the vector does not implement RepeatedAdder, a
 // default implementation is used.
-// v and scalers must not be equal.
+// v and scalers must not overlap.
 func AddRepeated(v, scalers Vector) {
 	if r, ok := v.(RepeatedAdder); ok {
 		r.AddRepeated(scalers)
@@ -146,7 +146,7 @@ type RepeatedScaler interface {
 // ScaleRepeated scales the repeated form of scalers to v.
 // If the vector does not implement RepeatedScaler, a
 // default implementation is used.
-// v and scalers must not be equal.
+// v and scalers must not overlap.
 func ScaleRepeated(v, scalers Vector) {
 	if r, ok := v.(RepeatedScaler); ok {
 		r.ScaleRepeated(scalers)

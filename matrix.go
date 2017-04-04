@@ -71,7 +71,7 @@ type Transposer interface {
 // If v does not implement Transposer, a default
 // implementation is used.
 //
-// v and out should not be equal.
+// v and out should not overlap.
 func Transpose(v, out Vector, inRows int) {
 	if t, ok := v.(Transposer); ok {
 		t.Transpose(out, inRows)
@@ -98,8 +98,8 @@ func Transpose(v, out Vector, inRows int) {
 // Specifically, a Gemver implements the BLAS gemv API
 // with itself as the destination vector.
 //
-// In general, the receiver (y) cannot be equal to either
-// of the two operands (x or a).
+// In general, the receiver (y) cannot overlap with x or
+// a.
 type Gemver interface {
 	Gemv(trans bool, m, n int, alpha Numeric, a Vector, lda int,
 		x Vector, incx int, beta Numeric, incy int)
@@ -149,8 +149,8 @@ func Gemv(trans bool, m, n int, alpha Numeric, a Vector, lda int,
 //
 // Specifically, a Gemmer implements the BLAS gemm API.
 //
-// In general, the receiver (c) cannot be equal to either
-// of the two operands (a or b).
+// In general, the receiver (c) cannot overlap with a or
+// b.
 type Gemmer interface {
 	Gemm(transA, transB bool, m, n, k int, alpha Numeric, a Vector, lda int,
 		b Vector, ldb int, beta Numeric, ldc int)
@@ -272,7 +272,6 @@ func BatchedGemm(transA, transB bool, num, m, n, k int, alpha Numeric,
 	bBatch := splitBatch(b, num)
 	cBatch := splitBatch(c, num)
 
-	var offset int
 	for i, subC := range cBatch {
 		lda, ldb := k, n
 		if transA {
@@ -282,8 +281,6 @@ func BatchedGemm(transA, transB bool, num, m, n, k int, alpha Numeric,
 			ldb = k
 		}
 		Gemm(transA, transB, m, n, k, alpha, aBatch[i], lda, bBatch[i], ldb, beta, subC, n)
-		c.SetSlice(offset, subC)
-		offset += subC.Len()
 	}
 }
 

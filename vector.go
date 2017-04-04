@@ -38,7 +38,8 @@ type Vector interface {
 	// Copy creates a copy of the vector.
 	Copy() Vector
 
-	// Slice creates a copy of a subset of the vector.
+	// Slice creates a reference to a sub-range of the
+	// vector.
 	//
 	// The start argument specifies the first element.
 	// The end argument specifies the element after the last
@@ -46,24 +47,12 @@ type Vector interface {
 	// resulting vector.
 	// The indices must be within the bounds of the vector.
 	//
-	// The result should contain its own copy of the data,
-	// unlike how slices work in Go.
+	// The result is backed by the same buffer.
 	Slice(start, end int) Vector
 
-	// SetSlice replaces a subset of the vector with the
-	// contents of another vector.
-	//
-	// The start index specifies where in the receiver the
-	// data should be put.
-	// It can take on any value, although some values will
-	// result in a no-op.
-	//
-	// If the start index is negative, then the beginning of
-	// v is ignored and only the tail of v is copied into the
-	// receiver.
-	//
-	// The receiver should not equal v.
-	SetSlice(start int, v Vector)
+	// Overlaps checks if the receiver has an overlapping
+	// backing buffer with v.
+	Overlaps(v Vector) bool
 
 	// Scale scales the vector by a constant.
 	Scale(s Numeric)
@@ -75,20 +64,20 @@ type Vector interface {
 	Dot(v Vector) Numeric
 
 	// Add adds another vector to this vector.
-	// The receiver must not be equal to v.
+	// The receiver must not overlap with v.
 	Add(v Vector)
 
 	// Sub subtracts a vector from this vector.
-	// The receiver must not be equal to v.
+	// The receiver must not overlap with v.
 	Sub(v Vector)
 
 	// Mul multiplies the components of the vector by the
 	// components of v and stores the result in the receiver.
-	// The receiver must not be equal to v.
+	// The receiver must not overlap with v.
 	Mul(v Vector)
 
 	// Div divides the components of the vector by the
 	// components of v and stores the result in the receiver.
-	// The receiver must not be equal to v.
+	// The receiver must not overlap with v.
 	Div(v Vector)
 }
