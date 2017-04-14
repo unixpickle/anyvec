@@ -4,8 +4,9 @@ package anyvec
 // a float64.
 type Numeric interface{}
 
-// A NumericList is a slice of numerical values, such as a
+// A NumericList is a list of numerical values, such as a
 // []float32 or a []float64.
+// It needn't be a native slice.
 type NumericList interface{}
 
 // A Vector is the main primitive for storing values.
