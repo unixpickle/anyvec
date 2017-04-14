@@ -221,7 +221,7 @@ func SumRows(v Vector, cols int) Vector {
 		one := v.Creator().MakeNumeric(1)
 		zero := v.Creator().MakeNumeric(0)
 		oneVec := v.Creator().MakeVector(rows)
-		oneVec.AddScaler(one)
+		oneVec.AddScalar(one)
 		out := v.Creator().MakeVector(cols)
 		Gemv(true, rows, cols, one, v, cols, oneVec, 1, zero, out, 1)
 		return out
@@ -248,7 +248,7 @@ func SumCols(v Vector, rows int) Vector {
 		one := v.Creator().MakeNumeric(1)
 		zero := v.Creator().MakeNumeric(0)
 		oneVec := v.Creator().MakeVector(cols)
-		oneVec.AddScaler(one)
+		oneVec.AddScalar(one)
 		out := v.Creator().MakeVector(rows)
 		Gemv(false, rows, cols, one, v, cols, oneVec, 1, zero, out, 1)
 		return out

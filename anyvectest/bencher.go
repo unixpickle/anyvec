@@ -20,7 +20,7 @@ func (b *Bencher) BenchmarkAll(bench *testing.B) {
 	bench.Run("GemmBatch", b.BenchmarkGemmBatch)
 	bench.Run("Mul", b.BenchmarkMul)
 	bench.Run("Div", b.BenchmarkDiv)
-	bench.Run("AddScaler", b.BenchmarkAddScaler)
+	bench.Run("AddScalar", b.BenchmarkAddScalar)
 	bench.Run("AddRepeated", b.BenchmarkAddRepeated)
 	bench.Run("SumRows", b.BenchmarkSumRows)
 	bench.Run("Exp", b.BenchmarkExp)
@@ -144,9 +144,9 @@ func (b *Bencher) BenchmarkDiv(bench *testing.B) {
 	v1.Data()
 }
 
-func (b *Bencher) BenchmarkAddScaler(bench *testing.B) {
+func (b *Bencher) BenchmarkAddScalar(bench *testing.B) {
 	b.benchmarkIter(1024, bench, func(v anyvec.Vector) {
-		v.AddScaler(float32(2.0))
+		v.AddScalar(float32(2.0))
 	})
 }
 

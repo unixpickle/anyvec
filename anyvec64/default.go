@@ -111,7 +111,7 @@ func (v *vector) Scale(s anyvec.Numeric) {
 	blas64.Scal(len(v.slice), s.(float64), v.blasVec())
 }
 
-func (v *vector) AddScaler(s anyvec.Numeric) {
+func (v *vector) AddScalar(s anyvec.Numeric) {
 	sNum := s.(float64)
 	for i := range v.slice {
 		v.slice[i] += sNum

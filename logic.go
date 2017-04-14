@@ -18,7 +18,7 @@ func Complement(v Vector) {
 		c.Complement()
 	} else {
 		v.Scale(v.Creator().MakeNumeric(-1))
-		v.AddScaler(v.Creator().MakeNumeric(1))
+		v.AddScalar(v.Creator().MakeNumeric(1))
 	}
 }
 

@@ -58,8 +58,8 @@ type Vector interface {
 	// Scale scales the vector by a constant.
 	Scale(s Numeric)
 
-	// AddScaler adds a scaler to every component.
-	AddScaler(s Numeric)
+	// AddScalar adds a scaler to every component.
+	AddScalar(s Numeric)
 
 	// Dot computes the dot product with another vector.
 	Dot(v Vector) Numeric

@@ -20,7 +20,7 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Overlaps", t.TestOverlaps)
 	test.Run("Concat", t.TestConcat)
 	test.Run("Scale", t.TestScale)
-	test.Run("AddScaler", t.TestAddScaler)
+	test.Run("AddScalar", t.TestAddScalar)
 	test.Run("Dot", t.TestDot)
 	test.Run("Add", t.TestAdd)
 	test.Run("Sub", t.TestSub)
@@ -400,11 +400,11 @@ func (t *Tester) TestScale(test *testing.T) {
 	}
 }
 
-// TestAddScaler tests scaler addition.
-func (t *Tester) TestAddScaler(test *testing.T) {
+// TestAddScalar tests scaler addition.
+func (t *Tester) TestAddScalar(test *testing.T) {
 	v := t.randomVec()
 	data1 := t.unlist(v.Data())
-	v.AddScaler(t.num(-0.5))
+	v.AddScalar(t.num(-0.5))
 	data2 := t.unlist(v.Data())
 	for i, x := range data1 {
 		y := data2[i]

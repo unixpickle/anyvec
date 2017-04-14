@@ -54,7 +54,7 @@ func Cos(v Vector) {
 	if c, ok := v.(Coser); ok {
 		c.Cosine()
 	} else {
-		v.AddScaler(v.Creator().MakeNumeric(0.5 * math.Pi))
+		v.AddScalar(v.Creator().MakeNumeric(0.5 * math.Pi))
 		Sin(v)
 	}
 }
@@ -109,7 +109,7 @@ func Sigmoid(v Vector) {
 		half := v.Creator().MakeNumeric(0.5)
 		v.Scale(half)
 		Tanh(v)
-		v.AddScaler(v.Creator().MakeNumeric(1))
+		v.AddScalar(v.Creator().MakeNumeric(1))
 		v.Scale(half)
 	}
 }
