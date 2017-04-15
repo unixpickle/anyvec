@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/gonum/blas"
-	"github.com/gonum/blas/blas64"
 	"github.com/unixpickle/anyvec"
 )
 
@@ -26,7 +24,6 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Sub", t.TestSub)
 	test.Run("Mul", t.TestMul)
 	test.Run("Div", t.TestDiv)
-	test.Run("Gemm", t.TestGemm)
 	test.Run("Mapper", t.TestMapper)
 	test.Run("Empty", t.TestEmpty)
 }
@@ -463,44 +460,6 @@ func (t *Tester) TestDiv(test *testing.T) {
 	}, func(v1, v2 anyvec.Vector) {
 		v1.Div(v2)
 	})
-}
-
-// TestGemm tests matrix multiplication.
-func (t *Tester) TestGemm(test *testing.T) {
-	// TODO: fancier test for unusual strides.
-
-	mat1 := &anyvec.Matrix{
-		Data: t.randomVecLen(30 * 17),
-		Rows: 30,
-		Cols: 17,
-	}
-	mat2 := &anyvec.Matrix{
-		Data: t.randomVecLen(17 * 5),
-		Rows: 5,
-		Cols: 17,
-	}
-	mat3 := &anyvec.Matrix{
-		Data: t.randomVecLen(30 * 5),
-		Rows: 30,
-		Cols: 5,
-	}
-
-	var bmats [3]blas64.General
-	for i, x := range []*anyvec.Matrix{mat1, mat2, mat3} {
-		bmats[i] = blas64.General{
-			Data:   t.unlist(x.Data.Data()),
-			Rows:   x.Rows,
-			Cols:   x.Cols,
-			Stride: x.Cols,
-		}
-	}
-	blas64.Gemm(blas.NoTrans, blas.Trans, 2.5, bmats[0], bmats[1], -0.7, bmats[2])
-	mat3.Product(false, true, t.num(2.5), mat1, mat2, t.num(-0.7))
-
-	actual := mat3.Data.Data()
-	expected := bmats[2].Data
-
-	t.assertClose(test, actual, expected)
 }
 
 // TestMapper tests the Mapper API.

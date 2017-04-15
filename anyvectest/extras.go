@@ -43,6 +43,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("MapMax", t.TestMapMax)
 	test.Run("Transpose", t.TestTranspose)
 	test.Run("Gemv", t.TestGemv)
+	test.Run("Gemm", t.TestGemm)
 	test.Run("BatchedGemm", t.TestBatchedGemm)
 }
 
@@ -508,6 +509,44 @@ func (t *Tester) TestGemv(test *testing.T) {
 	}
 
 	t.assertClose(test, product.Data(), expected)
+}
+
+// TestGemm tests the Gemmer interface.
+func (t *Tester) TestGemm(test *testing.T) {
+	// TODO: fancier test for unusual strides.
+
+	mat1 := &anyvec.Matrix{
+		Data: t.randomVecLen(30 * 17),
+		Rows: 30,
+		Cols: 17,
+	}
+	mat2 := &anyvec.Matrix{
+		Data: t.randomVecLen(17 * 5),
+		Rows: 5,
+		Cols: 17,
+	}
+	mat3 := &anyvec.Matrix{
+		Data: t.randomVecLen(30 * 5),
+		Rows: 30,
+		Cols: 5,
+	}
+
+	var bmats [3]blas64.General
+	for i, x := range []*anyvec.Matrix{mat1, mat2, mat3} {
+		bmats[i] = blas64.General{
+			Data:   t.unlist(x.Data.Data()),
+			Rows:   x.Rows,
+			Cols:   x.Cols,
+			Stride: x.Cols,
+		}
+	}
+	blas64.Gemm(blas.NoTrans, blas.Trans, 2.5, bmats[0], bmats[1], -0.7, bmats[2])
+	mat3.Product(false, true, t.num(2.5), mat1, mat2, t.num(-0.7))
+
+	actual := mat3.Data.Data()
+	expected := bmats[2].Data
+
+	t.assertClose(test, actual, expected)
 }
 
 // TestBatchedGemm tests the BatchedGemmer interface.
