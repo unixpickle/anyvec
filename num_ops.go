@@ -11,6 +11,13 @@ type NumOps interface {
 	Mul(n1, n2 Numeric) Numeric
 	Div(n1, n2 Numeric) Numeric
 
+	// Compare everything, including things like
+	// derivatives for forward autodiff.
+	Identical(n1, n2 Numeric) bool
+
+	// Only compare the numerical value itself,
+	// not extra information.
+	// Useful with Less and Greater.
 	Equal(n1, n2 Numeric) bool
 
 	// These may not work for certain types of

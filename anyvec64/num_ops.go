@@ -25,6 +25,11 @@ func (n NumOps) Div(n1, n2 anyvec.Numeric) anyvec.Numeric {
 	return n1.(float64) / n2.(float64)
 }
 
+// Identical is like Equal.
+func (n NumOps) Identical(n1, n2 anyvec.Numeric) bool {
+	return n.Equal(n1, n2)
+}
+
 // Equal checks if n1 == n2.
 func (n NumOps) Equal(n1, n2 anyvec.Numeric) bool {
 	return n1.(float64) == n2.(float64)
