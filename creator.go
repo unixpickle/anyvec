@@ -33,4 +33,7 @@ type Creator interface {
 	// No value in the table can be less than 0 or greater
 	// than inSize-1.
 	MakeMapper(inSize int, table []int) Mapper
+
+	// NumOps returns a NumOps for the Numeric type.
+	NumOps() NumOps
 }

@@ -57,6 +57,11 @@ func (d DefaultCreator) MakeMapper(inSize int, table []int) anyvec.Mapper {
 	}
 }
 
+// NumOps returns a new NumOps object.
+func (d DefaultCreator) NumOps() anyvec.NumOps {
+	return NumOps{}
+}
+
 type vector struct {
 	// Information used to check for overlap.
 	backing *[]float64
