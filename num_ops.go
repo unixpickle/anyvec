@@ -10,6 +10,7 @@ type NumOps interface {
 	Sub(n1, n2 Numeric) Numeric
 	Mul(n1, n2 Numeric) Numeric
 	Div(n1, n2 Numeric) Numeric
+	Pow(n1, n2 Numeric) Numeric
 
 	// Compare everything, including things like
 	// derivatives for forward autodiff.

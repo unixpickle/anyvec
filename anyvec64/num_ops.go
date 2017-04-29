@@ -1,6 +1,10 @@
 package anyvec64
 
-import "github.com/unixpickle/anyvec"
+import (
+	"math"
+
+	"github.com/unixpickle/anyvec"
+)
 
 // NumOps implements anyvec.NumOps for float64 numerics.
 type NumOps struct{}
@@ -23,6 +27,11 @@ func (n NumOps) Mul(n1, n2 anyvec.Numeric) anyvec.Numeric {
 // Div divides numerics.
 func (n NumOps) Div(n1, n2 anyvec.Numeric) anyvec.Numeric {
 	return n1.(float64) / n2.(float64)
+}
+
+// Pow raises n1 to the n2 power.
+func (n NumOps) Pow(n1, n2 anyvec.Numeric) anyvec.Numeric {
+	return math.Pow(n1.(float64), n2.(float64))
 }
 
 // Identical is like Equal.
