@@ -32,6 +32,7 @@ func (b *Bencher) BenchmarkAll(bench *testing.B) {
 	bench.Run("Map", b.BenchmarkMap)
 	bench.Run("MapTranspose", b.BenchmarkMapTranspose)
 	bench.Run("MapMax", b.BenchmarkMapMax)
+	bench.Run("Pow", b.BenchmarkPow)
 }
 
 func (b *Bencher) BenchmarkGemmOneVec(bench *testing.B) {
@@ -258,6 +259,24 @@ func (b *Bencher) BenchmarkMapTranspose(bench *testing.B) {
 func (b *Bencher) BenchmarkMapMax(bench *testing.B) {
 	b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
 		anyvec.MapMax(v, 4)
+	})
+}
+
+func (b *Bencher) BenchmarkPow(bench *testing.B) {
+	bench.Run("Square", func(bench *testing.B) {
+		b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
+			anyvec.Pow(v, v.Creator().MakeNumeric(2))
+		})
+	})
+	bench.Run("Sqrt", func(bench *testing.B) {
+		b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
+			anyvec.Pow(v, v.Creator().MakeNumeric(0.5))
+		})
+	})
+	bench.Run("Unit", func(bench *testing.B) {
+		b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
+			anyvec.Pow(v, v.Creator().MakeNumeric(1))
+		})
 	})
 }
 

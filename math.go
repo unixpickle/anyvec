@@ -148,13 +148,37 @@ func Pow(v Vector, n Numeric) {
 	} else {
 		switch data := v.Data().(type) {
 		case []float64:
-			for i, x := range data {
-				data[i] = math.Pow(x, n.(float64))
+			n64 := n.(float64)
+			switch n64 {
+			case 2:
+				for i, x := range data {
+					data[i] = x * x
+				}
+			case 0.5:
+				for i, x := range data {
+					data[i] = math.Sqrt(x)
+				}
+			default:
+				for i, x := range data {
+					data[i] = math.Pow(x, n64)
+				}
 			}
 			v.SetData(data)
 		case []float32:
-			for i, x := range data {
-				data[i] = float32(math.Pow(float64(x), float64(n.(float32))))
+			n64 := float64(n.(float32))
+			switch n64 {
+			case 2:
+				for i, x := range data {
+					data[i] = float32(x * x)
+				}
+			case 0.5:
+				for i, x := range data {
+					data[i] = float32(math.Sqrt(float64(x)))
+				}
+			default:
+				for i, x := range data {
+					data[i] = float32(math.Pow(float64(x), n64))
+				}
 			}
 			v.SetData(data)
 		default:

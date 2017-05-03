@@ -110,6 +110,12 @@ func (t *Tester) TestPow(test *testing.T) {
 	anyvec.Pow(v, t.num(0.3))
 	anyvec.Pow(v, t.num(1/0.3))
 	t.assertClose(test, v.Data(), old)
+
+	v = t.vec([]float64{rand.Float64(), rand.Float64() * 10, rand.Float64() * 100})
+	old = v.Data()
+	anyvec.Pow(v, t.num(0.5))
+	anyvec.Pow(v, t.num(2))
+	t.assertClose(test, v.Data(), old)
 }
 
 // TestSum tests summation.
