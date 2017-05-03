@@ -263,21 +263,15 @@ func (b *Bencher) BenchmarkMapMax(bench *testing.B) {
 }
 
 func (b *Bencher) BenchmarkPow(bench *testing.B) {
-	bench.Run("Square", func(bench *testing.B) {
-		b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
-			anyvec.Pow(v, v.Creator().MakeNumeric(2))
+	names := []string{"Square", "Sqrt", "InvSquare", "InvSqrt", "Unit"}
+	pows := []float64{2, 0.5, -2, -0.5, 1}
+	for i, name := range names {
+		bench.Run(name, func(bench *testing.B) {
+			b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
+				anyvec.Pow(v, v.Creator().MakeNumeric(pows[i]))
+			})
 		})
-	})
-	bench.Run("Sqrt", func(bench *testing.B) {
-		b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
-			anyvec.Pow(v, v.Creator().MakeNumeric(0.5))
-		})
-	})
-	bench.Run("Unit", func(bench *testing.B) {
-		b.benchmarkIter(4096, bench, func(v anyvec.Vector) {
-			anyvec.Pow(v, v.Creator().MakeNumeric(1))
-		})
-	})
+	}
 }
 
 func (b *Bencher) benchmarkIter(size int, bench *testing.B, f func(anyvec.Vector)) {
