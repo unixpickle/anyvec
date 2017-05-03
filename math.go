@@ -154,9 +154,17 @@ func Pow(v Vector, n Numeric) {
 				for i, x := range data {
 					data[i] = x * x
 				}
+			case -2:
+				for i, x := range data {
+					data[i] = 1 / (x * x)
+				}
 			case 0.5:
 				for i, x := range data {
 					data[i] = math.Sqrt(x)
+				}
+			case -0.5:
+				for i, x := range data {
+					data[i] = 1 / math.Sqrt(x)
 				}
 			default:
 				for i, x := range data {
@@ -171,9 +179,17 @@ func Pow(v Vector, n Numeric) {
 				for i, x := range data {
 					data[i] = float32(x * x)
 				}
+			case -2:
+				for i, x := range data {
+					data[i] = 1 / float32(x*x)
+				}
 			case 0.5:
 				for i, x := range data {
 					data[i] = float32(math.Sqrt(float64(x)))
+				}
+			case -0.5:
+				for i, x := range data {
+					data[i] = 1 / float32(math.Sqrt(float64(x)))
 				}
 			default:
 				for i, x := range data {

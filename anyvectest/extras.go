@@ -95,27 +95,25 @@ func (t *Tester) TestPow(test *testing.T) {
 		anyvec.Pow(v, t.num(2))
 	})
 
-	data := make([]float64, 10)
-	expected := make([]float64, 10)
-	for i := range data {
-		data[i] = math.Abs(rand.NormFloat64()) + 1
-		expected[i] = math.Pow(data[i], -2.5)
+	for _, negPower := range []float64{-2.5, -0.5, -2} {
+		data := make([]float64, 10)
+		expected := make([]float64, 10)
+		for i := range data {
+			data[i] = math.Abs(rand.NormFloat64()) + 1
+			expected[i] = math.Pow(data[i], negPower)
+		}
+		v := t.vec(data)
+		anyvec.Pow(v, t.num(negPower))
+		t.assertClose(test, v.Data(), expected)
 	}
-	v := t.vec(data)
-	anyvec.Pow(v, t.num(-2.5))
-	t.assertClose(test, v.Data(), expected)
 
-	v = t.vec([]float64{rand.Float64(), rand.Float64() * 10, rand.Float64() * 100})
-	old := v.Data()
-	anyvec.Pow(v, t.num(0.3))
-	anyvec.Pow(v, t.num(1/0.3))
-	t.assertClose(test, v.Data(), old)
-
-	v = t.vec([]float64{rand.Float64(), rand.Float64() * 10, rand.Float64() * 100})
-	old = v.Data()
-	anyvec.Pow(v, t.num(0.5))
-	anyvec.Pow(v, t.num(2))
-	t.assertClose(test, v.Data(), old)
+	for _, fracPower := range []float64{0.3, 0.5} {
+		v := t.vec([]float64{rand.Float64(), rand.Float64() * 10, rand.Float64() * 100})
+		old := v.Data()
+		anyvec.Pow(v, t.num(fracPower))
+		anyvec.Pow(v, t.num(1/fracPower))
+		t.assertClose(test, v.Data(), old)
+	}
 }
 
 // TestSum tests summation.
