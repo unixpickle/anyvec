@@ -9,6 +9,7 @@ import (
 	"github.com/gonum/blas/blas64"
 	"github.com/unixpickle/anyvec"
 	"github.com/unixpickle/approb"
+	"github.com/unixpickle/essentials"
 )
 
 // TestExtras runs tests for all of the possible extra
@@ -21,6 +22,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("Sigmoid", t.TestSigmoid)
 	test.Run("Tanh", t.TestTanh)
 	test.Run("ClipPos", t.TestClipPos)
+	test.Run("Round", t.TestRound)
 	test.Run("Pow", t.TestPow)
 	test.Run("Max", t.TestMax)
 	test.Run("MaxIndex", t.TestMaxIndex)
@@ -84,6 +86,11 @@ func (t *Tester) TestClipPos(test *testing.T) {
 	t.testOp(test, func(x float64) float64 {
 		return math.Max(0, x)
 	}, anyvec.ClipPos)
+}
+
+// TestRound tests rounding.
+func (t *Tester) TestRound(test *testing.T) {
+	t.testOp(test, essentials.Round, anyvec.Round)
 }
 
 // TestPow tests power taking.

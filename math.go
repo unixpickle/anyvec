@@ -3,6 +3,8 @@ package anyvec
 import (
 	"fmt"
 	"math"
+
+	"github.com/unixpickle/essentials"
 )
 
 // A Tanher can compute its own hyperbolic tangent.
@@ -130,6 +132,27 @@ func ClipPos(v Vector) {
 		applyUnitary(v, func(arg float64) float64 {
 			return math.Max(0, arg)
 		})
+	}
+}
+
+// A Rounder can round its elements to the nearest whole
+// number.
+//
+// To break ties, numbers should be rounded away from 0.
+type Rounder interface {
+	Round()
+}
+
+// Round rounds the vector entries to the nearest whole
+// numbers.
+// If the vector does not implement Rounder, a default
+// implementation is used which supports float32 and
+// float64 values.
+func Round(v Vector) {
+	if r, ok := v.(Rounder); ok {
+		r.Round()
+	} else {
+		applyUnitary(v, essentials.Round)
 	}
 }
 
