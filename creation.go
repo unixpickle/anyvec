@@ -37,3 +37,10 @@ type Creator interface {
 	// NumOps returns a NumOps for the Numeric type.
 	NumOps() NumOps
 }
+
+// Ones creates a vector of all ones.
+func Ones(c Creator, size int) Vector {
+	res := c.MakeVector(size)
+	res.AddScalar(c.MakeNumeric(1))
+	return res
+}
