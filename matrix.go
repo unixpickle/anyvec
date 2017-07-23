@@ -41,6 +41,20 @@ func (m *Matrix) Product(transA, transB bool, alpha Numeric, a, b *Matrix, beta 
 	Gemm(transA, transB, x, n, k, alpha, a.Data, a.Cols, b.Data, b.Cols, beta, m.Data, m.Cols)
 }
 
+// Apply applies the matrix to the column vector and
+// returns the result.
+func (m *Matrix) Apply(column Vector) Vector {
+	if column.Len() != m.Cols {
+		panic("invalid dimensions")
+	}
+	c := m.Data.Creator()
+	res := c.MakeVector(m.Rows)
+	dest := &Matrix{Data: res, Rows: res.Len(), Cols: 1}
+	in := &Matrix{Data: column, Rows: column.Len(), Cols: 1}
+	dest.Product(false, false, c.MakeNumeric(1), m, in, c.MakeNumeric(0))
+	return dest.Data
+}
+
 // Transpose stores the transpose of src in m.
 func (m *Matrix) Transpose(src *Matrix) {
 	if src.Rows != m.Cols || src.Cols != m.Rows {
