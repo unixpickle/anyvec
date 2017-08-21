@@ -18,6 +18,7 @@ func (b *Bencher) BenchmarkAll(bench *testing.B) {
 	bench.Run("GemmOneVec", b.BenchmarkGemmOneVec)
 	bench.Run("GemmMat", b.BenchmarkGemmMat)
 	bench.Run("GemmBatch", b.BenchmarkGemmBatch)
+	bench.Run("SmallOps", b.BenchmarkSmallOps)
 	bench.Run("Mul", b.BenchmarkMul)
 	bench.Run("Div", b.BenchmarkDiv)
 	bench.Run("AddScalar", b.BenchmarkAddScalar)
@@ -109,6 +110,21 @@ func (b *Bencher) BenchmarkGemmBatch(bench *testing.B) {
 	}
 	// Force lazy operations to finish.
 	prod.Data.Data()
+}
+
+func (b *Bencher) BenchmarkSmallOps(bench *testing.B) {
+	v1 := b.randomVector(4)
+	v2 := b.randomVector(4)
+	scale := b.Creator.MakeNumeric(1.001)
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		v1.Sub(v2)
+		v2.Add(v1)
+		v2.Scale(scale)
+	}
+	// Force lazy operations to finish.
+	v1.Data()
+	v2.Data()
 }
 
 func (b *Bencher) BenchmarkMul(bench *testing.B) {
