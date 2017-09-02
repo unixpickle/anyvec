@@ -135,18 +135,18 @@ func ClipPos(v Vector) {
 	}
 }
 
-// A Clipper can clip its values to the given range.
-type Clipper interface {
-	Clip(min, max Numeric)
+// A RangeClipper can clip its values to the given range.
+type RangeClipper interface {
+	ClipRange(min, max Numeric)
 }
 
-// Clip clips the vector entries to be in [min, max].
+// ClipRange clips the vector entries to be in [min, max].
 // If the vector does not implement Clipper, a default
 // implementation is used which depends on LessThan,
 // GreaterThan, and Complement.
-func Clip(v Vector, min, max Numeric) {
-	if c, ok := v.(Clipper); ok {
-		c.Clip(min, max)
+func ClipRange(v Vector, min, max Numeric) {
+	if r, ok := v.(RangeClipper); ok {
+		r.ClipRange(min, max)
 	} else {
 		mask := v.Copy()
 		GreaterThan(mask, min)

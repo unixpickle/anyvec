@@ -22,7 +22,7 @@ func (t *Tester) TestExtras(test *testing.T) {
 	test.Run("Sigmoid", t.TestSigmoid)
 	test.Run("Tanh", t.TestTanh)
 	test.Run("ClipPos", t.TestClipPos)
-	test.Run("Clip", t.TestClip)
+	test.Run("ClipRange", t.TestClipRange)
 	test.Run("Round", t.TestRound)
 	test.Run("Pow", t.TestPow)
 	test.Run("Max", t.TestMax)
@@ -89,8 +89,8 @@ func (t *Tester) TestClipPos(test *testing.T) {
 	}, anyvec.ClipPos)
 }
 
-// TestClip tests arbitrary clipping.
-func (t *Tester) TestClip(test *testing.T) {
+// TestClipRange tests arbitrary range clipping.
+func (t *Tester) TestClipRange(test *testing.T) {
 	mins := []float64{-0.3, 0.2, -100}
 	maxes := []float64{0.9, 1.5, 100}
 	for i, min := range mins {
@@ -99,7 +99,7 @@ func (t *Tester) TestClip(test *testing.T) {
 			return math.Min(math.Max(x, min), max)
 		}, func(in anyvec.Vector) {
 			c := in.Creator()
-			anyvec.Clip(in, c.MakeNumeric(min), c.MakeNumeric(max))
+			anyvec.ClipRange(in, c.MakeNumeric(min), c.MakeNumeric(max))
 		})
 	}
 }
