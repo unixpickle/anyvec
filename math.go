@@ -135,6 +135,35 @@ func ClipPos(v Vector) {
 	}
 }
 
+// A Clipper can clip its values to the given range.
+type Clipper interface {
+	Clip(min, max Numeric)
+}
+
+// Clip clips the vector entries to be in [min, max].
+// If the vector does not implement Clipper, a default
+// implementation is used which depends on LessThan,
+// GreaterThan, and Complement.
+func Clip(v Vector, min, max Numeric) {
+	if c, ok := v.(Clipper); ok {
+		c.Clip(min, max)
+	} else {
+		mask := v.Copy()
+		GreaterThan(mask, min)
+		v.Mul(mask)
+		Complement(mask)
+		mask.Scale(min)
+		v.Add(mask)
+
+		mask.Set(v)
+		LessThan(mask, max)
+		v.Mul(mask)
+		Complement(mask)
+		mask.Scale(max)
+		v.Add(mask)
+	}
+}
+
 // A Rounder can round its elements to the nearest whole
 // number.
 //

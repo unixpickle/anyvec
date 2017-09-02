@@ -31,4 +31,4 @@ Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addre
 Here are some things I'd like to add to anyvec at some point:
 
  * Proper way to convert *back* to `float64`/`[]float64`
- * Clip between arbitrary values or vectors
+ * Clip between arbitrary vectors
