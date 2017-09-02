@@ -25,3 +25,10 @@ If you plan on using CUDA, see [cudavec](https://github.com/unixpickle/cudavec).
 Why would you need anyvec when the tried and true BLAS APIs provide functions for matrix multiplication, vector addition, and the like? One reason is that BLAS assumes too much about where your vectors are stored. BLAS routines take memory addresses as arguments, meaning that your vectors need to be stored in main memory. Some frameworks, like CUDA 8, deal with this using fancy virtual memory mechanisms. However, that is not always an option, especially in higher-level languages like Go.
 
 Unlike BLAS, anyvec uses abstract vector types that don't depend on memory addresses. This makes it possible to offload your vector computations to *anything*, whether it be the GPU or a remote server.
+
+# TODO
+
+Here are some things I'd like to add to anyvec at some point:
+
+ * Proper way to convert *back* to `float64`/`[]float64`
+ * Clip between arbitrary values or vectors
