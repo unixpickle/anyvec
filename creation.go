@@ -53,3 +53,10 @@ func Ones(c Creator, size int) Vector {
 	res.AddScalar(c.MakeNumeric(1))
 	return res
 }
+
+// Make creates a vector directly from a []float64.
+// It combines the MakeVectorData and MakeNumericList
+// methods of c.
+func Make(c Creator, f []float64) Vector {
+	return c.MakeVectorData(c.MakeNumericList(f))
+}
