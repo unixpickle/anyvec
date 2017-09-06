@@ -36,6 +36,15 @@ type Creator interface {
 
 	// NumOps returns a NumOps for the Numeric type.
 	NumOps() NumOps
+
+	// Float64 converts a Numeric back to a native float.
+	// This may be a lossy conversion.
+	Float64(n Numeric) float64
+
+	// Float64Slice converts a NumericList back to a slice
+	// of native floats.
+	// This may be a lossy conversion.
+	Float64Slice(n NumericList) []float64
 }
 
 // Ones creates a vector of all ones.

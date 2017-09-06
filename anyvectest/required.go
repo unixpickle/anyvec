@@ -26,6 +26,7 @@ func (t *Tester) TestRequired(test *testing.T) {
 	test.Run("Div", t.TestDiv)
 	test.Run("Mapper", t.TestMapper)
 	test.Run("Empty", t.TestEmpty)
+	test.Run("ToFloats", t.TestToFloats)
 }
 
 // TestSliceConversion makes sure that the vector properly
@@ -509,4 +510,18 @@ func (t *Tester) TestEmpty(test *testing.T) {
 		test.Errorf("incorrect vector length")
 	}
 	v1.Set(v2)
+}
+
+// TestToFloats tests conversions from numeric types back
+// to native floats.
+func (t *Tester) TestToFloats(test *testing.T) {
+	expected := []float64{1, 2, -2, -3.5, 1.75, math.Pi, -math.E}
+	actual := t.Creator.Float64Slice(t.Creator.MakeNumericList(expected))
+	t.assertClose(test, actual, expected)
+
+	expectedNum := math.Pi
+	actualNum := t.Creator.Float64(t.Creator.MakeNumeric(expectedNum))
+	if math.Abs(actualNum-expectedNum) > 1e-3 {
+		test.Errorf("expected %v but got %v", expectedNum, actualNum)
+	}
 }

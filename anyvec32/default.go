@@ -62,6 +62,21 @@ func (d DefaultCreator) NumOps() anyvec.NumOps {
 	return NumOps{}
 }
 
+// Float64 converts a float32 to a float64.
+func (d DefaultCreator) Float64(n anyvec.Numeric) float64 {
+	return float64(n.(float32))
+}
+
+// Float64Slice converts a []float32 to a []float64.
+func (d DefaultCreator) Float64Slice(n anyvec.NumericList) []float64 {
+	list := n.([]float32)
+	res := make([]float64, len(list))
+	for i, f := range list {
+		res[i] = float64(f)
+	}
+	return res
+}
+
 type vector struct {
 	// Information used to check for overlap.
 	backing *[]float32
