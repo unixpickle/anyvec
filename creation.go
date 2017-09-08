@@ -60,3 +60,12 @@ func Ones(c Creator, size int) Vector {
 func Make(c Creator, f []float64) Vector {
 	return c.MakeVectorData(c.MakeNumericList(f))
 }
+
+// OneHot creates a one-hot vector.
+//
+// The vector has dim elements, and the i-th one is set.
+func OneHot(c Creator, dim, i int) Vector {
+	res := c.MakeVector(dim)
+	res.Slice(i, i+1).SetData(c.MakeNumericList([]float64{1}))
+	return res
+}
